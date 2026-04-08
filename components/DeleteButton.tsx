@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+
+const BUCKET = "recipe-images";
 
 type Props = {
   recipeId: string;
@@ -13,22 +16,18 @@ type Props = {
 export default function DeleteButton({ recipeId, imageUrl }: Props) {
   const supabase = createClient();
   const router = useRouter();
-  const [confirm, setConfirm] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
     setLoading(true);
 
-    // Remove image from storage if exists
     if (imageUrl) {
-      const path = imageUrl.split("/recipe-images/")[1];
-      if (path) {
-        await supabase.storage.from("recipe-images").remove([path]);
-      }
+      const path = imageUrl.split(`/${BUCKET}/`)[1];
+      if (path) await supabase.storage.from(BUCKET).remove([path]);
     }
 
     const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
-
     if (error) {
       toast.error("ลบไม่สำเร็จ");
       setLoading(false);
@@ -40,19 +39,19 @@ export default function DeleteButton({ recipeId, imageUrl }: Props) {
     router.refresh();
   }
 
-  if (confirm) {
+  if (confirming) {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <button
-          onClick={() => setConfirm(false)}
-          className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
+          onClick={() => setConfirming(false)}
+          className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 transition-colors"
         >
           ยกเลิก
         </button>
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-60"
+          className="text-sm px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-60"
         >
           {loading ? "กำลังลบ…" : "ยืนยันลบ"}
         </button>
@@ -62,9 +61,10 @@ export default function DeleteButton({ recipeId, imageUrl }: Props) {
 
   return (
     <button
-      onClick={() => setConfirm(true)}
-      className="text-sm bg-red-50 hover:bg-red-100 text-red-500 px-4 py-2 rounded-lg transition-colors"
+      onClick={() => setConfirming(true)}
+      className="text-sm px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors inline-flex items-center gap-1"
     >
+      <Trash2 className="w-3.5 h-3.5" />
       ลบ
     </button>
   );

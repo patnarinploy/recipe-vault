@@ -1,25 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
-import type { Recipe } from "@/lib/types";
-import { RECIPE_CATEGORIES } from "@/lib/types";
+import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
+import { createRecipe, updateRecipe } from "@/app/actions/recipes";
 
 type Props = {
-  userId: string;
   recipe?: Recipe;
 };
 
-export default function RecipeForm({ userId, recipe }: Props) {
+export default function RecipeForm({ recipe }: Props) {
   const router = useRouter();
-  const supabase = createClient();
   const isEdit = !!recipe;
-
-  const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
+  const [isPending, startTransition] = useTransition();
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    recipe?.image_url ?? null
+  );
 
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
@@ -31,174 +29,179 @@ export default function RecipeForm({ userId, recipe }: Props) {
     servings: recipe?.servings?.toString() ?? "",
   });
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  function set(field: keyof typeof form) {
+    return (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!form.title.trim() || !form.ingredients.trim() || !form.instructions.trim()) {
-      toast.error("กรุณากรอกข้อมูลที่จำเป็น");
+      toast.error("กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, ส่วนผสม, วิธีทำ)");
       return;
     }
 
-    setLoading(true);
-
     const payload = {
-      user_id: userId,
       title: form.title.trim(),
       description: form.description.trim() || null,
       ingredients: form.ingredients.trim(),
       instructions: form.instructions.trim(),
       category: form.category || null,
-      cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
+      cook_time_minutes: form.cook_time_minutes
+        ? parseInt(form.cook_time_minutes)
+        : null,
       servings: form.servings ? parseInt(form.servings) : null,
       image_url: imageUrl,
-      updated_at: new Date().toISOString(),
     };
 
-    let error;
-    if (isEdit) {
-      ({ error } = await supabase.from("recipes").update(payload).eq("id", recipe.id));
-    } else {
-      ({ error } = await supabase.from("recipes").insert(payload));
-    }
-
-    setLoading(false);
-
-    if (error) {
-      toast.error("เกิดข้อผิดพลาด: " + error.message);
-    } else {
-      toast.success(isEdit ? "แก้ไขสูตรอาหารแล้ว" : "เพิ่มสูตรอาหารแล้ว");
-      router.push("/");
-      router.refresh();
-    }
+    startTransition(async () => {
+      try {
+        if (isEdit) {
+          await updateRecipe(recipe.id, payload);
+        } else {
+          await createRecipe(payload);
+        }
+        toast.success(isEdit ? "แก้ไขสำเร็จ" : "เพิ่มสูตรอาหารแล้ว");
+      } catch (err) {
+        toast.error("เกิดข้อผิดพลาด: " + (err as Error).message);
+      }
+    });
   }
 
+  const inputCls =
+    "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
+  const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-6 space-y-5">
-      {/* Image upload */}
-      <ImageUpload userId={userId} value={imageUrl} onChange={setImageUrl} />
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5"
+    >
+      {/* Image */}
+      <ImageUpload value={imageUrl} onChange={setImageUrl} />
 
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          ชื่อสูตรอาหาร <span className="text-red-500">*</span>
+        <label className={labelCls}>
+          ชื่อสูตรอาหาร <span className="text-red-400">*</span>
         </label>
         <input
-          name="title"
           value={form.title}
-          onChange={handleChange}
+          onChange={set("title")}
           placeholder="เช่น ต้มยำกุ้ง"
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className={inputCls}
           required
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">คำอธิบาย</label>
+        <label className={labelCls}>คำอธิบาย</label>
         <textarea
-          name="description"
           value={form.description}
-          onChange={handleChange}
+          onChange={set("description")}
           rows={2}
           placeholder="อธิบายสั้นๆ เกี่ยวกับสูตรนี้"
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+          className={inputCls + " resize-none"}
         />
       </div>
 
-      {/* Category + cook time + servings */}
+      {/* Category + time + servings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
+          <label className={labelCls}>หมวดหมู่</label>
           <select
-            name="category"
             value={form.category}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            onChange={set("category")}
+            className={inputCls}
           >
             <option value="">เลือกหมวดหมู่</option>
-            {RECIPE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">เวลาทำ (นาที)</label>
+          <label className={labelCls}>เวลาทำ (นาที)</label>
           <input
-            name="cook_time_minutes"
             type="number"
             min="1"
             value={form.cook_time_minutes}
-            onChange={handleChange}
+            onChange={set("cook_time_minutes")}
             placeholder="30"
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนที่</label>
+          <label className={labelCls}>จำนวนที่เสิร์ฟ</label>
           <input
-            name="servings"
             type="number"
             min="1"
             value={form.servings}
-            onChange={handleChange}
+            onChange={set("servings")}
             placeholder="4"
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className={inputCls}
           />
         </div>
       </div>
 
       {/* Ingredients */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          ส่วนผสม <span className="text-red-500">*</span>
+        <label className={labelCls}>
+          ส่วนผสม <span className="text-red-400">*</span>
         </label>
         <textarea
-          name="ingredients"
           value={form.ingredients}
-          onChange={handleChange}
+          onChange={set("ingredients")}
           rows={5}
           placeholder={"- กุ้ง 300 กรัม\n- น้ำ 2 ถ้วย\n- ตะไคร้ 2 ต้น"}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+          className={inputCls + " resize-y"}
           required
         />
       </div>
 
       {/* Instructions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          วิธีทำ <span className="text-red-500">*</span>
+        <label className={labelCls}>
+          วิธีทำ <span className="text-red-400">*</span>
         </label>
         <textarea
-          name="instructions"
           value={form.instructions}
-          onChange={handleChange}
+          onChange={set("instructions")}
           rows={6}
-          placeholder={"1. ต้มน้ำให้เดือด\n2. ใส่ตะไคร้และกุ้ง\n3. ปรุงรสด้วยน้ำปลา มะนาว พริก"}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+          placeholder={
+            "1. ต้มน้ำให้เดือด\n2. ใส่ตะไคร้และกุ้ง\n3. ปรุงรสด้วยน้ำปลา มะนาว พริก"
+          }
+          className={inputCls + " resize-y"}
           required
         />
       </div>
 
-      {/* Submit */}
+      {/* Buttons */}
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex-1 border border-gray-300 text-gray-600 rounded-xl py-2.5 hover:bg-gray-50 transition-colors"
+          className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
-          disabled={loading}
-          className="flex-1 bg-orange-500 text-white rounded-xl py-2.5 font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60"
+          disabled={isPending}
+          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60"
         >
-          {loading ? "กำลังบันทึก…" : isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
+          {isPending
+            ? "กำลังบันทึก…"
+            : isEdit
+            ? "บันทึกการแก้ไข"
+            : "เพิ่มสูตรอาหาร"}
         </button>
       </div>
     </form>

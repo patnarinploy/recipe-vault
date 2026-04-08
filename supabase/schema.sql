@@ -1,12 +1,11 @@
 -- ============================================================
 -- Recipe Vault — Supabase Schema
--- Run this in the Supabase SQL Editor
+-- Paste into: Supabase Dashboard → SQL Editor → Run
 -- ============================================================
 
 -- 1. recipes table
 create table if not exists public.recipes (
   id                  uuid primary key default gen_random_uuid(),
-  user_id             uuid not null references auth.users(id) on delete cascade,
   title               text not null,
   description         text,
   ingredients         text not null,
@@ -15,65 +14,47 @@ create table if not exists public.recipes (
   category            text,
   cook_time_minutes   int,
   servings            int,
-  created_at          timestamptz not null default now(),
-  updated_at          timestamptz not null default now()
+  created_at          timestamptz not null default now()
 );
 
--- 2. Row-level security
+-- 2. Row-Level Security — public (no auth required)
 alter table public.recipes enable row level security;
 
--- Anyone can read recipes
-create policy "Public read"
+-- Anyone can read
+create policy "public_select"
   on public.recipes for select
   using (true);
 
--- Owner can insert
-create policy "Owner insert"
+-- Anyone can insert
+create policy "public_insert"
   on public.recipes for insert
-  with check (auth.uid() = user_id);
+  with check (true);
 
--- Owner can update
-create policy "Owner update"
+-- Anyone can update
+create policy "public_update"
   on public.recipes for update
-  using (auth.uid() = user_id);
+  using (true);
 
--- Owner can delete
-create policy "Owner delete"
+-- Anyone can delete
+create policy "public_delete"
   on public.recipes for delete
-  using (auth.uid() = user_id);
+  using (true);
 
--- 3. Storage bucket for recipe images
--- (Create the bucket in Supabase Dashboard → Storage → New bucket)
--- Bucket name: recipe-images  |  Public: ✅
+-- ============================================================
+-- Storage: create bucket then run policies below
+-- Dashboard → Storage → New bucket
+--   Name : recipe-images
+--   Public: ✅ ON
+-- ============================================================
 
--- Storage policies (run after creating the bucket)
-create policy "Public image read"
+create policy "public_image_select"
   on storage.objects for select
   using (bucket_id = 'recipe-images');
 
-create policy "Auth image upload"
+create policy "public_image_insert"
   on storage.objects for insert
-  with check (
-    bucket_id = 'recipe-images'
-    and auth.uid()::text = (storage.foldername(name))[1]
-  );
+  with check (bucket_id = 'recipe-images');
 
-create policy "Auth image delete"
+create policy "public_image_delete"
   on storage.objects for delete
-  using (
-    bucket_id = 'recipe-images'
-    and auth.uid()::text = (storage.foldername(name))[1]
-  );
-
--- 4. Auto-update updated_at
-create or replace function public.handle_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
-create trigger recipes_updated_at
-  before update on public.recipes
-  for each row execute procedure public.handle_updated_at();
+  using (bucket_id = 'recipe-images');

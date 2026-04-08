@@ -1,6 +1,5 @@
 export type Recipe = {
   id: string;
-  user_id: string;
   title: string;
   description: string | null;
   ingredients: string;
@@ -10,19 +9,11 @@ export type Recipe = {
   cook_time_minutes: number | null;
   servings: number | null;
   created_at: string;
-  updated_at: string;
 };
 
-export type RecipeInsert = Omit<Recipe, "id" | "created_at" | "updated_at">;
+export type RecipeFormData = Omit<Recipe, "id" | "created_at">;
 
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-};
-
-export const RECIPE_CATEGORIES = [
+export const CATEGORIES = [
   "อาหารไทย",
   "อาหารจีน",
   "อาหารญี่ปุ่น",
@@ -33,5 +24,3 @@ export const RECIPE_CATEGORIES = [
   "เครื่องดื่ม",
   "อื่นๆ",
 ] as const;
-
-export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number];
