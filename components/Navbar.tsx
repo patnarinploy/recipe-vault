@@ -1,44 +1,47 @@
 import Link from "next/link";
-import { ChefHat, PlusCircle, Settings, Users, LogOut } from "lucide-react";
+import { ChefHat, PlusCircle, BookOpen } from "lucide-react";
 import { getSession } from "@/lib/session";
-import { logout } from "@/app/actions/auth";
+import UserMenu from "./UserMenu";
 
 export default async function Navbar() {
   const user = await getSession();
 
   return (
-    <header className="bg-white border-b border-stone-100 sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2 font-bold text-stone-800 text-lg hover:text-orange-500 transition-colors">
-          <ChefHat className="w-5 h-5 text-orange-500" />
-          Recipe Vault
+    <header className="bg-white border-b border-stone-100 sticky top-0 z-40 shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+
+        {/* Logo */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 font-extrabold text-stone-800 text-xl hover:text-orange-500 transition-colors shrink-0"
+        >
+          <div className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center">
+            <ChefHat className="w-4.5 h-4.5 text-white" />
+          </div>
+          <span className="hidden sm:inline">Recipe Vault</span>
         </Link>
 
         {user && (
-          <div className="flex items-center gap-1">
-            <Link href="/recipes/new" className="inline-flex items-center gap-1.5 text-stone-600 hover:text-orange-500 hover:bg-orange-50 px-3 py-1.5 rounded-lg text-sm transition-colors">
+          <div className="flex items-center gap-2">
+            {/* Nav links — always visible */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-stone-600 hover:text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>สูตรของฉัน</span>
+            </Link>
+
+            <Link
+              href="/recipes/new"
+              className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+            >
               <PlusCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">เพิ่มสูตร</span>
+              <span>เพิ่มสูตร</span>
             </Link>
 
-            {user.role === "admin" && (
-              <Link href="/admin/users" className="inline-flex items-center gap-1.5 text-stone-600 hover:text-orange-500 hover:bg-orange-50 px-3 py-1.5 rounded-lg text-sm transition-colors">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">ผู้ใช้</span>
-              </Link>
-            )}
-
-            <Link href="/settings" className="inline-flex items-center gap-1.5 text-stone-600 hover:text-orange-500 hover:bg-orange-50 px-3 py-1.5 rounded-lg text-sm transition-colors">
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">{user.username}</span>
-            </Link>
-
-            <form action={logout}>
-              <button type="submit" className="inline-flex items-center gap-1.5 text-stone-500 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm transition-colors">
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">ออก</span>
-              </button>
-            </form>
+            {/* User dropdown */}
+            <UserMenu user={user} />
           </div>
         )}
       </div>
