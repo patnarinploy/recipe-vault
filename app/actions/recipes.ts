@@ -1,28 +1,119 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import type { RecipeFormData } from "@/lib/types";
+import { getSession } from "@/lib/session";
+import type { Recipe } from "@/lib/types";
 
-export async function createRecipe(data: RecipeFormData) {
+type RecipePayload = {
+  title: string;
+  description: string | null;
+  ingredients: string;
+  instructions: string;
+  image_url: string | null;
+  category: string | null;
+  cook_time_minutes: number | null;
+  servings: number | null;
+  is_public: boolean;
+};
+
+export async function createRecipe(
+  payload: RecipePayload
+): Promise<{ id: string } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
+
   const supabase = await createClient();
-  const { error, data: row } = await supabase
+  const { data, error } = await supabase
     .from("recipes")
-    .insert(data)
+    .insert({ ...payload, user_id: user.id })
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message);
-  redirect(`/recipes/${row.id}`);
+  if (error) return { error: error.message };
+  return { id: data.id };
 }
 
-export async function updateRecipe(id: string, data: Partial<RecipeFormData>) {
+export async function updateRecipe(
+  id: string,
+  payload: Partial<RecipePayload>
+): Promise<{ id: string } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
+
   const supabase = await createClient();
+  // Ensure ownership
+  const { data: existing } = await supabase
+    .from("recipes")
+    .select("user_id")
+    .eq("id", id)
+    .single<Pick<Recipe, "user_id">>();
+
+  if (!existing || existing.user_id !== user.id) {
+    return { error: "ไม่มีสิทธิ์แก้ไขสูตรนี้" };
+  }
+
+  const { error } = await supabase.from("recipes").update(payload).eq("id", id);
+  if (error) return { error: error.message };
+  return { id };
+}
+
+export async function deleteRecipe(
+  id: string
+): Promise<{ success: true } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("recipes")
+    .select("user_id, image_url")
+    .eq("id", id)
+    .single<Pick<Recipe, "user_id" | "image_url">>();
+
+  if (!existing || existing.user_id !== user.id) {
+    return { error: "ไม่มีสิทธิ์ลบสูตรนี้" };
+  }
+
+  // Remove image from storage
+  if (existing.image_url) {
+    const path = existing.image_url.split("/recipe-images/")[1];
+    if (path) {
+      const { createClient: createBrowser } = await import(
+        "@/lib/supabase/client"
+      );
+      // Use server client for storage delete
+      supabase.storage.from("recipe-images").remove([path]);
+    }
+  }
+
+  const { error } = await supabase.from("recipes").delete().eq("id", id);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function togglePublic(
+  id: string,
+  isPublic: boolean
+): Promise<{ success: true } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("recipes")
+    .select("user_id")
+    .eq("id", id)
+    .single<Pick<Recipe, "user_id">>();
+
+  if (!existing || existing.user_id !== user.id) {
+    return { error: "ไม่มีสิทธิ์" };
+  }
+
   const { error } = await supabase
     .from("recipes")
-    .update(data)
+    .update({ is_public: isPublic })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  redirect(`/recipes/${id}`);
+  if (error) return { error: error.message };
+  return { success: true };
 }

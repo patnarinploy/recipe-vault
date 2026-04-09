@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { requireSession } from "@/lib/session";
+import { notFound, redirect } from "next/navigation";
 import RecipeForm from "@/components/RecipeForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -11,6 +12,7 @@ export default async function EditRecipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const user = await requireSession();
   const supabase = await createClient();
 
   const { data: recipe } = await supabase
@@ -20,13 +22,11 @@ export default async function EditRecipePage({
     .single<Recipe>();
 
   if (!recipe) notFound();
+  if (recipe.user_id !== user.id) redirect("/");
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link
-        href={`/recipes/${id}`}
-        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
-      >
+      <Link href={`/recipes/${id}`} className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         กลับสูตรอาหาร
       </Link>

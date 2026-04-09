@@ -1,5 +1,6 @@
 export type Recipe = {
   id: string;
+  user_id: string;
   title: string;
   description: string | null;
   ingredients: string;
@@ -8,10 +9,16 @@ export type Recipe = {
   category: string | null;
   cook_time_minutes: number | null;
   servings: number | null;
+  is_public: boolean;
   created_at: string;
 };
 
-export type RecipeFormData = Omit<Recipe, "id" | "created_at">;
+export type User = {
+  id: string;
+  username: string;
+  role: "admin" | "user";
+  created_at: string;
+};
 
 export const CATEGORIES = [
   "อาหารไทย",
