@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -22,6 +23,10 @@ export default function Modal({
   fullscreen = false,
   hideChrome = false,
 }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -36,41 +41,46 @@ export default function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
+  /* ── Fullscreen variant (book reader, etc.) ── */
   if (fullscreen) {
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-[60] anim-fade-in"
+        className="fixed inset-0 anim-fade-in"
+        style={{ zIndex: 9999 }}
         role="dialog"
         aria-modal="true"
       >
+        {/* Backdrop */}
         <div
           className="absolute inset-0 bg-stone-900/70 backdrop-blur-md"
           onClick={onClose}
         />
-        <div className="relative w-full h-full flex flex-col">
+        {/* Content — direct child of body via portal */}
+        <div className="absolute inset-0 flex flex-col overflow-auto">
           {!hideChrome && (
             <button
               type="button"
               onClick={onClose}
-              className="fixed top-4 right-4 z-[70] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
+              className="fixed top-4 right-4 z-[100] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
               aria-label="ปิด"
             >
               <X className="w-5 h-5" />
             </button>
           )}
-          <div className="flex-1 min-h-0 overflow-auto">
-            {children}
-          </div>
+          {children}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
+  /* ── Standard centered modal ── */
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] overflow-y-auto"
+      className="fixed inset-0 overflow-y-auto"
+      style={{ zIndex: 9999 }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -98,6 +108,7 @@ export default function Modal({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -245,9 +245,9 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
   }
 
   return (
-    <div className="relative w-full book-paper min-h-[100dvh]">
+    <div className="relative w-full book-paper" style={{ minHeight: "100dvh" }}>
       {/* Top bar */}
-      <div className="sticky top-0 z-30 bg-stone-50/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between">
+      <div className="sticky top-0 bg-stone-50/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between" style={{ zIndex: 50 }}>
         <button
           onClick={handleBack}
           className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm"
