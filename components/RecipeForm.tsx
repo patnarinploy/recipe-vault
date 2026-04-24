@@ -86,10 +86,17 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
       onSubmit={handleSubmit}
       className={
         inModal
-          ? "bg-white rounded-b-2xl border border-stone-100 border-t-0 shadow-xl p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto"
-          : "bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5"
+          ? "bg-white rounded-b-2xl border border-stone-100 border-t-0 shadow-xl overflow-hidden"
+          : "bg-white rounded-2xl border border-stone-100 shadow-sm"
       }
     >
+      <div
+        className={
+          inModal
+            ? "p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto"
+            : "p-6 space-y-5"
+        }
+      >
       <ImageUpload value={imageUrl} onChange={setImageUrl} />
 
       <div>
@@ -152,6 +159,7 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
         <button type="submit" disabled={isPending} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60">
           {isPending ? "กำลังบันทึก…" : isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
         </button>
+      </div>
       </div>
     </form>
   );
