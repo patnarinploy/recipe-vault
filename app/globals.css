@@ -10,3 +10,74 @@
     @apply antialiased;
   }
 }
+
+/* ─── Page / component animations ─────────────────────────── */
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+@keyframes spin-cc {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.anim-slide-right { animation: slide-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-slide-left  { animation: slide-left  0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fade-up     { animation: fade-up     0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fade-in     { animation: fade-in     0.2s  ease-out both; }
+.anim-scale-in    { animation: scale-in    0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-spin        { animation: spin-cc     0.8s  linear infinite; }
+.anim-pulse       { animation: pulse-soft  1.4s  ease-in-out infinite; }
+
+/* Stagger children fade-up (add delay via style prop) */
+.stagger-child {
+  animation: fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Button / interactive press feel ─────────────────────── */
+button:not([disabled]):active,
+a:active {
+  transform: scale(0.96);
+}
+button, a {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Spinner helper ───────────────────────────────────────── */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 9999px;
+  animation: spin-cc 0.7s linear infinite;
+}
+
+/* ─── Warm paper background ────────────────────────────────── */
+.book-paper {
+  background-color: #fffbf2;
+  background-image:
+    radial-gradient(ellipse at 0% 0%,   rgba(251,191,36,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.04) 0%, transparent 60%);
+}
