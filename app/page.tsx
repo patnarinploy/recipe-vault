@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireSession } from "@/lib/session";
 import { type Recipe } from "@/lib/types";
-import BookView from "@/components/BookView";
+import BookReader from "@/components/BookReader";
 
 export const revalidate = 0;
 
@@ -25,7 +25,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <BookView
+    <BookReader
       myRecipes={myRecipes ?? []}
       publicRecipes={publicRecipes ?? []}
       username={user.username}

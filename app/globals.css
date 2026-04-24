@@ -42,6 +42,7 @@
 
 .anim-slide-right { animation: slide-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .anim-slide-left  { animation: slide-left  0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.font-serif-book  { font-family: 'Playfair Display', Georgia, serif; }
 .anim-fade-up     { animation: fade-up     0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .anim-fade-in     { animation: fade-in     0.2s  ease-out both; }
 .anim-scale-in    { animation: scale-in    0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
