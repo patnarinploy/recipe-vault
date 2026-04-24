@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ChefHat, BookOpen } from "lucide-react";
+import { ChefHat, Library as LibraryIcon } from "lucide-react";
 import { getSession } from "@/lib/session";
 import UserMenu from "./UserMenu";
-import AddRecipeButton from "./AddRecipeButton";
 
 export default async function Navbar() {
   const user = await getSession();
@@ -10,8 +9,6 @@ export default async function Navbar() {
   return (
     <header className="bg-white border-b border-stone-100 sticky top-0 z-40 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-
-        {/* Logo */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 font-extrabold text-stone-800 text-xl hover:text-orange-500 transition-colors shrink-0"
@@ -24,18 +21,13 @@ export default async function Navbar() {
 
         {user && (
           <div className="flex items-center gap-2">
-            {/* Nav links — always visible */}
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-stone-600 hover:text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
             >
-              <BookOpen className="w-4 h-4" />
-              <span>สูตรของฉัน</span>
+              <LibraryIcon className="w-4 h-4" />
+              <span>ชั้นหนังสือ</span>
             </Link>
-
-            <AddRecipeButton variant="navbar" label="เพิ่มสูตร" />
-
-            {/* User dropdown */}
             <UserMenu user={user} />
           </div>
         )}

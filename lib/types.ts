@@ -1,6 +1,7 @@
 export type Recipe = {
   id: string;
   user_id: string;
+  book_id: string;
   title: string;
   description: string | null;
   ingredients: string;
@@ -12,6 +13,27 @@ export type Recipe = {
   is_public: boolean;
   created_at: string;
 };
+
+export type Book = {
+  id: string;
+  user_id: string;
+  title: string;
+  subtitle: string | null;
+  tagline: string | null;
+  cover_color: string;
+  created_at: string;
+};
+
+export const BOOK_COLORS = [
+  { name: "Sage",     value: "#6b7c5b" },
+  { name: "Terracotta", value: "#b2613e" },
+  { name: "Mustard",  value: "#c8934a" },
+  { name: "Dusty Rose", value: "#b07a7a" },
+  { name: "Ocean",    value: "#4a6785" },
+  { name: "Lavender", value: "#8a7aa8" },
+  { name: "Charcoal", value: "#4a4a4a" },
+  { name: "Cream",    value: "#c9a876" },
+] as const;
 
 export type User = {
   id: string;

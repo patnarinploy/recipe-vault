@@ -14,6 +14,7 @@ type RecipePayload = {
   cook_time_minutes: number | null;
   servings: number | null;
   is_public: boolean;
+  book_id: string;
 };
 
 export async function createRecipe(
@@ -23,6 +24,16 @@ export async function createRecipe(
   if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
 
   const supabase = await createClient();
+
+  // Verify the book belongs to the user
+  const { data: book } = await supabase
+    .from("books")
+    .select("user_id")
+    .eq("id", payload.book_id)
+    .single<{ user_id: string }>();
+
+  if (!book || book.user_id !== user.id) return { error: "ไม่มีสิทธิ์เพิ่มสูตรในเล่มนี้" };
+
   const { data, error } = await supabase
     .from("recipes")
     .insert({ ...payload, user_id: user.id })

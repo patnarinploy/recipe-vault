@@ -5,19 +5,32 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
-import { createRecipe, updateRecipe } from "@/app/actions/recipes";
+import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
+import { Trash2 } from "lucide-react";
 
 interface Props {
   recipe?: Recipe;
+  bookId?: string;
   onSuccess?: (id: string) => void;
   onCancel?: () => void;
+  onDeleted?: () => void;
   inModal?: boolean;
+  showDelete?: boolean;
 }
 
-export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Props) {
+export default function RecipeForm({
+  recipe,
+  bookId,
+  onSuccess,
+  onCancel,
+  onDeleted,
+  inModal,
+  showDelete,
+}: Props) {
   const router = useRouter();
   const isEdit = !!recipe;
   const [isPending, startTransition] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
 
   const [form, setForm] = useState({
@@ -43,7 +56,12 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
       return;
     }
 
-    const payload = {
+    if (!isEdit && !bookId) {
+      toast.error("ไม่มี book_id");
+      return;
+    }
+
+    const basePayload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
       ingredients: form.ingredients.trim(),
@@ -57,8 +75,8 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
 
     startTransition(async () => {
       const res = isEdit
-        ? await updateRecipe(recipe.id, payload)
-        : await createRecipe(payload);
+        ? await updateRecipe(recipe.id, basePayload)
+        : await createRecipe({ ...basePayload, book_id: bookId! });
 
       if ("error" in res) {
         toast.error(res.error);
@@ -77,6 +95,16 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
   }
 
   const cancel = onCancel ?? (() => router.back());
+
+  function handleDelete() {
+    if (!recipe) return;
+    startTransition(async () => {
+      const res = await deleteRecipe(recipe.id);
+      if ("error" in res) { toast.error(res.error); return; }
+      toast.success("ลบสูตรอาหารแล้ว");
+      if (onDeleted) onDeleted(); else router.push("/");
+    });
+  }
 
   const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
   const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
@@ -153,12 +181,28 @@ export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Pro
       </label>
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={cancel} className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors">
-          ยกเลิก
+        {showDelete && isEdit && (
+          confirmDelete ? (
+            <button type="button" onClick={handleDelete} disabled={isPending}
+              className="border border-red-300 bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2.5 text-sm disabled:opacity-60">
+              {isPending ? "กำลังลบ…" : "ยืนยันลบ"}
+            </button>
+          ) : (
+            <button type="button" onClick={() => setConfirmDelete(true)}
+              className="border border-red-200 text-red-500 rounded-xl px-3.5 py-2.5 text-sm hover:bg-red-50 flex items-center"
+              title="ลบสูตร">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )
+        )}
+        <button type="button" onClick={() => confirmDelete ? setConfirmDelete(false) : cancel()} className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors">
+          {confirmDelete ? "ไม่ลบ" : "ยกเลิก"}
         </button>
-        <button type="submit" disabled={isPending} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60">
-          {isPending ? "กำลังบันทึก…" : isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
-        </button>
+        {!confirmDelete && (
+          <button type="submit" disabled={isPending} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60">
+            {isPending ? "กำลังบันทึก…" : isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
+          </button>
+        )}
       </div>
       </div>
     </form>

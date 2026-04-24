@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
-import { ChefHat, Users, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
-import { type Recipe } from "@/lib/types";
-import AddRecipeButton from "./AddRecipeButton";
+import { useRouter } from "next/navigation";
+import { ChefHat, Users, ArrowLeft, Globe } from "lucide-react";
+import type { Recipe, Book } from "@/lib/types";
+import BookCover from "./BookCover";
+import BookFAB from "./BookFAB";
 
-// ─── helpers ────────────────────────────────────────────────────────────────
 function pg(n: number) { return String(n).padStart(2, "0"); }
 
 const CAT_EN: Record<string, string> = {
@@ -15,124 +16,121 @@ const CAT_EN: Record<string, string> = {
   "ของหวาน": "DESSERT", "เครื่องดื่ม": "DRINKS", "อื่นๆ": "OTHERS",
 };
 
-// ─── Tape decoration ────────────────────────────────────────────────────────
-function Tape({ top = true, right = true }: { top?: boolean; right?: boolean }) {
+function PageTape({ left }: { left?: boolean }) {
   return (
-    <div className="absolute pointer-events-none z-10" style={{
-      top: top ? 10 : "auto", bottom: top ? "auto" : 10,
-      right: right ? 20 : "auto", left: right ? "auto" : 20,
-      width: 52, height: 18,
-      background: "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.7),rgba(212,184,150,.6))",
-      borderRadius: 3, transform: `rotate(${right ? 9 : -9}deg)`,
-      boxShadow: "0 1px 3px rgba(0,0,0,.1)",
-    }} />
+    <div className="absolute top-4 z-10 pointer-events-none rounded-sm"
+      style={{
+        width: 52, height: 18,
+        [left ? "left" : "right"]: 20,
+        background: "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.7),rgba(212,184,150,.6))",
+        transform: `rotate(${left ? -9 : 9}deg)`,
+        boxShadow: "0 1px 3px rgba(0,0,0,.1)",
+      }}
+    />
   );
 }
 
 function PageNumber({ n, right }: { n: number; right?: boolean }) {
   return (
-    <p className={`mt-auto pt-4 text-[11px] text-[#b8a48a] font-serif-book tracking-widest ${right ? "text-right" : "text-left"}`}>
+    <p className={`mt-auto pt-4 text-[11px] text-[#b8a48a] tracking-widest ${right ? "text-right" : "text-left"}`}
+       style={{ fontFamily: "Georgia, serif" }}>
       {pg(n)}
     </p>
   );
 }
 
-// ─── Book Cover (closed state) ───────────────────────────────────────────────
-function BookCover({ onOpen, count, username }: { onOpen: () => void; count: number; username: string }) {
+function PageShareBadge() {
   return (
-    <div className="flex flex-col items-center py-8 anim-fade-up">
-      <div className="relative mb-6">
-        {/* Drop shadow */}
-        <div className="absolute -bottom-3 left-4 right-4 h-8 rounded-full opacity-30"
-          style={{ background: "#444", filter: "blur(18px)" }} />
-        {/* Book body */}
-        <div className="relative flex overflow-hidden"
-          style={{ width: 240, height: 320, borderRadius: "2px 6px 6px 2px",
-            boxShadow: "5px 10px 36px rgba(0,0,0,.28), -2px 0 10px rgba(0,0,0,.14)" }}>
-          {/* Spine */}
-          <div className="shrink-0 flex items-center justify-center bg-gradient-to-r from-[#3e5339] to-[#556e4c]"
-            style={{ width: 22 }}>
-            <span className="text-white/35 text-[7px] tracking-[.45em]"
-              style={{ writingMode: "vertical-rl" }}>RECIPE VAULT</span>
-          </div>
-          {/* Face */}
-          <div className="flex-1 bg-[#6b7c5b] flex items-center justify-center relative p-5">
-            <Tape top right />
-            <div className="border border-white/22 w-full py-8 px-3 text-center text-white flex flex-col items-center gap-2.5">
-              <p className="text-[8.5px] tracking-[.38em] text-white/48 uppercase">Have a Nice Meal</p>
-              <div className="w-7 h-px bg-white/20" />
-              <h1 className="text-2xl font-bold leading-tight font-serif-book">The Cozy<br />Folio</h1>
-              <div className="w-7 h-px bg-white/20" />
-              <p className="text-[9.5px] text-white/48">บันทึกสูตรอาหารอุ่นหัวใจ</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold ml-2 align-middle">
+      <Globe className="w-2.5 h-2.5" /> แชร์แล้ว
+    </span>
+  );
+}
 
-      <p className="text-sm text-stone-400 mb-5">
-        {count > 0 ? `${count} สูตร · สมุดของ ${username}` : `ยังไม่มีสูตร · เริ่มเพิ่มเลย`}
+// ─── Book Cover (clickable to open) ─────────────────────────────────────────
+function CoverPhase({ book, onOpen, publicCount, isOwner }: {
+  book: Book; onOpen: () => void; publicCount: number; isOwner: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] anim-fade-up">
+      <div
+        onClick={onOpen}
+        className="cursor-pointer transition-transform hover:scale-[1.03] active:scale-[0.98]"
+        title="คลิกเพื่อเปิดหนังสือ"
+      >
+        <BookCover book={book} size="lg" publicCount={publicCount} />
+      </div>
+      <p className="mt-6 text-sm text-stone-400">
+        {isOwner ? "คลิกที่หนังสือเพื่อเปิดอ่าน" : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
       </p>
-      <div className="flex gap-3">
-        <AddRecipeButton variant="navbar" label="+ เพิ่มสูตร" />
-        {count > 0 && (
-          <button onClick={onOpen}
-            className="flex items-center gap-1.5 bg-[#6b7c5b] hover:bg-[#5a6948] text-white px-5 py-2 rounded-xl text-sm font-medium shadow-sm transition-all">
-            <BookOpen className="w-4 h-4" /> เปิดหน้าถัดไป →
-          </button>
-        )}
-      </div>
     </div>
   );
 }
 
-// ─── ToC left page ───────────────────────────────────────────────────────────
-function ToCPage({ recipes, onJump }: { recipes: Recipe[]; onJump: (i: number) => void }) {
+// ─── ToC left page ─────────────────────────────────────────────────────────
+function ToCPage({ book, recipes, onJump, isOwner }: {
+  book: Book; recipes: Recipe[]; onJump: (i: number) => void; isOwner: boolean;
+}) {
   return (
-    <div className="flex-1 flex flex-col bg-[#fef9f0] border-r border-[#e8d5b7]/60 p-7 min-h-[500px] relative overflow-hidden">
-      <Tape top={false} right={false} />
-      <p className="text-[8.5px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">Table of Contents</p>
-      <h2 className="text-2xl font-bold text-stone-700 mb-6 leading-tight font-serif-book">
-        สารบัญ<br />ความอร่อย
-      </h2>
-      <nav className="flex-1 space-y-1 overflow-y-auto">
-        {recipes.map((r, i) => (
-          <button key={r.id} onClick={() => onJump(i + 1)}
-            className="w-full flex items-center gap-1 px-1.5 py-2 rounded-lg hover:bg-amber-50/80 transition-colors group text-left">
-            <span className="flex-1 text-sm text-stone-600 group-hover:text-stone-800 truncate">{r.title}</span>
-            <span className="border-b border-dotted border-stone-200 w-8 shrink-0 mx-2" />
-            <span className="shrink-0 text-[11px] text-stone-400 group-hover:text-[#8a7354] font-mono">หน้า {pg(i * 2 + 1)}</span>
-          </button>
-        ))}
-      </nav>
+    <div className="flex-1 flex flex-col bg-[#fef9f0] p-8 md:p-10 min-h-[600px] relative">
+      <PageTape left />
+      <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">Table of Contents</p>
+      <h2 className="text-3xl font-bold text-stone-700 mb-6 leading-tight">สารบัญความอร่อย</h2>
+      {recipes.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-stone-300">
+          <ChefHat className="w-14 h-14 mb-3" />
+          <p className="text-sm">{isOwner ? "ยังไม่มีสูตรในเล่มนี้" : "หนังสือเล่มนี้ยังไม่มีสูตรสาธารณะ"}</p>
+          {isOwner && <p className="text-xs mt-1">เริ่มเพิ่มสูตรแรกของคุณ</p>}
+        </div>
+      ) : (
+        <nav className="flex-1 space-y-1 overflow-y-auto">
+          {recipes.map((r, i) => (
+            <button
+              key={r.id}
+              onClick={() => onJump(i + 1)}
+              className="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-amber-50 transition-colors group text-left"
+            >
+              <span className="flex-1 text-sm text-stone-600 group-hover:text-stone-800 truncate">
+                {r.title}
+                {r.is_public && <PageShareBadge />}
+              </span>
+              <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
+              <span className="shrink-0 text-[11px] text-stone-400 group-hover:text-[#8a7354] font-mono">
+                หน้า {pg(i * 2 + 1)}
+              </span>
+            </button>
+          ))}
+        </nav>
+      )}
     </div>
   );
 }
 
-// ─── Recipe left page ─────────────────────────────────────────────────────────
+// ─── Recipe left page ──────────────────────────────────────────────────────
 function RecipeLeft({ recipe, pn }: { recipe: Recipe; pn: number }) {
   const catEn = recipe.category ? (CAT_EN[recipe.category] ?? recipe.category.toUpperCase()) : null;
   const meta = [catEn, recipe.cook_time_minutes ? `${recipe.cook_time_minutes} MINS` : null].filter(Boolean).join(" · ");
   return (
-    <div className="flex-1 flex flex-col bg-[#fef9f0] border-r border-[#e8d5b7]/60 p-7 min-h-[500px] relative">
-      <Tape top right={false} />
-      {meta && <p className="text-[8.5px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">{meta}</p>}
-      <h2 className="text-[1.65rem] font-bold text-stone-800 leading-tight mb-3 font-serif-book">{recipe.title}</h2>
-      <div className="h-px bg-[#e8d5b7] mb-4" />
-      {/* Image */}
-      <div className="relative w-full shrink-0 rounded-md overflow-hidden mb-4 bg-amber-50 border border-amber-100"
-        style={{ height: 150 }}>
+    <div className="flex-1 flex flex-col bg-[#fef9f0] p-8 md:p-10 min-h-[600px] relative">
+      <PageTape left />
+      {meta && <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">{meta}</p>}
+      <h2 className="text-2xl font-bold text-stone-800 leading-tight mb-3">
+        {recipe.title}
+        {recipe.is_public && <PageShareBadge />}
+      </h2>
+      <div className="h-px bg-[#e8d5b7] mb-5" />
+      <div className="relative w-full shrink-0 rounded-md overflow-hidden mb-5 bg-amber-50 border border-amber-100"
+        style={{ height: 180 }}>
         {recipe.image_url
           ? <Image src={recipe.image_url} alt={recipe.title} fill className="object-cover" />
           : <div className="flex h-full items-center justify-center text-stone-200 text-xs tracking-widest"
               style={{ fontFamily: "Georgia,serif", fontStyle: "italic" }}>
               [ ภาพประกอบ ]
-            </div>
-        }
+            </div>}
       </div>
-      {/* Ingredients */}
       <div className="flex-1 overflow-hidden">
-        <p className="text-[8.5px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
-        <div className="text-sm text-stone-600 leading-[1.8] whitespace-pre-line line-clamp-[8] overflow-hidden">
+        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
+        <div className="text-sm text-stone-600 leading-[1.9] whitespace-pre-line line-clamp-[9] overflow-hidden">
           {recipe.ingredients}
         </div>
       </div>
@@ -141,15 +139,18 @@ function RecipeLeft({ recipe, pn }: { recipe: Recipe; pn: number }) {
   );
 }
 
-// ─── Recipe right page ────────────────────────────────────────────────────────
+// ─── Recipe right page ─────────────────────────────────────────────────────
 function RecipeRight({ recipe, pn }: { recipe: Recipe; pn: number }) {
   return (
-    <div className="flex-1 flex flex-col bg-[#fef9f0] p-7 min-h-[500px] relative">
+    <div className="flex-1 flex flex-col bg-[#fef9f0] p-8 md:p-10 min-h-[600px] relative">
       {recipe.description && (
-        <p className="text-sm text-stone-500 italic mb-4 leading-relaxed font-serif-book">{recipe.description}</p>
+        <p className="text-sm text-stone-500 italic mb-4 leading-relaxed"
+           style={{ fontFamily: "Georgia, serif" }}>
+          {recipe.description}
+        </p>
       )}
-      <p className="text-[8.5px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วิธีทำ:</p>
-      <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.9] whitespace-pre-line">
+      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วิธีทำ:</p>
+      <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.95] whitespace-pre-line">
         {recipe.instructions}
       </div>
       {recipe.servings && (
@@ -162,28 +163,30 @@ function RecipeRight({ recipe, pn }: { recipe: Recipe; pn: number }) {
   );
 }
 
-// ─── Empty right page ─────────────────────────────────────────────────────────
 function EmptyPage() {
   return (
-    <div className="flex-1 flex items-center justify-center bg-[#fef9f0] min-h-[500px]">
-      <ChefHat className="w-20 h-20 text-amber-100/80" />
+    <div className="flex-1 flex items-center justify-center bg-[#fef9f0] min-h-[600px]">
+      <ChefHat className="w-24 h-24 text-amber-100/80" />
     </div>
   );
 }
 
-// ─── Main BookReader ──────────────────────────────────────────────────────────
-interface Props { myRecipes: Recipe[]; publicRecipes: Recipe[]; username: string; }
+// ─── Main BookReader ───────────────────────────────────────────────────────
+interface Props {
+  book: Book;
+  recipes: Recipe[];
+  isOwner: boolean;
+}
 
-export default function BookReader({ myRecipes, publicRecipes, username }: Props) {
-  const [tab, setTab] = useState<"mine" | "public">("mine");
-  const recipes = tab === "mine" ? myRecipes : publicRecipes;
-
+export default function BookReader({ book, recipes, isOwner }: Props) {
+  const router = useRouter();
   const [phase, setPhase] = useState<"cover" | "book">("cover");
-  const [spreadIdx, setSpreadIdx] = useState(0);   // 0 = ToC, 1..n = recipe n-1
+  const [spreadIdx, setSpreadIdx] = useState(0);
   const [dir, setDir] = useState<"fwd" | "back">("fwd");
   const [animKey, setAnimKey] = useState(0);
 
   const totalSpreads = 1 + recipes.length;
+  const publicCount = useMemo(() => recipes.filter((r) => r.is_public).length, [recipes]);
 
   function goTo(idx: number, d: "fwd" | "back") {
     setDir(d);
@@ -192,7 +195,7 @@ export default function BookReader({ myRecipes, publicRecipes, username }: Props
   }
 
   function next() {
-    if (phase === "cover") { if (recipes.length) { setPhase("book"); } return; }
+    if (phase === "cover") { setPhase("book"); setSpreadIdx(0); return; }
     if (spreadIdx < totalSpreads - 1) goTo(spreadIdx + 1, "fwd");
   }
 
@@ -201,89 +204,100 @@ export default function BookReader({ myRecipes, publicRecipes, username }: Props
     if (phase === "book") goTo(spreadIdx - 1, "back");
   }
 
-  function switchTab(t: "mine" | "public") {
-    setTab(t); setPhase("cover"); setSpreadIdx(0);
-  }
+  function backToToC() { goTo(0, "back"); }
+
+  const currentRecipe = spreadIdx > 0 ? recipes[spreadIdx - 1] : null;
 
   function renderSpread() {
-    if (spreadIdx === 0) return (
-      <>
-        <ToCPage recipes={recipes} onJump={(i) => goTo(i, "fwd")} />
+    if (spreadIdx === 0) {
+      return <>
+        <ToCPage book={book} recipes={recipes} onJump={(i) => goTo(i, "fwd")} isOwner={isOwner} />
         <EmptyPage />
-      </>
-    );
+      </>;
+    }
     const r = recipes[spreadIdx - 1];
     const leftPg = (spreadIdx - 1) * 2 + 1;
-    return <><RecipeLeft recipe={r} pn={leftPg} /><RecipeRight recipe={r} pn={leftPg + 1} /></>;
+    return <>
+      <RecipeLeft recipe={r} pn={leftPg} />
+      <RecipeRight recipe={r} pn={leftPg + 1} />
+    </>;
   }
 
-  const atEnd = phase === "book" && spreadIdx === totalSpreads - 1;
-
   return (
-    <div className="flex flex-col items-center">
-      {/* Tab */}
-      <div className="flex gap-2 mb-6 self-start">
-        {(["mine", "public"] as const).map((t) => (
-          <button key={t} onClick={() => switchTab(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-              tab === t ? "bg-[#6b7c5b] text-white shadow-sm" : "text-stone-500 hover:bg-stone-100"}`}>
-            {t === "mine" ? "📚 ของฉัน" : "🌐 สาธารณะ"}
-          </button>
-        ))}
-        <div className="ml-auto pl-4">
-          <AddRecipeButton variant="navbar" label="+ เพิ่มสูตร" />
+    <div className="relative">
+      {/* Top bar */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => router.push("/")}
+          className="inline-flex items-center gap-1.5 text-stone-400 hover:text-stone-600 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          กลับชั้นหนังสือ
+        </button>
+        <div className="text-xs text-stone-400 font-mono tabular-nums">
+          {phase === "cover" ? "ปก" : `${pg(spreadIdx + 1)} / ${pg(totalSpreads)}`}
         </div>
       </div>
 
-      {phase === "cover"
-        ? <BookCover onOpen={next} count={recipes.length} username={username} />
-        : (
-          <div className="w-full max-w-5xl">
-            {/* Book frame */}
-            <div className="relative">
-              {/* Shadow */}
-              <div className="absolute -bottom-3 left-16 right-16 h-8 rounded-full opacity-25"
-                style={{ background: "#555", filter: "blur(22px)" }} />
+      {phase === "cover" ? (
+        <CoverPhase book={book} onOpen={next} publicCount={publicCount} isOwner={isOwner} />
+      ) : (
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="relative">
+            {/* Book drop shadow */}
+            <div className="absolute -bottom-4 left-20 right-20 h-10 rounded-full opacity-25 pointer-events-none"
+              style={{ background: "#555", filter: "blur(24px)" }} />
 
-              {/* Side nav arrows */}
-              <button onClick={prev}
-                className="absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-9 h-14 bg-white/90 hover:bg-white rounded-r-xl shadow-md flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button onClick={next} disabled={atEnd}
-                className="absolute -right-5 top-1/2 -translate-y-1/2 z-30 w-9 h-14 bg-white/90 hover:bg-white rounded-l-xl shadow-md flex items-center justify-center text-stone-400 hover:text-stone-600 transition-all disabled:opacity-30">
-                <ChevronRight className="w-5 h-5" />
-              </button>
-
-              {/* Animated spread */}
-              <div key={animKey}
-                className={`flex overflow-hidden rounded-sm border border-[#e0cdb4] ${dir === "fwd" ? "anim-slide-right" : "anim-slide-left"}`}
-                style={{ boxShadow: "0 16px 50px rgba(0,0,0,.13), inset 0 0 40px rgba(0,0,0,.02)" }}>
-                {renderSpread()}
-              </div>
-
-              {/* Spine */}
-              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px pointer-events-none z-10"
-                style={{ background: "linear-gradient(to bottom, #ddd, #bbb, #ddd)" }} />
+            {/* Spread */}
+            <div
+              key={animKey}
+              className={`flex overflow-hidden rounded-sm border border-[#e0cdb4] ${
+                dir === "fwd" ? "anim-slide-right" : "anim-slide-left"
+              }`}
+              style={{ boxShadow: "0 18px 56px rgba(0,0,0,.14), inset 0 0 50px rgba(0,0,0,.025)" }}
+            >
+              {renderSpread()}
             </div>
 
-            {/* Bottom nav */}
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <button onClick={prev}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-white border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 shadow-sm transition-all">
-                ← ย้อนกลับ
-              </button>
-              <span className="text-xs text-stone-400 font-mono tabular-nums px-2">
-                {pg(spreadIdx + 1)} / {pg(totalSpreads)}
-              </span>
-              <button onClick={next} disabled={atEnd}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#6b7c5b] hover:bg-[#5a6948] text-white text-sm font-medium shadow-sm transition-all disabled:opacity-35">
-                เปิดหน้าถัดไป →
-              </button>
+            {/* Single center spine (single vertical line) */}
+            <div
+              className="absolute top-0 bottom-0 left-1/2 w-px pointer-events-none"
+              style={{
+                background: "linear-gradient(to bottom, rgba(180,160,130,.15), rgba(180,160,130,.4), rgba(180,160,130,.15))",
+                transform: "translateX(-0.5px)",
+              }}
+            />
+
+            {/* Edge hover zones — page peel hint + click to turn */}
+            <div
+              onClick={prev}
+              className="absolute top-0 bottom-0 left-0 w-[7%] z-20 cursor-w-resize group"
+              title="หน้าก่อนหน้า"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="absolute top-1/2 -translate-y-1/2 left-2 text-stone-400 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1 text-2xl select-none">‹</div>
+            </div>
+            <div
+              onClick={next}
+              className="absolute top-0 bottom-0 right-0 w-[7%] z-20 cursor-e-resize group"
+              title="หน้าถัดไป"
+              style={{ pointerEvents: spreadIdx === totalSpreads - 1 ? "none" : "auto" }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-l from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="absolute top-1/2 -translate-y-1/2 right-2 text-stone-400 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:-translate-x-1 text-2xl select-none">›</div>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
+
+      {/* FAB */}
+      <BookFAB
+        context={phase === "cover" ? "cover" : spreadIdx === 0 ? "toc" : "recipe"}
+        book={book}
+        recipe={currentRecipe}
+        isOwner={isOwner}
+        onBackToToC={backToToC}
+      />
     </div>
   );
 }
