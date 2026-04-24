@@ -5,6 +5,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Settings, Users, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
+import DbStatus from "./DbStatus";
 
 export default function UserMenu({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
@@ -76,6 +77,10 @@ export default function UserMenu({ user }: { user: User }) {
                 ออกจากระบบ
               </button>
             </form>
+          </div>
+
+          <div className="border-t border-stone-100 px-4 pt-2 pb-1 flex justify-center">
+            <DbStatus />
           </div>
         </div>
       )}
