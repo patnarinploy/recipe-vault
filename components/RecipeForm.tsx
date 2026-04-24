@@ -7,7 +7,14 @@ import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createRecipe, updateRecipe } from "@/app/actions/recipes";
 
-export default function RecipeForm({ recipe }: { recipe?: Recipe }) {
+interface Props {
+  recipe?: Recipe;
+  onSuccess?: (id: string) => void;
+  onCancel?: () => void;
+  inModal?: boolean;
+}
+
+export default function RecipeForm({ recipe, onSuccess, onCancel, inModal }: Props) {
   const router = useRouter();
   const isEdit = !!recipe;
   const [isPending, startTransition] = useTransition();
@@ -59,16 +66,30 @@ export default function RecipeForm({ recipe }: { recipe?: Recipe }) {
       }
 
       toast.success(isEdit ? "แก้ไขสำเร็จ" : "เพิ่มสูตรอาหารแล้ว");
-      router.push(`/recipes/${res.id}`);
-      router.refresh();
+      if (onSuccess) {
+        onSuccess(res.id);
+        router.refresh();
+      } else {
+        router.push(`/recipes/${res.id}`);
+        router.refresh();
+      }
     });
   }
+
+  const cancel = onCancel ?? (() => router.back());
 
   const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
   const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      className={
+        inModal
+          ? "bg-white rounded-b-2xl border border-stone-100 border-t-0 shadow-xl p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto"
+          : "bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5"
+      }
+    >
       <ImageUpload value={imageUrl} onChange={setImageUrl} />
 
       <div>
@@ -125,7 +146,7 @@ export default function RecipeForm({ recipe }: { recipe?: Recipe }) {
       </label>
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={() => router.back()} className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors">
+        <button type="button" onClick={cancel} className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors">
           ยกเลิก
         </button>
         <button type="submit" disabled={isPending} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60">

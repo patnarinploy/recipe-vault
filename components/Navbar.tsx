@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ChefHat, PlusCircle, BookOpen } from "lucide-react";
+import { ChefHat, BookOpen } from "lucide-react";
 import { getSession } from "@/lib/session";
 import UserMenu from "./UserMenu";
+import AddRecipeButton from "./AddRecipeButton";
 
 export default async function Navbar() {
   const user = await getSession();
@@ -32,13 +33,7 @@ export default async function Navbar() {
               <span>สูตรของฉัน</span>
             </Link>
 
-            <Link
-              href="/recipes/new"
-              className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>เพิ่มสูตร</span>
-            </Link>
+            <AddRecipeButton variant="navbar" label="เพิ่มสูตร" />
 
             {/* User dropdown */}
             <UserMenu user={user} />

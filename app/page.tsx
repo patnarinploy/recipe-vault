@@ -3,9 +3,10 @@ import { requireSession } from "@/lib/session";
 import RecipeCard from "@/components/RecipeCard";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
+import AddRecipeButton from "@/components/AddRecipeButton";
 import Link from "next/link";
 import { CATEGORIES, type Recipe } from "@/lib/types";
-import { PlusCircle, ChefHat } from "lucide-react";
+import { ChefHat } from "lucide-react";
 import { Suspense } from "react";
 
 export const revalidate = 0;
@@ -49,13 +50,7 @@ export default async function HomePage({ searchParams }: Props) {
               : `สวัสดี, ${user.username}`}
           </p>
         </div>
-        <Link
-          href="/recipes/new"
-          className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" />
-          เพิ่มสูตรอาหาร
-        </Link>
+        <AddRecipeButton variant="hero" label="เพิ่มสูตรอาหาร" />
       </div>
 
       {/* View toggle */}
@@ -102,9 +97,9 @@ export default async function HomePage({ searchParams }: Props) {
             {showPublic ? "ยังไม่มีสูตรสาธารณะ" : "ยังไม่มีสูตรอาหาร"}
           </p>
           {!showPublic && (
-            <Link href="/recipes/new" className="mt-3 inline-block text-orange-500 hover:underline text-sm">
-              เพิ่มสูตรแรกของคุณ →
-            </Link>
+            <div className="mt-3">
+              <AddRecipeButton variant="link" label="เพิ่มสูตรแรกของคุณ →" showIcon={false} />
+            </div>
           )}
         </div>
       )}
