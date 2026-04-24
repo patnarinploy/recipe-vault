@@ -3,12 +3,13 @@
 import { login } from "@/app/actions/auth";
 import { ChefHat } from "lucide-react";
 import { useActionState } from "react";
+import DbStatus from "@/components/DbStatus";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined);
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4 gap-3">
       <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-8 w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-100 rounded-2xl mb-4">
@@ -62,6 +63,8 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+
+      <DbStatus />
     </div>
   );
 }
