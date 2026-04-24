@@ -9,6 +9,8 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   maxWidth?: string;
+  fullscreen?: boolean;
+  hideChrome?: boolean;
 }
 
 export default function Modal({
@@ -17,6 +19,8 @@ export default function Modal({
   title,
   children,
   maxWidth = "max-w-2xl",
+  fullscreen = false,
+  hideChrome = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -33,6 +37,36 @@ export default function Modal({
   }, [open, onClose]);
 
   if (!open) return null;
+
+  if (fullscreen) {
+    return (
+      <div
+        className="fixed inset-0 z-[60] anim-fade-in"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          className="absolute inset-0 bg-stone-900/70 backdrop-blur-md"
+          onClick={onClose}
+        />
+        <div className="relative w-full h-full flex flex-col">
+          {!hideChrome && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="fixed top-4 right-4 z-[70] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
+              aria-label="ปิด"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+          <div className="flex-1 min-h-0 overflow-auto">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

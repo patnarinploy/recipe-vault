@@ -82,3 +82,102 @@ button, a {
     radial-gradient(ellipse at 0% 0%,   rgba(251,191,36,0.06) 0%, transparent 60%),
     radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.04) 0%, transparent 60%);
 }
+
+/* ─── Skeleton shimmer (Facebook-style) ────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(120, 113, 108, 0.08) 0%,
+    rgba(120, 113, 108, 0.18) 50%,
+    rgba(120, 113, 108, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+  border-radius: 8px;
+}
+.skeleton-dark {
+  background: linear-gradient(
+    90deg,
+    rgba(60, 50, 40, 0.22) 0%,
+    rgba(80, 70, 60, 0.35) 50%,
+    rgba(60, 50, 40, 0.22) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s linear infinite;
+  border-radius: 6px;
+}
+
+/* ─── 3D book page-flip animation ──────────────────────────── */
+.book-perspective {
+  perspective: 2200px;
+  perspective-origin: center center;
+}
+.book-3d {
+  transform-style: preserve-3d;
+}
+.flip-leaf {
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: visible;
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face-back {
+  transform: rotateY(180deg);
+}
+
+/* Forward flip — right page rotates around its LEFT edge (spine) */
+@keyframes flip-next-anim {
+  0%   { transform: rotateY(0deg); box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50%  { transform: rotateY(-90deg); box-shadow: -24px 0 40px rgba(0,0,0,.22); }
+  100% { transform: rotateY(-180deg); box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+/* Backward flip — left page rotates around its RIGHT edge (spine) */
+@keyframes flip-prev-anim {
+  0%   { transform: rotateY(0deg); box-shadow: 0 0 0 rgba(0,0,0,0); }
+  50%  { transform: rotateY(90deg); box-shadow: 24px 0 40px rgba(0,0,0,.22); }
+  100% { transform: rotateY(180deg); box-shadow: 0 0 0 rgba(0,0,0,0); }
+}
+.flip-next { animation: flip-next-anim 0.72s cubic-bezier(0.4, 0.1, 0.25, 1) both; transform-origin: left center; }
+.flip-prev { animation: flip-prev-anim 0.72s cubic-bezier(0.4, 0.1, 0.25, 1) both; transform-origin: right center; }
+
+/* Cover opening flip — full book cover rotates around left edge */
+@keyframes cover-open-anim {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(-172deg); }
+}
+.cover-opening {
+  animation: cover-open-anim 0.8s cubic-bezier(0.45, 0.05, 0.2, 1) both;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+
+/* Subtle page curl gradient overlay while flipping */
+.flip-curl-front {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0) 14%,
+    rgba(0, 0, 0, 0) 86%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  pointer-events: none;
+}
+.flip-curl-back {
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0) 14%,
+    rgba(0, 0, 0, 0) 86%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  pointer-events: none;
+}

@@ -86,11 +86,11 @@ export default function BookCoverEditor({ book, onSuccess, onCancel, inModal }: 
           : "bg-white rounded-2xl border border-stone-100 shadow-sm"
       }
     >
-      <div className={inModal ? "p-6 max-h-[calc(100vh-10rem)] overflow-y-auto" : "p-6"}>
+      <div className={inModal ? "p-6 sm:p-8 max-h-[calc(100vh-8rem)] overflow-y-auto" : "p-6"}>
         {/* Preview + fields */}
-        <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start mb-6">
+        <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start mb-8">
           <div className="shrink-0">
-            <BookCover book={previewBook} size="sm" />
+            <BookCover book={previewBook} size="md" />
           </div>
 
           <div className="flex-1 space-y-4 w-full">

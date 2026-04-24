@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, BookOpen } from "lucide-react";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
+import BookReaderModal from "./BookReaderModal";
 import type { Book } from "@/lib/types";
 
 interface BookWithCounts extends Book {
@@ -15,14 +15,14 @@ interface BookWithCounts extends Book {
 
 interface Props {
   myBooks: BookWithCounts[];
-  publicBooks: BookWithCounts[]; // books that have at least 1 public recipe
+  publicBooks: BookWithCounts[];
   username: string;
 }
 
 export default function Library({ myBooks, publicBooks, username }: Props) {
-  const router = useRouter();
   const [tab, setTab] = useState<"mine" | "public">("mine");
   const [newBookOpen, setNewBookOpen] = useState(false);
+  const [openBookId, setOpenBookId] = useState<string | null>(null);
 
   const books = tab === "mine" ? myBooks : publicBooks;
 
@@ -91,8 +91,8 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
               <BookCover
                 book={book}
                 size="sm"
-                publicCount={tab === "public" ? book.public_count : book.public_count}
-                onClick={() => router.push(`/books/${book.id}`)}
+                publicCount={book.public_count}
+                onClick={() => setOpenBookId(book.id)}
               />
               <p className="mt-4 text-sm font-medium text-stone-700 text-center line-clamp-1 max-w-[160px]">
                 {book.title}
@@ -123,13 +123,24 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
       )}
 
       {/* New book modal */}
-      <Modal open={newBookOpen} onClose={() => setNewBookOpen(false)} title="สร้างหนังสือสูตรใหม่">
+      <Modal
+        open={newBookOpen}
+        onClose={() => setNewBookOpen(false)}
+        title="สร้างหนังสือสูตรใหม่"
+        maxWidth="max-w-3xl"
+      >
         <BookCoverEditor
           inModal
-          onSuccess={(id) => { setNewBookOpen(false); router.push(`/books/${id}`); }}
+          onSuccess={(id) => { setNewBookOpen(false); setOpenBookId(id); }}
           onCancel={() => setNewBookOpen(false)}
         />
       </Modal>
+
+      {/* Book reader modal */}
+      <BookReaderModal
+        bookId={openBookId}
+        onClose={() => setOpenBookId(null)}
+      />
     </div>
   );
 }

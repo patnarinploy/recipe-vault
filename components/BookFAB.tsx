@@ -153,7 +153,12 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
         </Modal>
       )}
 
-      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title="แก้ไขปกหนังสือ">
+      <Modal
+        open={coverEditorOpen}
+        onClose={() => setCoverEditorOpen(false)}
+        title="แก้ไขปกหนังสือ"
+        maxWidth="max-w-3xl"
+      >
         <BookCoverEditor
           book={book}
           inModal
