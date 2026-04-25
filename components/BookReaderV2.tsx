@@ -6,6 +6,14 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 // ─── Fake data (mockup only — no real API calls) ─────────────────
 const COVER_COLOR = "#b5651d";
 
+function darken(hex: string, amt: number) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, ((n >> 16) & 0xff) - amt);
+  const g = Math.max(0, ((n >> 8) & 0xff) - amt);
+  const b = Math.max(0, (n & 0xff) - amt);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
+}
+
 const FAKE_RECIPES = [
   {
     title: "ข้าวผัดกุ้ง",
@@ -33,7 +41,7 @@ const FAKE_RECIPES = [
   },
 ];
 
-// ─── Page sizing (mirrors BookFlip logic) ────────────────────────
+// ─── Page sizing ─────────────────────────────────────────────────
 const BASE_W = 390;
 const BASE_H = 540;
 
@@ -50,7 +58,7 @@ function usePageDimensions() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const portrait = vw < 640;
-      // Keep 18% vertical breathing room so flipping page corners stay visible
+      // 18% vertical headroom keeps page-corner tips visible during flip
       const availH = vh * 0.82;
       const availW = portrait ? vw * 0.84 : (vw * 0.9) / 2;
       const scale = Math.max(0.35, Math.min(availH / BASE_H, availW / BASE_W, 1.8));
@@ -99,62 +107,79 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 }
 
 // ─── ForwardRef page wrappers (required by react-pageflip) ───────
+//
+// IMPORTANT: react-pageflip sets its own style/transform on the root ref div.
+// All visual styling must live one level IN — in the inner content div.
 
 const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
-  <div
-    ref={ref}
-    data-density="hard"
-    className="w-full h-full flex"
-    style={{ background: COVER_COLOR }}
-  >
-    {/* Spine strip */}
-    <div
-      className="shrink-0 flex items-center justify-center"
-      style={{
-        width: "8.5%",
-        background: `linear-gradient(to right, rgba(0,0,0,.25), rgba(0,0,0,.08))`,
-      }}
-    >
-      <span
-        className="text-white/30 tracking-[.4em] truncate"
-        style={{ writingMode: "vertical-rl", fontSize: 8 }}
-      >
-        RECIPE BOOK
-      </span>
-    </div>
-
-    {/* Face */}
-    <div className="flex-1 relative flex items-center justify-center">
-      {/* Washi tape */}
+  <div ref={ref} data-density="hard">
+    {/* Inner div owns all visual styling */}
+    <div className="w-full h-full flex overflow-hidden">
+      {/* Spine */}
       <div
-        className="absolute pointer-events-none rounded-sm"
+        className="shrink-0 flex items-center justify-center"
         style={{
-          top: "5%",
-          right: "7%",
-          width: 44,
-          height: 14,
-          background:
-            "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.75),rgba(212,184,150,.6))",
-          transform: "rotate(8deg)",
+          width: "8.2%",
+          background: `linear-gradient(to right, ${darken(COVER_COLOR, 28)}, ${COVER_COLOR})`,
         }}
-      />
-      {/* Title frame */}
-      <div
-        className="border border-white/20 flex flex-col items-center justify-center gap-3 text-white text-center mx-4"
-        style={{ width: "calc(100% - 2rem)", padding: "2rem 1rem" }}
       >
-        <p className="tracking-[.4em] text-white/45 text-[10px] uppercase">
-          ตำรับอาหาร
-        </p>
-        <div className="w-6 h-px bg-white/20" />
-        <h2
-          className="font-bold text-3xl leading-tight"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        <span
+          className="text-white/30 tracking-[.4em] truncate"
+          style={{ writingMode: "vertical-rl", fontSize: "clamp(6px,1.6vw,8px)" }}
         >
-          สูตรอร่อย
-        </h2>
-        <div className="w-6 h-px bg-white/20" />
-        <p className="text-white/50 text-xs">คอลเลกชันส่วนตัว</p>
+          RECIPE BOOK
+        </span>
+      </div>
+
+      {/* Face */}
+      <div
+        className="flex-1 relative flex items-center justify-center"
+        style={{ background: COVER_COLOR }}
+      >
+        {/* Washi tape */}
+        <div
+          className="absolute pointer-events-none rounded-sm"
+          style={{
+            top: "4%",
+            right: "6%",
+            width: "clamp(28px,12%,52px)",
+            height: "clamp(10px,3.5%,18px)",
+            background:
+              "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.75),rgba(212,184,150,.6))",
+            transform: "rotate(9deg)",
+            boxShadow: "0 1px 3px rgba(0,0,0,.1)",
+          }}
+        />
+
+        {/* Title frame */}
+        <div
+          className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3"
+          style={{
+            width: "calc(100% - 1.5rem)",
+            padding: "clamp(1.5rem,8%,3rem) 1rem",
+          }}
+        >
+          <p
+            className="tracking-[.38em] text-white/48 uppercase truncate w-full"
+            style={{ fontSize: "clamp(8px,1.8vw,11px)" }}
+          >
+            ตำรับอาหาร
+          </p>
+          <div className="w-7 h-px bg-white/20" />
+          <h2
+            className="font-bold leading-tight break-words w-full"
+            style={{
+              fontSize: "clamp(1.4rem,5vw,2.4rem)",
+              fontFamily: "'Playfair Display', Georgia, serif",
+            }}
+          >
+            สูตรอร่อย
+          </h2>
+          <div className="w-7 h-px bg-white/20" />
+          <p className="text-white/55" style={{ fontSize: "clamp(9px,2vw,12px)" }}>
+            คอลเลกชันส่วนตัว
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -162,52 +187,54 @@ const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
 PageCoverFront.displayName = "PageCoverFront";
 
 const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
-  <div ref={ref} data-density="hard" className="w-full h-full bg-[#fef9f0]" />
+  <div ref={ref} data-density="hard">
+    <div className="w-full h-full bg-[#fef9f0]" />
+  </div>
 ));
 PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<HTMLDivElement, object>((_p, ref) => (
-  <div
-    ref={ref}
-    className="w-full h-full bg-[#fef9f0] flex flex-col"
-    style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
-  >
-    <Tape />
-    <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
-      Table of Contents
-    </p>
-    <h2
-      className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
-      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+  <div ref={ref}>
+    <div
+      className="w-full h-full bg-[#fef9f0] flex flex-col relative"
+      style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
     >
-      สารบัญ
-    </h2>
-    <nav className="flex-1 space-y-1.5">
-      {FAKE_RECIPES.map((r, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-1 px-2 py-2 rounded-lg text-sm text-stone-500"
-        >
-          <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-          <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
-          <span className="shrink-0 text-[11px] font-mono text-stone-400">
-            {String(i * 2 + 1).padStart(2, "0")}
-          </span>
-        </div>
-      ))}
-    </nav>
+      <Tape />
+      <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
+        Table of Contents
+      </p>
+      <h2
+        className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
+        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+      >
+        สารบัญ
+      </h2>
+      <nav className="flex-1 space-y-1.5 overflow-hidden">
+        {FAKE_RECIPES.map((r, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-1 px-2 py-2 rounded-lg text-sm text-stone-500"
+          >
+            <span className="flex-1 text-stone-700 truncate">{r.title}</span>
+            <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
+            <span className="shrink-0 text-[11px] font-mono text-stone-400">
+              {String(i * 2 + 1).padStart(2, "0")}
+            </span>
+          </div>
+        ))}
+      </nav>
+    </div>
   </div>
 ));
 PageToC.displayName = "PageToC";
 
-const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(
-  ({ idx }, ref) => {
-    const r = FAKE_RECIPES[idx];
-    const pn = idx * 2 + 1;
-    return (
+const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref) => {
+  const r = FAKE_RECIPES[idx];
+  const pn = idx * 2 + 1;
+  return (
+    <div ref={ref}>
       <div
-        ref={ref}
-        className="w-full h-full bg-[#fef9f0] flex flex-col"
+        className="w-full h-full bg-[#fef9f0] flex flex-col relative"
         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
       >
         <Tape />
@@ -232,19 +259,18 @@ const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(
         </div>
         <Pn n={pn} />
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
 PageRecipeLeft.displayName = "PageRecipeLeft";
 
-const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(
-  ({ idx }, ref) => {
-    const r = FAKE_RECIPES[idx];
-    const pn = idx * 2 + 2;
-    return (
+const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref) => {
+  const r = FAKE_RECIPES[idx];
+  const pn = idx * 2 + 2;
+  return (
+    <div ref={ref}>
       <div
-        ref={ref}
-        className="w-full h-full bg-[#fef9f0] flex flex-col"
+        className="w-full h-full bg-[#fef9f0] flex flex-col relative"
         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
       >
         <Tape right />
@@ -256,19 +282,19 @@ const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(
         </div>
         <Pn n={pn} right />
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
 PageRecipeRight.displayName = "PageRecipeRight";
 
 const PageBackCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
-  <div
-    ref={ref}
-    data-density="hard"
-    className="w-full h-full flex items-center justify-center"
-    style={{ background: COVER_COLOR }}
-  >
-    <div className="w-6 h-px bg-white/25" />
+  <div ref={ref} data-density="hard">
+    <div
+      className="w-full h-full flex items-center justify-center"
+      style={{ background: COVER_COLOR }}
+    >
+      <div className="w-8 h-px bg-white/20" />
+    </div>
   </div>
 ));
 PageBackCover.displayName = "PageBackCover";
@@ -281,9 +307,8 @@ export default function BookReaderV2() {
   if (!ready) return <div style={{ minHeight: "100vh" }} />;
 
   const bookW = portrait ? pageW : pageW * 2;
-  const borderColor = `${COVER_COLOR}60`;
-  const spineGrad = `linear-gradient(to bottom, transparent, ${COVER_COLOR}55, transparent)`;
-  // Vertical padding so flipping page corners are never clipped by viewport
+  const borderColor = `${COVER_COLOR}55`;
+  const spineGrad = `linear-gradient(to bottom, transparent, ${COVER_COLOR}60, transparent)`;
   const vPad = Math.round(pageH * 0.14);
 
   const pages: React.ReactElement[] = [
@@ -303,14 +328,16 @@ export default function BookReaderV2() {
       style={{ minHeight: "100vh", padding: `${vPad}px 16px` }}
     >
       {/*
-        NO overflow:hidden — pages must be able to extend outside the
-        border box while animating (matching StPageFlip demo behaviour).
+        book container gets a paper background so the left half (empty when
+        at the cover page) shows warm paper instead of the transparent backdrop.
+        NO overflow:hidden — pages extend beyond the border during animation.
       */}
       <div
         className="relative"
         style={{
           width: bookW,
           height: pageH,
+          background: "#fef9f0",
           border: `2px solid ${borderColor}`,
           borderRadius: "2px 8px 8px 2px",
           boxShadow:
@@ -346,7 +373,7 @@ export default function BookReaderV2() {
           {pages}
         </HTMLFlipBook>
 
-        {/* Center spine — landscape only */}
+        {/* Center spine line — landscape only */}
         {!portrait && (
           <div
             className="absolute top-0 bottom-0 pointer-events-none"
