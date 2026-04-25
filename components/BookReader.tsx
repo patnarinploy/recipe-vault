@@ -269,7 +269,7 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
           opening={phase === "opening"}
         />
       ) : (
-        <div className="w-full flex items-center justify-center px-2 sm:px-6 pb-10 pt-4"
+        <div className="w-full flex items-center justify-center px-2 sm:px-6 py-6"
              style={{ minHeight: "calc(100dvh - 4rem)" }}>
           <div className="relative w-full max-w-6xl book-perspective">
             {/* Book drop shadow */}
@@ -281,7 +281,7 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
               className="relative flex rounded-sm border border-[#e0cdb4] overflow-hidden book-3d"
               style={{
                 boxShadow: "0 18px 56px rgba(0,0,0,.14), inset 0 0 50px rgba(0,0,0,.025)",
-                height: "clamp(380px, 80vh, 820px)",
+                height: "clamp(400px, 86vh, 940px)",
               }}
             >
               {/* Left static page — fixed during "next" flip, swapped during "prev" flip */}
@@ -381,7 +381,6 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
 function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
   book: Book; onOpen: () => void; publicCount: number; isOwner: boolean; opening: boolean;
 }) {
-  // XL cover dimensions (the "master" size we scale from)
   const XL_W = 390, XL_H = 540;
 
   const [scale, setScale] = useState(1);
@@ -390,11 +389,11 @@ function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
     function recalc() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      // Target cover height: 72% of viewport, constrained by available width (minus padding)
-      const availH = vh * 0.72;
-      const availW = (vw - 64) * 0.90; // horizontal padding buffer
+      // Target: 84% of viewport height, constrained by width with generous padding buffer
+      const availH = vh * 0.84;
+      const availW = (vw - 80) * 0.88;
       const s = Math.min(availH / XL_H, availW / XL_W);
-      setScale(Math.max(0.5, Math.min(s, 1.5))); // clamp: never smaller than 50%, never larger than 150%
+      setScale(Math.max(0.5, Math.min(s, 1.8)));
     }
     recalc();
     window.addEventListener("resize", recalc);
@@ -406,13 +405,20 @@ function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
 
   return (
     <div
-      className="flex flex-col items-center justify-center px-4 anim-fade-up"
-      style={{ minHeight: "calc(100dvh - 8rem)" }}
+      className="flex items-center justify-center px-4"
+      style={{ minHeight: "calc(100dvh - 4rem)" }}
     >
-      {/* Outer box matches visual size after scale — centers properly */}
+      {/*
+        Two-layer structure:
+          Layer 1 (outer): sets layout footprint to visual size after scale.
+                           Text hint is absolute inside here so it never shifts the book.
+          Layer 2 (scale): applies transform:scale — separate from animation class.
+          Layer 3 (anim):  cover-opening animation — only rotateY, does NOT touch scale.
+      */}
       <div style={{ width: scaledW, height: scaledH, position: "relative" }}>
+
+        {/* Layer 2 — scale only, never animated */}
         <div
-          className={opening ? "cover-opening" : ""}
           style={{
             transform: `scale(${scale})`,
             transformOrigin: "top left",
@@ -423,20 +429,28 @@ function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
             left: 0,
           }}
         >
-          <div
-            onClick={opening ? undefined : onOpen}
-            className={`transition-transform duration-300 ${opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"}`}
-            title="คลิกเพื่อเปิดหนังสือ"
-          >
-            <BookCover book={book} size="xl" publicCount={publicCount} />
+          {/* Layer 3 — animation only, never has scale */}
+          <div className={opening ? "cover-opening" : ""}>
+            <div
+              onClick={opening ? undefined : onOpen}
+              className={`transition-transform duration-300 ${opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"}`}
+              title="คลิกเพื่อเปิดหนังสือ"
+            >
+              <BookCover book={book} size="xl" publicCount={publicCount} />
+            </div>
           </div>
         </div>
+
+        {/* Hint text — absolute so it never shifts the book's centered position */}
+        {!opening && (
+          <p
+            className="absolute left-0 right-0 text-center text-sm text-stone-400 anim-fade-in whitespace-nowrap"
+            style={{ top: scaledH + 20 }}
+          >
+            {isOwner ? "คลิกที่หนังสือเพื่อเปิดอ่าน" : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
+          </p>
+        )}
       </div>
-      {!opening && (
-        <p className="mt-6 text-sm text-stone-400 anim-fade-in">
-          {isOwner ? "คลิกที่หนังสือเพื่อเปิดอ่าน" : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
-        </p>
-      )}
     </div>
   );
 }
