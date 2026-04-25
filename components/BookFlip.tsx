@@ -10,11 +10,19 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { ChefHat, ChevronLeft, Globe, Users } from "lucide-react";
-import type { Recipe } from "@/lib/types";
+import { ChefHat, Globe, Users } from "lucide-react";
+import type { Book, Recipe } from "@/lib/types";
 
 function pg(n: number) {
   return String(n).padStart(2, "0");
+}
+
+function darken(hex: string, pct: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, ((n >> 16) & 0xff) - pct);
+  const g = Math.max(0, ((n >> 8) & 0xff) - pct);
+  const b = Math.max(0, (n & 0xff) - pct);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
 const CAT_EN: Record<string, string> = {
@@ -66,17 +74,107 @@ function ShareBadge() {
   );
 }
 
+// ─── Cover face (fills the full page, no fixed px) ──────────────
+function BookCoverPageContent({
+  book,
+  publicCount = 0,
+}: {
+  book: Book;
+  publicCount?: number;
+}) {
+  const spineColor = `linear-gradient(to right, ${darken(book.cover_color, 20)}, ${book.cover_color})`;
+  return (
+    <div className="w-full h-full flex overflow-hidden">
+      {/* Spine */}
+      <div
+        className="shrink-0 flex items-center justify-center"
+        style={{ width: "8.2%", background: spineColor }}
+      >
+        <span
+          className="text-white/35 tracking-[.4em] truncate"
+          style={{ writingMode: "vertical-rl", fontSize: "clamp(6px, 1.8vw, 8px)" }}
+        >
+          {book.title.slice(0, 18).toUpperCase()}
+        </span>
+      </div>
+
+      {/* Face */}
+      <div
+        className="flex-1 relative flex items-center justify-center"
+        style={{ background: book.cover_color }}
+      >
+        {/* Washi tape */}
+        <div
+          className="absolute pointer-events-none rounded-sm"
+          style={{
+            top: "4%",
+            right: "6%",
+            width: "clamp(28px,12%,52px)",
+            height: "clamp(10px,3.5%,18px)",
+            background:
+              "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.7),rgba(212,184,150,.6))",
+            transform: "rotate(9deg)",
+            boxShadow: "0 1px 3px rgba(0,0,0,.1)",
+          }}
+        />
+
+        {publicCount > 0 && (
+          <div className="absolute bottom-3 right-3 bg-white/95 text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
+            <Globe className="w-3 h-3" /> แชร์ {publicCount}
+          </div>
+        )}
+
+        {/* Frame */}
+        <div
+          className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3"
+          style={{ width: "calc(100% - 1.5rem)", padding: "clamp(1.5rem,8%,3rem) 1rem" }}
+        >
+          {book.tagline && (
+            <>
+              <p
+                className="tracking-[.38em] text-white/48 uppercase truncate w-full"
+                style={{ fontSize: "clamp(8px,1.8vw,11px)" }}
+              >
+                {book.tagline}
+              </p>
+              <div className="w-7 h-px bg-white/20" />
+            </>
+          )}
+          <h2
+            className="font-bold leading-tight break-words w-full"
+            style={{
+              fontSize: "clamp(1.25rem,5vw,2.25rem)",
+              fontFamily: "'Playfair Display', Georgia, serif",
+            }}
+          >
+            {book.title}
+          </h2>
+          {book.subtitle && (
+            <>
+              <div className="w-7 h-px bg-white/20" />
+              <p
+                className="text-white/55 line-clamp-2 break-words w-full px-1"
+                style={{ fontSize: "clamp(9px,2vw,12px)" }}
+              >
+                {book.subtitle}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page content ────────────────────────────────────────────────
 function ToCContent({
   recipes,
   onJump,
   isOwner,
-  onClose,
 }: {
   recipes: Recipe[];
   onJump: (spreadIdx: number) => void;
   isOwner: boolean;
-  onClose?: () => void;
 }) {
   return (
     <div
@@ -84,18 +182,6 @@ function ToCContent({
       style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}
     >
       <PageTape left />
-
-      {/* Back to cover */}
-      {onClose && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="flex items-center gap-1 text-[10px] text-[#b8a48a] hover:text-[#8a7354] mb-3 w-fit transition-colors"
-        >
-          <ChevronLeft className="w-3 h-3" />
-          ปิดหนังสือ
-        </button>
-      )}
-
       <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">
         Table of Contents
       </p>
@@ -116,7 +202,7 @@ function ToCContent({
           {recipes.map((r, i) => (
             <button
               key={r.id}
-              onClick={(e) => { e.stopPropagation(); onJump(i + 1); }}
+              onClick={(e) => { e.stopPropagation(); onJump(i + 2); }}
               className="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-amber-50 transition-colors group text-left"
             >
               <span className="flex-1 text-sm text-stone-600 group-hover:text-stone-800 truncate">
@@ -195,17 +281,7 @@ function RecipeLeftContent({ recipe, pn }: { recipe: Recipe; pn: number }) {
   );
 }
 
-function RecipeRightContent({
-  recipe,
-  pn,
-  isLast,
-  onClose,
-}: {
-  recipe: Recipe;
-  pn: number;
-  isLast?: boolean;
-  onClose?: () => void;
-}) {
+function RecipeRightContent({ recipe, pn }: { recipe: Recipe; pn: number }) {
   return (
     <div
       className="w-full h-full flex flex-col bg-[#fef9f0] relative"
@@ -233,22 +309,36 @@ function RecipeRightContent({
         </div>
       )}
       <PageNum n={pn} right />
-
-      {/* Back-to-cover on last page */}
-      {isLast && onClose && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="mt-4 pt-3 border-t border-[#e8d5b7] w-full flex items-center justify-center gap-1.5 text-[11px] text-[#b8a48a] hover:text-[#8a7354] transition-colors"
-        >
-          <ChevronLeft className="w-3 h-3" />
-          กลับปกหนังสือ
-        </button>
-      )}
     </div>
   );
 }
 
 // ─── ForwardRef page wrappers (required by react-pageflip) ──────
+
+// Page 0: Front cover (hard, shown alone by showCover)
+const PageCoverFront = forwardRef<
+  HTMLDivElement,
+  { book: Book; publicCount: number }
+>(({ book, publicCount }, ref) => (
+  <div ref={ref} data-density="hard" style={{ width: "100%", height: "100%" }}>
+    <BookCoverPageContent book={book} publicCount={publicCount} />
+  </div>
+));
+PageCoverFront.displayName = "PageCoverFront";
+
+// Page 1: Inside-front (hard, left side of first spread after cover opens)
+const PageInsideCover = forwardRef<HTMLDivElement, object>(
+  (_props, ref) => (
+    <div
+      ref={ref}
+      data-density="hard"
+      className="w-full h-full bg-[#fef9f0]"
+    />
+  )
+);
+PageInsideCover.displayName = "PageInsideCover";
+
+// Page 2: ToC (right side of first spread)
 const PageToC = forwardRef<
   HTMLDivElement,
   {
@@ -256,32 +346,13 @@ const PageToC = forwardRef<
     onJump: (i: number) => void;
     isOwner: boolean;
     density: "hard" | "soft";
-    onClose?: () => void;
   }
->(({ recipes, onJump, isOwner, density, onClose }, ref) => (
+>(({ recipes, onJump, isOwner, density }, ref) => (
   <div ref={ref} data-density={density}>
-    <ToCContent
-      recipes={recipes}
-      onJump={onJump}
-      isOwner={isOwner}
-      onClose={onClose}
-    />
+    <ToCContent recipes={recipes} onJump={onJump} isOwner={isOwner} />
   </div>
 ));
 PageToC.displayName = "PageToC";
-
-const PageBlank = forwardRef<HTMLDivElement, { density: "hard" | "soft" }>(
-  ({ density }, ref) => (
-    <div
-      ref={ref}
-      data-density={density}
-      className="w-full h-full bg-[#fef9f0] flex items-center justify-center"
-    >
-      <ChefHat className="w-20 h-20 text-amber-100/60" />
-    </div>
-  )
-);
-PageBlank.displayName = "PageBlank";
 
 const PageRecipeLeft = forwardRef<
   HTMLDivElement,
@@ -295,24 +366,37 @@ PageRecipeLeft.displayName = "PageRecipeLeft";
 
 const PageRecipeRight = forwardRef<
   HTMLDivElement,
-  {
-    recipe: Recipe;
-    pn: number;
-    density: "hard" | "soft";
-    isLast?: boolean;
-    onClose?: () => void;
-  }
->(({ recipe, pn, density, isLast, onClose }, ref) => (
+  { recipe: Recipe; pn: number; density: "hard" | "soft" }
+>(({ recipe, pn, density }, ref) => (
   <div ref={ref} data-density={density}>
-    <RecipeRightContent
-      recipe={recipe}
-      pn={pn}
-      isLast={isLast}
-      onClose={onClose}
-    />
+    <RecipeRightContent recipe={recipe} pn={pn} />
   </div>
 ));
 PageRecipeRight.displayName = "PageRecipeRight";
+
+// Last page: Back cover (hard, shown alone by showCover)
+const PageBackCover = forwardRef<
+  HTMLDivElement,
+  { coverColor: string; onClose?: () => void }
+>(({ coverColor, onClose }, ref) => (
+  <div
+    ref={ref}
+    data-density="hard"
+    className="w-full h-full flex flex-col items-center justify-center gap-4"
+    style={{ background: coverColor }}
+  >
+    {onClose && (
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="px-6 py-3 rounded-xl text-sm font-medium transition-all hover:scale-105"
+        style={{ background: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.92)" }}
+      >
+        ← กลับหน้าชั้นหนังสือ
+      </button>
+    )}
+  </div>
+));
+PageBackCover.displayName = "PageBackCover";
 
 // ─── Responsive page dimensions ──────────────────────────────────
 const BASE_W = 390;
@@ -358,69 +442,97 @@ export interface BookFlipHandle {
 }
 
 interface Props {
+  book: Book;
   recipes: Recipe[];
   isOwner: boolean;
   flipType: "hard" | "soft";
-  coverColor: string;
   onSpreadChange: (idx: number) => void;
   onClose?: () => void;
 }
 
+// Page numbering with showCover=true:
+//   Page 0  : Front cover (hard, alone)
+//   Page 1  : Inside-front cover (hard, left of first spread)
+//   Page 2  : ToC              (right of first spread)
+//   Page 3  : RecipeLeft[0]   (left of second spread)
+//   Page 4  : RecipeRight[0]  (right of second spread)
+//   ...
+//   Page 3+2*(n-1) : RecipeLeft[n-1]
+//   Page 4+2*(n-1) : RecipeRight[n-1]
+//   Page 3+2n : Back cover (hard, alone)
+// Total = 4 + 2n (always even)
+//
+// spreadIdx mapping:
+//   0       → cover (page 0)
+//   1       → inside+ToC spread
+//   2..n+1  → recipe spreads
+//   n+2     → back cover (page 3+2n)
+
 const BookFlip = forwardRef<BookFlipHandle, Props>(
-  ({ recipes, isOwner, flipType, coverColor, onSpreadChange, onClose }, ref) => {
+  ({ book, recipes, isOwner, flipType, onSpreadChange, onClose }, ref) => {
     const bookRef = useRef<any>(null);
     const { pageW, pageH, portrait, ready } = usePageDimensions();
+    const hasBeenOpenedRef = useRef(false);
 
     useImperativeHandle(ref, () => ({
       goToSpread(idx: number) {
-        bookRef.current?.pageFlip().flip(idx * 2);
+        // Page for spreadIdx k (k>=1): left page = 2k-1
+        if (idx === 0) bookRef.current?.pageFlip().flip(0);
+        else bookRef.current?.pageFlip().flip(idx * 2 - 1);
       },
     }));
 
     useEffect(() => {
-      onSpreadChange(0);
+      onSpreadChange(0); // start at cover
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleFlip = useCallback(
       (e: { data: number }) => {
-        onSpreadChange(Math.floor(e.data / 2));
+        const pageIdx = e.data;
+        if (pageIdx === 0) {
+          // Flipped back to cover
+          if (hasBeenOpenedRef.current) onClose?.();
+          onSpreadChange(0);
+          return;
+        }
+        hasBeenOpenedRef.current = true;
+        // spreadIdx = ceil(pageIdx / 2) for pages 1..last
+        onSpreadChange(Math.ceil(pageIdx / 2));
       },
-      [onSpreadChange]
+      [onSpreadChange, onClose]
     );
 
     function jumpToSpread(spreadIdx: number) {
-      bookRef.current?.pageFlip().flip(spreadIdx * 2);
+      if (spreadIdx === 0) bookRef.current?.pageFlip().flip(0);
+      else bookRef.current?.pageFlip().flip(spreadIdx * 2 - 1);
     }
 
     const d = flipType;
+    const coverColor = book.cover_color;
+    const publicCount = recipes.filter((r) => r.is_public).length;
 
     const pages: React.ReactElement[] = [
+      <PageCoverFront key="cover-front" book={book} publicCount={publicCount} />,
+      <PageInsideCover key="inside-cover" />,
       <PageToC
         key="toc"
         recipes={recipes}
         onJump={jumpToSpread}
         isOwner={isOwner}
         density={d}
-        onClose={onClose}
       />,
-      <PageBlank key="blank" density={d} />,
     ];
     recipes.forEach((r, i) => {
-      const isLast = i === recipes.length - 1;
       pages.push(
         <PageRecipeLeft key={`l${i}`} recipe={r} pn={i * 2 + 1} density={d} />
       );
       pages.push(
-        <PageRecipeRight
-          key={`r${i}`}
-          recipe={r}
-          pn={i * 2 + 2}
-          density={d}
-          isLast={isLast}
-          onClose={onClose}
-        />
+        <PageRecipeRight key={`r${i}`} recipe={r} pn={i * 2 + 2} density={d} />
       );
     });
+    pages.push(
+      <PageBackCover key="cover-back" coverColor={coverColor} onClose={onClose} />
+    );
 
     if (!ready) {
       return (
@@ -431,10 +543,8 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
       );
     }
 
-    // Border + spine colors derived from book cover color
     const borderColor = `${coverColor}70`;
     const spineGradient = `linear-gradient(to bottom, transparent, ${coverColor}55, transparent)`;
-
     const bookW = portrait ? pageW : pageW * 2;
 
     return (
@@ -442,7 +552,11 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
         className="flex items-center justify-center"
         style={{ minHeight: "calc(100dvh - 56px)" }}
       >
-        {/* Book wrapper: sets border, shadow, and spine overlay */}
+        {/*
+          Wrapper defines visual book size for border + spine.
+          NO overflow:hidden so flipping pages extend freely beyond
+          the border (matching the StPageFlip demo behaviour).
+        */}
         <div
           className="relative"
           style={{
@@ -452,7 +566,6 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
             borderRadius: "2px 8px 8px 2px",
             boxShadow:
               "0 24px 64px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.10)",
-            overflow: "hidden",
           }}
         >
           <HTMLFlipBook
@@ -470,7 +583,7 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
             flippingTime={800}
             usePortrait={portrait}
             drawShadow={true}
-            showCover={false}
+            showCover={true}
             maxShadowOpacity={0.45}
             showPageCorners={false}
             mobileScrollSupport={false}
@@ -485,7 +598,7 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
             {pages}
           </HTMLFlipBook>
 
-          {/* Center spine line (landscape only) */}
+          {/* Center spine line — landscape only */}
           {!portrait && (
             <div
               className="absolute top-0 bottom-0 pointer-events-none"

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import type { Recipe, Book } from "@/lib/types";
-import BookCover from "./BookCover";
 import BookFAB from "./BookFAB";
 import BookFlip, { type BookFlipHandle } from "./BookFlip";
 
@@ -12,7 +11,6 @@ function pg(n: number) {
   return String(n).padStart(2, "0");
 }
 
-// ─── Main BookReader ─────────────────────────────────────────────
 interface Props {
   book: Book;
   recipes: Recipe[];
@@ -22,10 +20,8 @@ interface Props {
 
 export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
   const router = useRouter();
-  const [phase, setPhase] = useState<"cover" | "opening" | "book">("cover");
   const [spreadIdx, setSpreadIdx] = useState(0);
   const [flipType, setFlipType] = useState<"hard" | "soft">("soft");
-  const openTimer = useRef<number | null>(null);
   const bookFlipRef = useRef<BookFlipHandle | null>(null);
 
   useEffect(() => {
@@ -33,23 +29,8 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
     if (v === "hard" || v === "soft") setFlipType(v);
   }, []);
 
-  useEffect(
-    () => () => {
-      if (openTimer.current) window.clearTimeout(openTimer.current);
-    },
-    []
-  );
-
-  function openBook() {
-    setPhase("opening");
-    openTimer.current = window.setTimeout(() => {
-      setPhase("book");
-      setSpreadIdx(0);
-    }, 760);
-  }
-
   function backToToC() {
-    bookFlipRef.current?.goToSpread(0);
+    bookFlipRef.current?.goToSpread(1);
   }
 
   function handleBack() {
@@ -57,8 +38,19 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
     else router.push("/");
   }
 
-  const totalSpreads = 1 + recipes.length;
-  const currentRecipe = spreadIdx > 0 ? recipes[spreadIdx - 1] : null;
+  // spreadIdx: 0=cover, 1=toc, 2..n+1=recipes, n+2=back cover
+  const totalSpreads = recipes.length + 3;
+  const currentRecipe =
+    spreadIdx >= 2 && spreadIdx <= recipes.length + 1
+      ? recipes[spreadIdx - 2]
+      : null;
+
+  const fabContext =
+    spreadIdx === 0 || spreadIdx >= recipes.length + 2
+      ? "cover"
+      : spreadIdx === 1
+      ? "toc"
+      : "recipe";
 
   return (
     <div className="relative w-full bg-stone-50" style={{ minHeight: "100dvh" }}>
@@ -75,127 +67,27 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
           {onClose ? "ปิดหนังสือ" : "กลับชั้นหนังสือ"}
         </button>
         <div className="text-xs text-stone-400 font-mono tabular-nums">
-          {phase !== "book"
-            ? "ปก"
-            : `${pg(spreadIdx + 1)} / ${pg(totalSpreads)}`}
+          {`${pg(spreadIdx + 1)} / ${pg(totalSpreads)}`}
         </div>
       </div>
 
-      {phase !== "book" ? (
-        <CoverPhase
-          book={book}
-          onOpen={openBook}
-          publicCount={recipes.filter((r) => r.is_public).length}
-          isOwner={isOwner}
-          opening={phase === "opening"}
-        />
-      ) : (
-        <BookFlip
-          ref={bookFlipRef}
-          recipes={recipes}
-          isOwner={isOwner}
-          flipType={flipType}
-          coverColor={book.cover_color}
-          onSpreadChange={setSpreadIdx}
-          onClose={onClose}
-        />
-      )}
+      <BookFlip
+        ref={bookFlipRef}
+        book={book}
+        recipes={recipes}
+        isOwner={isOwner}
+        flipType={flipType}
+        onSpreadChange={setSpreadIdx}
+        onClose={handleBack}
+      />
 
       <BookFAB
-        context={phase !== "book" ? "cover" : spreadIdx === 0 ? "toc" : "recipe"}
+        context={fabContext}
         book={book}
         recipe={currentRecipe}
         isOwner={isOwner}
         onBackToToC={backToToC}
       />
-    </div>
-  );
-}
-
-// ─── Cover phase ─────────────────────────────────────────────────
-const XL_W = 390;
-const XL_H = 540;
-
-function CoverPhase({
-  book,
-  onOpen,
-  publicCount,
-  isOwner,
-  opening,
-}: {
-  book: Book;
-  onOpen: () => void;
-  publicCount: number;
-  isOwner: boolean;
-  opening: boolean;
-}) {
-  const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    function recalc() {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const availH = vh * 0.84;
-      const availW = (vw - 80) * 0.88;
-      const s = Math.min(availH / XL_H, availW / XL_W);
-      setScale(Math.max(0.5, Math.min(s, 1.8)));
-    }
-    recalc();
-    window.addEventListener("resize", recalc);
-    return () => window.removeEventListener("resize", recalc);
-  }, []);
-
-  const scaledW = Math.round(XL_W * scale);
-  const scaledH = Math.round(XL_H * scale);
-
-  return (
-    <div
-      className="flex items-center justify-center px-4"
-      style={{ minHeight: "calc(100dvh - 4rem)" }}
-    >
-      {/*
-        Three-layer structure to avoid CSS transform conflict:
-          Layer 1: sets layout footprint to visual size after scale.
-          Layer 2: applies transform:scale — no animation.
-          Layer 3: cover-opening animation — no scale.
-      */}
-      <div style={{ width: scaledW, height: scaledH, position: "relative" }}>
-        {/* Layer 2 — scale only */}
-        <div
-          style={{
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            width: XL_W,
-            height: XL_H,
-            position: "absolute",
-            top: 0,
-            left: 0,
-          }}
-        >
-          {/* Layer 3 — animation only */}
-          <div className={opening ? "cover-opening" : ""}>
-            <div
-              onClick={opening ? undefined : onOpen}
-              className={`transition-transform duration-300 ${
-                opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
-              }`}
-            >
-              <BookCover book={book} size="xl" publicCount={publicCount} />
-            </div>
-          </div>
-        </div>
-
-        {!opening && (
-          <p
-            className="absolute left-0 right-0 text-center text-sm text-stone-400 anim-fade-in whitespace-nowrap"
-            style={{ top: scaledH + 20 }}
-          >
-            {isOwner
-              ? "คลิกที่หนังสือเพื่อเปิดอ่าน"
-              : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
