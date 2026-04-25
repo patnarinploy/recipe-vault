@@ -1,160 +1,18 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChefHat, Users, ArrowLeft, Globe } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Recipe, Book } from "@/lib/types";
 import BookCover from "./BookCover";
 import BookFAB from "./BookFAB";
+import BookFlip, { type BookFlipHandle } from "./BookFlip";
 
-function pg(n: number) { return String(n).padStart(2, "0"); }
-
-const CAT_EN: Record<string, string> = {
-  "อาหารไทย": "THAI FOOD", "อาหารจีน": "CHINESE", "อาหารญี่ปุ่น": "JAPANESE",
-  "อาหารตะวันตก": "WESTERN", "อาหารอิตาลี": "ITALIAN", "อาหารอินเดีย": "INDIAN",
-  "ของหวาน": "DESSERT", "เครื่องดื่ม": "DRINKS", "อื่นๆ": "OTHERS",
-};
-
-const FLIP_MS = 720;
-
-function PageTape({ left }: { left?: boolean }) {
-  return (
-    <div className="absolute top-4 z-10 pointer-events-none rounded-sm"
-      style={{
-        width: 52, height: 18,
-        [left ? "left" : "right"]: 20,
-        background: "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.7),rgba(212,184,150,.6))",
-        transform: `rotate(${left ? -9 : 9}deg)`,
-        boxShadow: "0 1px 3px rgba(0,0,0,.1)",
-      }}
-    />
-  );
+function pg(n: number) {
+  return String(n).padStart(2, "0");
 }
 
-function PageNumber({ n, right }: { n: number; right?: boolean }) {
-  return (
-    <p className={`mt-auto pt-4 text-[11px] text-[#b8a48a] tracking-widest ${right ? "text-right" : "text-left"}`}
-       style={{ fontFamily: "Georgia, serif" }}>
-      {pg(n)}
-    </p>
-  );
-}
-
-function PageShareBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold ml-2 align-middle">
-      <Globe className="w-2.5 h-2.5" /> แชร์แล้ว
-    </span>
-  );
-}
-
-// ─── ToC page ───────────────────────────────────────────────
-function ToCPage({ recipes, onJump, isOwner }: {
-  recipes: Recipe[]; onJump: (i: number) => void; isOwner: boolean;
-}) {
-  return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
-      <PageTape left />
-      <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">Table of Contents</p>
-      <h2 className="text-2xl md:text-3xl font-bold text-stone-700 mb-4 leading-tight">สารบัญความอร่อย</h2>
-      {recipes.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-stone-300">
-          <ChefHat className="w-14 h-14 mb-3" />
-          <p className="text-sm">{isOwner ? "ยังไม่มีสูตรในเล่มนี้" : "หนังสือเล่มนี้ยังไม่มีสูตรสาธารณะ"}</p>
-          {isOwner && <p className="text-xs mt-1">เริ่มเพิ่มสูตรแรกของคุณ</p>}
-        </div>
-      ) : (
-        <nav className="flex-1 space-y-1 overflow-y-auto">
-          {recipes.map((r, i) => (
-            <button
-              key={r.id}
-              onClick={() => onJump(i + 1)}
-              className="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-amber-50 transition-colors group text-left"
-            >
-              <span className="flex-1 text-sm text-stone-600 group-hover:text-stone-800 truncate">
-                {r.title}
-                {r.is_public && <PageShareBadge />}
-              </span>
-              <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
-              <span className="shrink-0 text-[11px] text-stone-400 group-hover:text-[#8a7354] font-mono">
-                หน้า {pg(i * 2 + 1)}
-              </span>
-            </button>
-          ))}
-        </nav>
-      )}
-    </div>
-  );
-}
-
-// ─── Recipe left page ───────────────────────────────────────
-function RecipeLeft({ recipe, pn }: { recipe: Recipe; pn: number }) {
-  const catEn = recipe.category ? (CAT_EN[recipe.category] ?? recipe.category.toUpperCase()) : null;
-  const meta = [catEn, recipe.cook_time_minutes ? `${recipe.cook_time_minutes} MINS` : null].filter(Boolean).join(" · ");
-  return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
-      <PageTape left />
-      {meta && <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">{meta}</p>}
-      <h2 className="text-2xl font-bold text-stone-800 leading-tight mb-3">
-        {recipe.title}
-        {recipe.is_public && <PageShareBadge />}
-      </h2>
-      <div className="h-px bg-[#e8d5b7] mb-5" />
-      <div className="relative w-full shrink-0 rounded-md overflow-hidden mb-5 bg-amber-50 border border-amber-100"
-        style={{ height: "clamp(140px, 26vh, 260px)" }}>
-        {recipe.image_url
-          ? <Image src={recipe.image_url} alt={recipe.title} fill className="object-cover" />
-          : <div className="flex h-full items-center justify-center text-stone-200 text-xs tracking-widest"
-              style={{ fontFamily: "Georgia,serif", fontStyle: "italic" }}>
-              [ ภาพประกอบ ]
-            </div>}
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
-        <div className="text-sm text-stone-600 leading-[1.9] whitespace-pre-line overflow-hidden">
-          {recipe.ingredients}
-        </div>
-      </div>
-      <PageNumber n={pn} />
-    </div>
-  );
-}
-
-// ─── Recipe right page ──────────────────────────────────────
-function RecipeRight({ recipe, pn }: { recipe: Recipe; pn: number }) {
-  return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
-      <PageTape />
-      {recipe.description && (
-        <p className="text-sm text-stone-500 italic mb-4 leading-relaxed"
-           style={{ fontFamily: "Georgia, serif" }}>
-          {recipe.description}
-        </p>
-      )}
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วิธีทำ:</p>
-      <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.95] whitespace-pre-line">
-        {recipe.instructions}
-      </div>
-      {recipe.servings && (
-        <div className="mt-3 pt-3 border-t border-[#e8d5b7] text-xs text-stone-400 flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5" />{recipe.servings} ที่
-        </div>
-      )}
-      <PageNumber n={pn} right />
-    </div>
-  );
-}
-
-function EmptyPage() {
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-[#fef9f0]">
-      <ChefHat className="w-24 h-24 text-amber-100/80" />
-    </div>
-  );
-}
-
-// ─── Main BookReader ───────────────────────────────────────
+// ─── Main BookReader ─────────────────────────────────────────────
 interface Props {
   book: Book;
   recipes: Recipe[];
@@ -166,88 +24,49 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
   const router = useRouter();
   const [phase, setPhase] = useState<"cover" | "opening" | "book">("cover");
   const [spreadIdx, setSpreadIdx] = useState(0);
-  const [flipping, setFlipping] = useState<"next" | "prev" | null>(null);
-  const flipTimer = useRef<number | null>(null);
+  const [flipType, setFlipType] = useState<"hard" | "soft">("soft");
+  const openTimer = useRef<number | null>(null);
+  const bookFlipRef = useRef<BookFlipHandle | null>(null);
 
-  const totalSpreads = 1 + recipes.length;
-  const publicCount = useMemo(() => recipes.filter((r) => r.is_public).length, [recipes]);
-
-  function renderLeft(idx: number) {
-    if (idx < 0 || idx >= totalSpreads) return <EmptyPage />;
-    if (idx === 0) return <ToCPage recipes={recipes} onJump={(i) => jumpTo(i)} isOwner={isOwner} />;
-    const r = recipes[idx - 1];
-    return <RecipeLeft recipe={r} pn={(idx - 1) * 2 + 1} />;
-  }
-
-  function renderRight(idx: number) {
-    if (idx < 0 || idx >= totalSpreads) return <EmptyPage />;
-    if (idx === 0) return <EmptyPage />;
-    const r = recipes[idx - 1];
-    return <RecipeRight recipe={r} pn={(idx - 1) * 2 + 2} />;
-  }
-
-  useEffect(() => () => {
-    if (flipTimer.current) window.clearTimeout(flipTimer.current);
+  useEffect(() => {
+    const v = localStorage.getItem("rv_page_flip_type");
+    if (v === "hard" || v === "soft") setFlipType(v);
   }, []);
 
-  function jumpTo(idx: number) {
-    if (flipping) return;
-    const clamped = Math.max(0, Math.min(idx, totalSpreads - 1));
-    if (clamped === spreadIdx) return;
-    // Multi-spread jumps skip animation; single-step uses flip
-    if (Math.abs(clamped - spreadIdx) > 1) {
-      setSpreadIdx(clamped);
-      return;
-    }
-    const dir: "next" | "prev" = clamped > spreadIdx ? "next" : "prev";
-    setFlipping(dir);
-    flipTimer.current = window.setTimeout(() => {
-      setSpreadIdx(clamped);
-      setFlipping(null);
-    }, FLIP_MS);
+  useEffect(
+    () => () => {
+      if (openTimer.current) window.clearTimeout(openTimer.current);
+    },
+    []
+  );
+
+  function openBook() {
+    setPhase("opening");
+    openTimer.current = window.setTimeout(() => {
+      setPhase("book");
+      setSpreadIdx(0);
+    }, 760);
   }
 
-  function next() {
-    if (phase === "cover") {
-      setPhase("opening");
-      flipTimer.current = window.setTimeout(() => {
-        setPhase("book");
-        setSpreadIdx(0);
-      }, 760);
-      return;
-    }
-    if (flipping || phase !== "book") return;
-    if (spreadIdx >= totalSpreads - 1) return;
-    setFlipping("next");
-    flipTimer.current = window.setTimeout(() => {
-      setSpreadIdx((i) => i + 1);
-      setFlipping(null);
-    }, FLIP_MS);
+  function backToToC() {
+    bookFlipRef.current?.goToSpread(0);
   }
-
-  function prev() {
-    if (flipping || phase !== "book") return;
-    if (spreadIdx === 0) { setPhase("cover"); return; }
-    setFlipping("prev");
-    flipTimer.current = window.setTimeout(() => {
-      setSpreadIdx((i) => i - 1);
-      setFlipping(null);
-    }, FLIP_MS);
-  }
-
-  function backToToC() { jumpTo(0); }
-
-  const currentRecipe = spreadIdx > 0 ? recipes[spreadIdx - 1] : null;
 
   function handleBack() {
     if (onClose) onClose();
     else router.push("/");
   }
 
+  const totalSpreads = 1 + recipes.length;
+  const currentRecipe = spreadIdx > 0 ? recipes[spreadIdx - 1] : null;
+
   return (
     <div className="relative w-full book-paper" style={{ minHeight: "100dvh" }}>
       {/* Top bar */}
-      <div className="sticky top-0 bg-stone-50/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between" style={{ zIndex: 50 }}>
+      <div
+        className="sticky top-0 bg-stone-50/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between"
+        style={{ zIndex: 50 }}
+      >
         <button
           onClick={handleBack}
           className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm"
@@ -256,115 +75,30 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
           {onClose ? "ปิดหนังสือ" : "กลับชั้นหนังสือ"}
         </button>
         <div className="text-xs text-stone-400 font-mono tabular-nums">
-          {phase === "cover" || phase === "opening" ? "ปก" : `${pg(spreadIdx + 1)} / ${pg(totalSpreads)}`}
+          {phase !== "book"
+            ? "ปก"
+            : `${pg(spreadIdx + 1)} / ${pg(totalSpreads)}`}
         </div>
       </div>
 
-      {phase === "cover" || phase === "opening" ? (
+      {phase !== "book" ? (
         <CoverPhase
           book={book}
-          onOpen={next}
-          publicCount={publicCount}
+          onOpen={openBook}
+          publicCount={recipes.filter((r) => r.is_public).length}
           isOwner={isOwner}
           opening={phase === "opening"}
         />
       ) : (
-        <div className="w-full flex items-center justify-center px-2 sm:px-6 py-6"
-             style={{ minHeight: "calc(100dvh - 4rem)" }}>
-          <div className="relative w-full max-w-6xl book-perspective">
-            {/* Book drop shadow */}
-            <div className="absolute -bottom-4 left-20 right-20 h-10 rounded-full opacity-25 pointer-events-none"
-              style={{ background: "#555", filter: "blur(24px)" }} />
-
-            {/* Spread — static pages */}
-            <div
-              className="relative flex rounded-sm border border-[#e0cdb4] overflow-hidden book-3d"
-              style={{
-                boxShadow: "0 18px 56px rgba(0,0,0,.14), inset 0 0 50px rgba(0,0,0,.025)",
-                height: "clamp(400px, 86vh, 940px)",
-              }}
-            >
-              {/* Left static page — fixed during "next" flip, swapped during "prev" flip */}
-              <div className="flex-1 relative">
-                {renderLeft(flipping === "prev" ? spreadIdx - 1 : spreadIdx)}
-              </div>
-              {/* Right static page — fixed during "prev" flip, swapped during "next" flip */}
-              <div className="flex-1 relative">
-                {renderRight(flipping === "next" ? spreadIdx + 1 : spreadIdx)}
-              </div>
-
-              {/* Flipping leaf (right page rotating to left) */}
-              {flipping === "next" && (
-                <div
-                  className="flip-leaf flip-next absolute top-0 bottom-0"
-                  style={{ left: "50%", width: "50%", zIndex: 30 }}
-                >
-                  <div className="flip-face">
-                    {renderRight(spreadIdx)}
-                    <div className="absolute inset-0 flip-curl-front" />
-                  </div>
-                  <div className="flip-face flip-face-back">
-                    {renderLeft(spreadIdx + 1)}
-                    <div className="absolute inset-0 flip-curl-back" />
-                  </div>
-                </div>
-              )}
-
-              {/* Flipping leaf (left page rotating to right) */}
-              {flipping === "prev" && (
-                <div
-                  className="flip-leaf flip-prev absolute top-0 bottom-0"
-                  style={{ left: 0, width: "50%", zIndex: 30 }}
-                >
-                  <div className="flip-face">
-                    {renderLeft(spreadIdx)}
-                    <div className="absolute inset-0 flip-curl-back" />
-                  </div>
-                  <div className="flip-face flip-face-back">
-                    {renderRight(spreadIdx - 1)}
-                    <div className="absolute inset-0 flip-curl-front" />
-                  </div>
-                </div>
-              )}
-
-              {/* Single center spine */}
-              <div
-                className="absolute top-0 bottom-0 left-1/2 w-px pointer-events-none z-20"
-                style={{
-                  background: "linear-gradient(to bottom, rgba(180,160,130,.15), rgba(180,160,130,.45), rgba(180,160,130,.15))",
-                  transform: "translateX(-0.5px)",
-                }}
-              />
-            </div>
-
-            {/* Edge click-zones (whole half of book, edge-dragging style) */}
-            <button
-              type="button"
-              onClick={prev}
-              disabled={!!flipping}
-              aria-label="หน้าก่อนหน้า"
-              className="absolute top-0 bottom-0 left-0 w-1/2 z-20 cursor-w-resize group disabled:cursor-wait"
-              style={{ background: "transparent" }}
-            >
-              <div className="absolute top-0 left-0 bottom-0 w-[10%] bg-gradient-to-r from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-3 text-stone-400 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1 text-3xl select-none">‹</div>
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              disabled={!!flipping || spreadIdx >= totalSpreads - 1}
-              aria-label="หน้าถัดไป"
-              className="absolute top-0 bottom-0 right-0 w-1/2 z-20 cursor-e-resize group disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ background: "transparent" }}
-            >
-              <div className="absolute top-0 right-0 bottom-0 w-[10%] bg-gradient-to-l from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              <div className="absolute top-1/2 -translate-y-1/2 right-3 text-stone-400 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:-translate-x-1 text-3xl select-none">›</div>
-            </button>
-          </div>
-        </div>
+        <BookFlip
+          ref={bookFlipRef}
+          recipes={recipes}
+          isOwner={isOwner}
+          flipType={flipType}
+          onSpreadChange={setSpreadIdx}
+        />
       )}
 
-      {/* FAB */}
       <BookFAB
         context={phase !== "book" ? "cover" : spreadIdx === 0 ? "toc" : "recipe"}
         book={book}
@@ -372,24 +106,33 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
         isOwner={isOwner}
         onBackToToC={backToToC}
       />
-
     </div>
   );
 }
 
-// ─── Cover phase — fully responsive via viewport-based scale ─
-function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
-  book: Book; onOpen: () => void; publicCount: number; isOwner: boolean; opening: boolean;
-}) {
-  const XL_W = 390, XL_H = 540;
+// ─── Cover phase ─────────────────────────────────────────────────
+const XL_W = 390;
+const XL_H = 540;
 
+function CoverPhase({
+  book,
+  onOpen,
+  publicCount,
+  isOwner,
+  opening,
+}: {
+  book: Book;
+  onOpen: () => void;
+  publicCount: number;
+  isOwner: boolean;
+  opening: boolean;
+}) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     function recalc() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      // Target: 84% of viewport height, constrained by width with generous padding buffer
       const availH = vh * 0.84;
       const availW = (vw - 80) * 0.88;
       const s = Math.min(availH / XL_H, availW / XL_W);
@@ -409,15 +152,13 @@ function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
       style={{ minHeight: "calc(100dvh - 4rem)" }}
     >
       {/*
-        Two-layer structure:
-          Layer 1 (outer): sets layout footprint to visual size after scale.
-                           Text hint is absolute inside here so it never shifts the book.
-          Layer 2 (scale): applies transform:scale — separate from animation class.
-          Layer 3 (anim):  cover-opening animation — only rotateY, does NOT touch scale.
+        Three-layer structure to avoid CSS transform conflict:
+          Layer 1: sets layout footprint to visual size after scale.
+          Layer 2: applies transform:scale — no animation.
+          Layer 3: cover-opening animation — no scale.
       */}
       <div style={{ width: scaledW, height: scaledH, position: "relative" }}>
-
-        {/* Layer 2 — scale only, never animated */}
+        {/* Layer 2 — scale only */}
         <div
           style={{
             transform: `scale(${scale})`,
@@ -429,25 +170,27 @@ function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
             left: 0,
           }}
         >
-          {/* Layer 3 — animation only, never has scale */}
+          {/* Layer 3 — animation only */}
           <div className={opening ? "cover-opening" : ""}>
             <div
               onClick={opening ? undefined : onOpen}
-              className={`transition-transform duration-300 ${opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"}`}
-              title="คลิกเพื่อเปิดหนังสือ"
+              className={`transition-transform duration-300 ${
+                opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
+              }`}
             >
               <BookCover book={book} size="xl" publicCount={publicCount} />
             </div>
           </div>
         </div>
 
-        {/* Hint text — absolute so it never shifts the book's centered position */}
         {!opening && (
           <p
             className="absolute left-0 right-0 text-center text-sm text-stone-400 anim-fade-in whitespace-nowrap"
             style={{ top: scaledH + 20 }}
           >
-            {isOwner ? "คลิกที่หนังสือเพื่อเปิดอ่าน" : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
+            {isOwner
+              ? "คลิกที่หนังสือเพื่อเปิดอ่าน"
+              : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
           </p>
         )}
       </div>

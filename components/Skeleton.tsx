@@ -31,33 +31,46 @@ export function SkeletonBookGrid({ count = 8 }: { count?: number }) {
   );
 }
 
-export function SkeletonBookReader() {
+// Book-cover-shaped shimmer shown while BookReaderModal loads data
+export function SkeletonBookCover() {
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 animate-pulse">
-      <div className="flex items-center justify-between mb-6">
-        <div className="skeleton h-4 w-32" />
-        <div className="skeleton h-4 w-20" />
-      </div>
-      <div className="flex rounded-sm border border-[#e0cdb4] overflow-hidden shadow-xl">
-        <div className="flex-1 bg-[#fef9f0] p-8 min-h-[520px] space-y-4">
-          <div className="skeleton h-3 w-24" />
-          <div className="skeleton h-8 w-56" />
-          <div className="space-y-2 pt-4">
-            <div className="skeleton h-4 w-full" />
-            <div className="skeleton h-4 w-5/6" />
-            <div className="skeleton h-4 w-3/4" />
-            <div className="skeleton h-4 w-4/5" />
+    <div
+      className="flex items-center justify-center px-4"
+      style={{ minHeight: "calc(100dvh - 4rem)" }}
+    >
+      <div
+        className="relative flex-shrink-0"
+        style={{ width: "min(390px, 88vw)" }}
+      >
+        {/* Book body */}
+        <div
+          className="skeleton-dark w-full"
+          style={{
+            aspectRatio: "390 / 540",
+            borderRadius: "2px 8px 8px 2px",
+          }}
+        >
+          {/* Spine strip */}
+          <div
+            className="absolute top-0 left-0 bottom-0"
+            style={{
+              width: "8.2%",
+              background: "rgba(0,0,0,.18)",
+              borderRadius: "2px 0 0 2px",
+            }}
+          />
+          {/* Faint horizontal shimmer lines to suggest content */}
+          <div className="absolute inset-x-[14%] top-[14%] flex flex-col gap-[6%]">
+            <div className="h-[5%] rounded skeleton" style={{ opacity: 0.35 }} />
+            <div className="h-[3%] w-4/5 rounded skeleton" style={{ opacity: 0.25 }} />
+            <div className="h-[3%] w-2/3 rounded skeleton" style={{ opacity: 0.25 }} />
           </div>
         </div>
-        <div className="flex-1 bg-[#fef9f0] p-8 min-h-[520px] space-y-4">
-          <div className="skeleton h-3 w-24" />
-          <div className="skeleton h-40 w-full rounded-md" />
-          <div className="space-y-2 pt-2">
-            <div className="skeleton h-4 w-full" />
-            <div className="skeleton h-4 w-5/6" />
-            <div className="skeleton h-4 w-3/4" />
-          </div>
-        </div>
+        {/* Drop shadow */}
+        <div
+          className="absolute -bottom-3 left-[10%] right-[5%] h-6 rounded-full pointer-events-none"
+          style={{ background: "#555", filter: "blur(12px)", opacity: 0.2 }}
+        />
       </div>
     </div>
   );
