@@ -47,30 +47,22 @@ export default function Modal({
   if (fullscreen) {
     return createPortal(
       <div
-        className="fixed inset-0 anim-fade-in"
+        className="fixed inset-0 anim-fade-in bg-stone-50 flex flex-col overflow-auto"
         style={{ zIndex: 9999 }}
         role="dialog"
         aria-modal="true"
       >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-stone-900/70 backdrop-blur-md"
-          onClick={onClose}
-        />
-        {/* Content — direct child of body via portal */}
-        <div className="absolute inset-0 flex flex-col overflow-auto">
-          {!hideChrome && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="fixed top-4 right-4 z-[100] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
-              aria-label="ปิด"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-          {children}
-        </div>
+        {!hideChrome && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="fixed top-4 right-4 z-[100] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
+            aria-label="ปิด"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+        {children}
       </div>,
       document.body
     );

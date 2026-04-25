@@ -61,10 +61,10 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
   const currentRecipe = spreadIdx > 0 ? recipes[spreadIdx - 1] : null;
 
   return (
-    <div className="relative w-full book-paper" style={{ minHeight: "100dvh" }}>
+    <div className="relative w-full bg-stone-50" style={{ minHeight: "100dvh" }}>
       {/* Top bar */}
       <div
-        className="sticky top-0 bg-stone-50/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between"
+        className="sticky top-0 bg-stone-50/90 backdrop-blur-sm border-b border-stone-100 px-4 sm:px-8 py-3 flex items-center justify-between"
         style={{ zIndex: 50 }}
       >
         <button
@@ -95,7 +95,9 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
           recipes={recipes}
           isOwner={isOwner}
           flipType={flipType}
+          coverColor={book.cover_color}
           onSpreadChange={setSpreadIdx}
+          onClose={onClose}
         />
       )}
 

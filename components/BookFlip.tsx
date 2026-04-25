@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { ChefHat, Globe, Users } from "lucide-react";
+import { ChefHat, ChevronLeft, Globe, Users } from "lucide-react";
 import type { Recipe } from "@/lib/types";
 
 function pg(n: number) {
@@ -66,15 +66,17 @@ function ShareBadge() {
   );
 }
 
-// ─── Page content (inner display components) ────────────────────
+// ─── Page content ────────────────────────────────────────────────
 function ToCContent({
   recipes,
   onJump,
   isOwner,
+  onClose,
 }: {
   recipes: Recipe[];
   onJump: (spreadIdx: number) => void;
   isOwner: boolean;
+  onClose?: () => void;
 }) {
   return (
     <div
@@ -82,12 +84,25 @@ function ToCContent({
       style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}
     >
       <PageTape left />
+
+      {/* Back to cover */}
+      {onClose && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="flex items-center gap-1 text-[10px] text-[#b8a48a] hover:text-[#8a7354] mb-3 w-fit transition-colors"
+        >
+          <ChevronLeft className="w-3 h-3" />
+          ปิดหนังสือ
+        </button>
+      )}
+
       <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">
         Table of Contents
       </p>
       <h2 className="text-2xl font-bold text-stone-700 mb-4 leading-tight">
         สารบัญความอร่อย
       </h2>
+
       {recipes.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-stone-300">
           <ChefHat className="w-14 h-14 mb-3" />
@@ -101,7 +116,7 @@ function ToCContent({
           {recipes.map((r, i) => (
             <button
               key={r.id}
-              onClick={() => onJump(i + 1)}
+              onClick={(e) => { e.stopPropagation(); onJump(i + 1); }}
               className="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-amber-50 transition-colors group text-left"
             >
               <span className="flex-1 text-sm text-stone-600 group-hover:text-stone-800 truncate">
@@ -180,7 +195,17 @@ function RecipeLeftContent({ recipe, pn }: { recipe: Recipe; pn: number }) {
   );
 }
 
-function RecipeRightContent({ recipe, pn }: { recipe: Recipe; pn: number }) {
+function RecipeRightContent({
+  recipe,
+  pn,
+  isLast,
+  onClose,
+}: {
+  recipe: Recipe;
+  pn: number;
+  isLast?: boolean;
+  onClose?: () => void;
+}) {
   return (
     <div
       className="w-full h-full flex flex-col bg-[#fef9f0] relative"
@@ -208,6 +233,17 @@ function RecipeRightContent({ recipe, pn }: { recipe: Recipe; pn: number }) {
         </div>
       )}
       <PageNum n={pn} right />
+
+      {/* Back-to-cover on last page */}
+      {isLast && onClose && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="mt-4 pt-3 border-t border-[#e8d5b7] w-full flex items-center justify-center gap-1.5 text-[11px] text-[#b8a48a] hover:text-[#8a7354] transition-colors"
+        >
+          <ChevronLeft className="w-3 h-3" />
+          กลับปกหนังสือ
+        </button>
+      )}
     </div>
   );
 }
@@ -220,10 +256,16 @@ const PageToC = forwardRef<
     onJump: (i: number) => void;
     isOwner: boolean;
     density: "hard" | "soft";
+    onClose?: () => void;
   }
->(({ recipes, onJump, isOwner, density }, ref) => (
+>(({ recipes, onJump, isOwner, density, onClose }, ref) => (
   <div ref={ref} data-density={density}>
-    <ToCContent recipes={recipes} onJump={onJump} isOwner={isOwner} />
+    <ToCContent
+      recipes={recipes}
+      onJump={onJump}
+      isOwner={isOwner}
+      onClose={onClose}
+    />
   </div>
 ));
 PageToC.displayName = "PageToC";
@@ -253,15 +295,26 @@ PageRecipeLeft.displayName = "PageRecipeLeft";
 
 const PageRecipeRight = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; pn: number; density: "hard" | "soft" }
->(({ recipe, pn, density }, ref) => (
+  {
+    recipe: Recipe;
+    pn: number;
+    density: "hard" | "soft";
+    isLast?: boolean;
+    onClose?: () => void;
+  }
+>(({ recipe, pn, density, isLast, onClose }, ref) => (
   <div ref={ref} data-density={density}>
-    <RecipeRightContent recipe={recipe} pn={pn} />
+    <RecipeRightContent
+      recipe={recipe}
+      pn={pn}
+      isLast={isLast}
+      onClose={onClose}
+    />
   </div>
 ));
 PageRecipeRight.displayName = "PageRecipeRight";
 
-// ─── Responsive page size ────────────────────────────────────────
+// ─── Responsive page dimensions ──────────────────────────────────
 const BASE_W = 390;
 const BASE_H = 540;
 
@@ -308,11 +361,13 @@ interface Props {
   recipes: Recipe[];
   isOwner: boolean;
   flipType: "hard" | "soft";
+  coverColor: string;
   onSpreadChange: (idx: number) => void;
+  onClose?: () => void;
 }
 
 const BookFlip = forwardRef<BookFlipHandle, Props>(
-  ({ recipes, isOwner, flipType, onSpreadChange }, ref) => {
+  ({ recipes, isOwner, flipType, coverColor, onSpreadChange, onClose }, ref) => {
     const bookRef = useRef<any>(null);
     const { pageW, pageH, portrait, ready } = usePageDimensions();
 
@@ -322,7 +377,6 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
       },
     }));
 
-    // Notify parent of initial spread on mount
     useEffect(() => {
       onSpreadChange(0);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -340,7 +394,6 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
 
     const d = flipType;
 
-    // Build flat page array
     const pages: React.ReactElement[] = [
       <PageToC
         key="toc"
@@ -348,15 +401,24 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
         onJump={jumpToSpread}
         isOwner={isOwner}
         density={d}
+        onClose={onClose}
       />,
       <PageBlank key="blank" density={d} />,
     ];
     recipes.forEach((r, i) => {
+      const isLast = i === recipes.length - 1;
       pages.push(
         <PageRecipeLeft key={`l${i}`} recipe={r} pn={i * 2 + 1} density={d} />
       );
       pages.push(
-        <PageRecipeRight key={`r${i}`} recipe={r} pn={i * 2 + 2} density={d} />
+        <PageRecipeRight
+          key={`r${i}`}
+          recipe={r}
+          pn={i * 2 + 2}
+          density={d}
+          isLast={isLast}
+          onClose={onClose}
+        />
       );
     });
 
@@ -369,43 +431,74 @@ const BookFlip = forwardRef<BookFlipHandle, Props>(
       );
     }
 
+    // Border + spine colors derived from book cover color
+    const borderColor = `${coverColor}70`;
+    const spineGradient = `linear-gradient(to bottom, transparent, ${coverColor}55, transparent)`;
+
+    const bookW = portrait ? pageW : pageW * 2;
+
     return (
       <div
         className="flex items-center justify-center"
         style={{ minHeight: "calc(100dvh - 56px)" }}
       >
-        <HTMLFlipBook
-          ref={bookRef}
-          width={pageW}
-          height={pageH}
-          minWidth={100}
-          maxWidth={800}
-          minHeight={100}
-          maxHeight={1100}
-          size="fixed"
-          startPage={0}
-          startZIndex={20}
-          autoSize={false}
-          flippingTime={800}
-          usePortrait={portrait}
-          drawShadow={true}
-          showCover={false}
-          maxShadowOpacity={0.45}
-          showPageCorners={false}
-          mobileScrollSupport={false}
-          clickEventForward={true}
-          useMouseEvents={true}
-          swipeDistance={30}
-          disableFlipByClick={false}
-          onFlip={handleFlip}
-          className=""
+        {/* Book wrapper: sets border, shadow, and spine overlay */}
+        <div
+          className="relative"
           style={{
+            width: bookW,
+            height: pageH,
+            border: `2px solid ${borderColor}`,
+            borderRadius: "2px 8px 8px 2px",
             boxShadow:
-              "0 20px 60px rgba(0,0,0,.16), 0 4px 20px rgba(0,0,0,.08)",
+              "0 24px 64px rgba(0,0,0,.18), 0 6px 24px rgba(0,0,0,.10)",
+            overflow: "hidden",
           }}
         >
-          {pages}
-        </HTMLFlipBook>
+          <HTMLFlipBook
+            ref={bookRef}
+            width={pageW}
+            height={pageH}
+            minWidth={100}
+            maxWidth={800}
+            minHeight={100}
+            maxHeight={1100}
+            size="fixed"
+            startPage={0}
+            startZIndex={20}
+            autoSize={false}
+            flippingTime={800}
+            usePortrait={portrait}
+            drawShadow={true}
+            showCover={false}
+            maxShadowOpacity={0.45}
+            showPageCorners={false}
+            mobileScrollSupport={false}
+            clickEventForward={true}
+            useMouseEvents={true}
+            swipeDistance={30}
+            disableFlipByClick={false}
+            onFlip={handleFlip}
+            className=""
+            style={{}}
+          >
+            {pages}
+          </HTMLFlipBook>
+
+          {/* Center spine line (landscape only) */}
+          {!portrait && (
+            <div
+              className="absolute top-0 bottom-0 pointer-events-none"
+              style={{
+                left: "50%",
+                width: 1,
+                background: spineGradient,
+                transform: "translateX(-0.5px)",
+                zIndex: 60,
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   }
