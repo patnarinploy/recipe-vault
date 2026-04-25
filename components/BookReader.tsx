@@ -54,10 +54,10 @@ function ToCPage({ recipes, onJump, isOwner }: {
   recipes: Recipe[]; onJump: (i: number) => void; isOwner: boolean;
 }) {
   return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] p-6 md:p-10 relative">
+    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
       <PageTape left />
       <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2">Table of Contents</p>
-      <h2 className="text-3xl font-bold text-stone-700 mb-6 leading-tight">สารบัญความอร่อย</h2>
+      <h2 className="text-2xl md:text-3xl font-bold text-stone-700 mb-4 leading-tight">สารบัญความอร่อย</h2>
       {recipes.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-stone-300">
           <ChefHat className="w-14 h-14 mb-3" />
@@ -93,7 +93,7 @@ function RecipeLeft({ recipe, pn }: { recipe: Recipe; pn: number }) {
   const catEn = recipe.category ? (CAT_EN[recipe.category] ?? recipe.category.toUpperCase()) : null;
   const meta = [catEn, recipe.cook_time_minutes ? `${recipe.cook_time_minutes} MINS` : null].filter(Boolean).join(" · ");
   return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] p-6 md:p-10 relative">
+    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
       <PageTape left />
       {meta && <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">{meta}</p>}
       <h2 className="text-2xl font-bold text-stone-800 leading-tight mb-3">
@@ -124,7 +124,7 @@ function RecipeLeft({ recipe, pn }: { recipe: Recipe; pn: number }) {
 // ─── Recipe right page ──────────────────────────────────────
 function RecipeRight({ recipe, pn }: { recipe: Recipe; pn: number }) {
   return (
-    <div className="w-full h-full flex flex-col bg-[#fef9f0] p-6 md:p-10 relative">
+    <div className="w-full h-full flex flex-col bg-[#fef9f0] relative" style={{ padding: "clamp(1.25rem, 2.5vw, 2.5rem)" }}>
       <PageTape />
       {recipe.description && (
         <p className="text-sm text-stone-500 italic mb-4 leading-relaxed"
@@ -281,8 +281,7 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
               className="relative flex rounded-sm border border-[#e0cdb4] overflow-hidden book-3d"
               style={{
                 boxShadow: "0 18px 56px rgba(0,0,0,.14), inset 0 0 50px rgba(0,0,0,.025)",
-                height: "min(82vh, 780px)",
-                minHeight: "520px",
+                height: "clamp(380px, 80vh, 820px)",
               }}
             >
               {/* Left static page — fixed during "next" flip, swapped during "prev" flip */}
@@ -378,34 +377,63 @@ export default function BookReader({ book, recipes, isOwner, onClose }: Props) {
   );
 }
 
-// ─── Cover phase — click to open (with 3D flip animation) ───
+// ─── Cover phase — fully responsive via viewport-based scale ─
 function CoverPhase({ book, onOpen, publicCount, isOwner, opening }: {
   book: Book; onOpen: () => void; publicCount: number; isOwner: boolean; opening: boolean;
 }) {
+  // XL cover dimensions (the "master" size we scale from)
+  const XL_W = 390, XL_H = 540;
+
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    function recalc() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      // Target cover height: 72% of viewport, constrained by available width (minus padding)
+      const availH = vh * 0.72;
+      const availW = (vw - 64) * 0.90; // horizontal padding buffer
+      const s = Math.min(availH / XL_H, availW / XL_W);
+      setScale(Math.max(0.5, Math.min(s, 1.5))); // clamp: never smaller than 50%, never larger than 150%
+    }
+    recalc();
+    window.addEventListener("resize", recalc);
+    return () => window.removeEventListener("resize", recalc);
+  }, []);
+
+  const scaledW = Math.round(XL_W * scale);
+  const scaledH = Math.round(XL_H * scale);
+
   return (
     <div
       className="flex flex-col items-center justify-center px-4 anim-fade-up"
       style={{ minHeight: "calc(100dvh - 8rem)" }}
     >
-      <div className="book-perspective">
-        <div className={`${opening ? "cover-opening" : ""}`}>
+      {/* Outer box matches visual size after scale — centers properly */}
+      <div style={{ width: scaledW, height: scaledH, position: "relative" }}>
+        <div
+          className={opening ? "cover-opening" : ""}
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            width: XL_W,
+            height: XL_H,
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        >
           <div
             onClick={opening ? undefined : onOpen}
             className={`transition-transform duration-300 ${opening ? "" : "cursor-pointer hover:scale-[1.03] active:scale-[0.98]"}`}
             title="คลิกเพื่อเปิดหนังสือ"
           >
-            {/* Responsive sizing: lg on small screens, xl on md+ */}
-            <div className="hidden md:block">
-              <BookCover book={book} size="xl" publicCount={publicCount} />
-            </div>
-            <div className="md:hidden">
-              <BookCover book={book} size="lg" publicCount={publicCount} />
-            </div>
+            <BookCover book={book} size="xl" publicCount={publicCount} />
           </div>
         </div>
       </div>
       {!opening && (
-        <p className="mt-8 text-sm text-stone-400 anim-fade-in">
+        <p className="mt-6 text-sm text-stone-400 anim-fade-in">
           {isOwner ? "คลิกที่หนังสือเพื่อเปิดอ่าน" : "คลิกที่หนังสือเพื่อเปิดอ่าน · โหมดดูเท่านั้น"}
         </p>
       )}
