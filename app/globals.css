@@ -5,10 +5,16 @@
 @layer base {
   :root {
     --font-sarabun: "Sarabun", sans-serif;
+    --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Helvetica Neue", Arial, sans-serif;
   }
   body {
     @apply antialiased;
   }
+}
+
+.font-apple {
+  font-family: var(--font-apple);
 }
 
 /* ─── Page / component animations ─────────────────────────── */

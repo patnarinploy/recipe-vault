@@ -31,6 +31,65 @@ export function SkeletonBookGrid({ count = 8 }: { count?: number }) {
   );
 }
 
+// Open-book shimmer for V2 modal loading state
+export function SkeletonOpenBook() {
+  return (
+    <div className="flex items-center justify-center w-full" style={{ minHeight: "100vh" }}>
+      <div className="flex flex-col items-center gap-4">
+        {/* Open book: two pages on desktop, one on mobile */}
+        <div className="flex items-stretch gap-0">
+          {/* Left page — hidden on mobile */}
+          <div
+            className="hidden sm:block skeleton"
+            style={{
+              width: "min(340px, 40vw)",
+              aspectRatio: "390 / 540",
+              borderRadius: "6px 0 0 6px",
+              opacity: 0.7,
+            }}
+          />
+          {/* Spine */}
+          <div
+            className="hidden sm:block"
+            style={{ width: 3, background: "rgba(120,113,108,0.18)" }}
+          />
+          {/* Right page */}
+          <div
+            className="skeleton"
+            style={{
+              width: "min(340px, 82vw)",
+              aspectRatio: "390 / 540",
+              borderRadius: "0 6px 6px 0",
+            }}
+          >
+            {/* Content lines */}
+            <div className="absolute inset-x-[10%] top-[12%] flex flex-col gap-[5%]">
+              <div className="h-[4%] w-3/5 rounded skeleton" style={{ opacity: 0.5 }} />
+              <div className="h-[3%] w-4/5 rounded skeleton" style={{ opacity: 0.35 }} />
+              <div className="h-[3%] w-2/3 rounded skeleton" style={{ opacity: 0.35 }} />
+              <div className="mt-[4%] h-[22%] rounded-md skeleton" style={{ opacity: 0.4 }} />
+              <div className="h-[3%] w-1/2 rounded skeleton" style={{ opacity: 0.3 }} />
+              <div className="h-[3%] w-3/4 rounded skeleton" style={{ opacity: 0.3 }} />
+              <div className="h-[3%] w-2/3 rounded skeleton" style={{ opacity: 0.3 }} />
+            </div>
+          </div>
+        </div>
+        {/* Shadow */}
+        <div
+          style={{
+            width: "min(680px, 84vw)",
+            height: 12,
+            background: "#444",
+            filter: "blur(14px)",
+            opacity: 0.12,
+            borderRadius: "50%",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // Book-cover-shaped shimmer shown while BookReaderModal loads data
 export function SkeletonBookCover() {
   return (
