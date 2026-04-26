@@ -44,9 +44,8 @@ const FAKE_RECIPES = [
 // ─── Page sizing ─────────────────────────────────────────────────
 const BASE_W = 390;
 const BASE_H = 540;
-// Fixed px headroom above & below book so flipping page corner tips
-// never hit the viewport edge (the modal centers the book)
-const CORNER_PAD = 40;
+// Minimal headroom so flipping page corner tips don't clip the viewport edge.
+const CORNER_PAD = 20;
 
 function usePageDimensions() {
   const [dims, setDims] = useState({
@@ -62,8 +61,8 @@ function usePageDimensions() {
       const vh = window.innerHeight;
       const portrait = vw < 640;
       const availH = vh - CORNER_PAD * 2;
-      const availW = portrait ? vw - 32 : (vw - 32) / 2;
-      const scale = Math.max(0.3, Math.min(availH / BASE_H, availW / BASE_W, 1.6));
+      const availW = portrait ? vw - 16 : (vw - 16) / 2;
+      const scale = Math.max(0.3, Math.min(availH / BASE_H, availW / BASE_W, 2.0));
       setDims({
         pageW: Math.round(BASE_W * scale),
         pageH: Math.round(BASE_H * scale),
@@ -89,11 +88,9 @@ function usePageDimensions() {
 }
 
 // ─── Shared style tokens ─────────────────────────────────────────
-// Each page's inner div carries its own border via inset shadow so the edge
-// travels with the page during flip.
-const PAGE_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.10)";
+// Per-page inset shadow travels with the page during flip (unlike a container border).
+const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
-const BOOK_SHADOW = "0 24px 64px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.10)";
 
 // ─── Page helpers ────────────────────────────────────────────────
 function Tape({ right }: { right?: boolean }) {
@@ -308,25 +305,12 @@ export default function BookReaderV2() {
   const bookRef = useRef<any>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
 
-  // 'cover'     → only right half visible (front cover alone on right)
-  // 'backCover' → only left half visible (back cover alone on left)
-  // 'spread'    → full two-page spread
-  const [shadowMode, setShadowMode] = useState<"cover" | "spread" | "backCover">("cover");
-
-  // Track the last-settled page so handleFlip can distinguish flip directions.
-  // Lives in a ref (not state) so reads inside event handlers are always fresh.
-  const currentPageRef = useRef(0);
-
-  // When HTMLFlipBook remounts after a resize it resets to page 0 — sync both.
-  const flipKey = `${pageW}x${pageH}`;
-  useEffect(() => {
-    setShadowMode("cover");
-    currentPageRef.current = 0;
-  }, [flipKey]);
-
   if (!ready) return null;
 
-  const bookW = portrait ? pageW : pageW * 2;
+  const bookW  = portrait ? pageW : pageW * 2;
+  // key forces HTMLFlipBook to remount on resize — it ignores width/height prop
+  // changes after initial mount when size="fixed".
+  const flipKey = `${pageW}x${pageH}`;
 
   const pages: React.ReactElement[] = [
     <PageCoverFront key="cf" />,
@@ -339,115 +323,17 @@ export default function BookReaderV2() {
   });
   pages.push(<PageBackCover key="cb" />);
 
-  const totalPages = pages.length;
-
-  // ── Shadow removal strategy ──────────────────────────────────────
-  //
-  //  Opening (cover → spread):
-  //    Shadow MUST appear at animation END ("read") only — the empty left side
-  //    should not flash a shadow before the inside-cover page visually arrives.
-  //
-  //  Closing (spread → cover):
-  //    Shadow MUST disappear at animation START — it should lift away with the page.
-  //
-  //  Problem: StPageFlip's e.data in onFlip is ambiguous — it could be either the
-  //  DESTINATION page (0 = cover) or the PAGE BEING FLIPPED (1 = InsideCover).
-  //  We handle both interpretations simultaneously using currentPageRef:
-  //
-  //  Interpretation A  e.data = destination page
-  //    → page === 0  means "going to cover"  → switch immediately ✓
-  //    → page === 1  means "going to spread" → do nothing (wait for "read")
-  //
-  //  Interpretation B  e.data = page being flipped
-  //    → page === 1 while currentPageRef.current === 1 means InsideCover is flipping
-  //      back from spread-1. This combination is IMPOSSIBLE in interpretation A
-  //      (you cannot flip to the same page you are already on), so it is exclusively
-  //      the "closing the book" scenario → switch immediately ✓
-  //
-  //  onChangeState("read") fires unconditionally at animation end and is the
-  //  definitive correction for all cases, including spread arrivals.
-
-  function handleFlip(e: any) {
-    const page = e.data as number;
-    if (portrait) return;
-
-    // Interpretation A: e.data = destination page
-    if (page === 0)               { setShadowMode("cover");     return; }
-    if (page === totalPages - 1)  { setShadowMode("backCover"); return; }
-
-    // Interpretation B: e.data = page being flipped
-    // InsideCover (1) can only be the flipped page when closing from spread-1.
-    // (If e.data were the destination, page === currentPage is impossible.)
-    if (page === 1 && currentPageRef.current === 1)
-      { setShadowMode("cover"); return; }
-    // Recipe3-right (totalPages-2) can only be the flipped page when going
-    // forward from the last content spread to the back cover.
-    if (page === totalPages - 2 && currentPageRef.current === totalPages - 3)
-      { setShadowMode("backCover"); return; }
-  }
-
-  function handleChangeState(e: any) {
-    if (e.data !== "read") return;
-    const pf  = bookRef.current?.pageFlip?.();
-    const page = pf?.getCurrentPageIndex?.() ?? -1;
-    if (page < 0) return;
-
-    // Definitive state after animation completes.
-    currentPageRef.current = page;
-    if (!portrait && page === 0)              setShadowMode("cover");
-    else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
-    else                                      setShadowMode("spread");
-  }
-
-  const coverOnly = !portrait && shadowMode === "cover";
-  const backCoverOnly = !portrait && shadowMode === "backCover";
-
   return (
-    /*
-      No background: pages fill their own halves, empty half stays transparent.
-      No overflow:hidden: pages extend past the container during flip corners.
-      Shadow is on an absolutely-positioned inner div so it covers only the
-      side(s) that have a visible page — no ghost shadow on the empty half.
-    */
-    <div
-      className="font-apple relative"
-      style={{ width: bookW, height: pageH }}
-    >
-      {/* Shadow layer — tracks which side(s) have a visible page */}
-      {coverOnly ? (
-        // Front cover alone on right
-        <div
-          className="absolute inset-y-0 right-0 pointer-events-none"
-          style={{ width: pageW, zIndex: 0, boxShadow: BOOK_SHADOW }}
-        />
-      ) : backCoverOnly ? (
-        // Back cover alone on left
-        <div
-          className="absolute inset-y-0 left-0 pointer-events-none"
-          style={{ width: pageW, zIndex: 0, boxShadow: BOOK_SHADOW }}
-        />
-      ) : (
-        // Two-page spread (or portrait) — full width
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ zIndex: 0, boxShadow: BOOK_SHADOW }}
-        />
-      )}
-
-      {/*
-        key={flipKey} forces HTMLFlipBook to fully remount when dimensions
-        change after a resize. react-pageflip ignores width/height prop
-        updates after the initial mount (size="fixed" mode).
-      */}
+    <div className="font-apple" style={{ width: bookW, height: pageH }}>
       <HTMLFlipBook
         key={flipKey}
         ref={bookRef}
         width={pageW}
         height={pageH}
         minWidth={100}
-        maxWidth={800}
+        maxWidth={900}
         minHeight={100}
-        maxHeight={1100}
+        maxHeight={1300}
         size="fixed"
         startPage={0}
         startZIndex={20}
@@ -465,8 +351,6 @@ export default function BookReaderV2() {
         disableFlipByClick={false}
         className=""
         style={{}}
-        onFlip={handleFlip}
-        onChangeState={handleChangeState}
       >
         {pages}
       </HTMLFlipBook>
