@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main className={user ? "max-w-6xl mx-auto px-4 sm:px-6 py-10" : ""}>
           {children}
         </main>
-        <Toaster position="top-right" toastOptions={{ style: { fontFamily: "Sarabun, sans-serif", fontSize: "14px" } }} />
+        <Toaster position="top-right" toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }} />
       </body>
     </html>
   );

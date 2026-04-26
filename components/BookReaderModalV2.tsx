@@ -52,9 +52,7 @@ export default function BookReaderModalV2({ open, onClose }: Props) {
       className="fixed inset-0 flex items-center justify-center overflow-hidden"
       style={{
         zIndex: 9999,
-        background: "rgba(255,255,255,0.6)",
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
+        background: "rgba(0,0,0,0.5)",
       }}
       role="dialog"
       aria-modal="true"

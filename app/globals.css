@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --font-sarabun: "Sarabun", sans-serif;
+    --font-sarabun: "Thonburi", "Sarabun", sans-serif;
     --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
       "Thonburi", "Helvetica Neue", Arial, sans-serif;
   }

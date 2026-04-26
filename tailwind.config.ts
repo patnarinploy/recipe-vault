@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sarabun)", "Sarabun", "system-ui", "sans-serif"],
+        sans: ["var(--font-sarabun)", "Thonburi", "Sarabun", "system-ui", "sans-serif"],
       },
     },
   },
