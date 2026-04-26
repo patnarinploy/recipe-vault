@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChefHat, Library as LibraryIcon } from "lucide-react";
 import { getSession } from "@/lib/session";
 import UserMenu from "./UserMenu";
-import BookV2Trigger from "./BookV2Trigger";
 
 export default async function Navbar() {
   const user = await getSession();
@@ -29,7 +28,6 @@ export default async function Navbar() {
               <LibraryIcon className="w-4 h-4" />
               <span>ชั้นหนังสือ</span>
             </Link>
-            <BookV2Trigger />
             <UserMenu user={user} />
           </div>
         )}

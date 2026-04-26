@@ -5,7 +5,7 @@ import { Plus, BookOpen } from "lucide-react";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
-import BookReaderModal from "./BookReaderModal";
+import BookReaderModalV2 from "./BookReaderModalV2";
 import type { Book } from "@/lib/types";
 
 interface BookWithCounts extends Book {
@@ -137,8 +137,8 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
       </Modal>
 
       {/* Book reader modal */}
-      <BookReaderModal
-        bookId={openBookId}
+      <BookReaderModalV2
+        open={openBookId !== null}
         onClose={() => setOpenBookId(null)}
       />
     </div>
