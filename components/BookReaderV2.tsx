@@ -311,19 +311,13 @@ export default function BookReaderV2() {
   // 'cover'     → only right half visible (front cover alone on right)
   // 'backCover' → only left half visible (back cover alone on left)
   // 'spread'    → full two-page spread
-  // Starts at 'cover' because page 0 (front cover) is the first thing shown.
   const [shadowMode, setShadowMode] = useState<"cover" | "spread" | "backCover">("cover");
-  const shadowTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // When HTMLFlipBook remounts after a resize it resets to page 0 — sync shadow.
   const flipKey = `${pageW}x${pageH}`;
   useEffect(() => {
     setShadowMode("cover");
-    clearTimeout(shadowTimer.current);
   }, [flipKey]);
-
-  // Cancel any pending timer when the modal unmounts.
-  useEffect(() => () => clearTimeout(shadowTimer.current), []);
 
   if (!ready) return null;
 
@@ -342,17 +336,18 @@ export default function BookReaderV2() {
 
   const totalPages = pages.length;
 
-  // onFlip fires at the START of the flip animation.
-  // When arriving at a spread: switch shadow immediately (left page becomes visible).
-  // When arriving at cover/backCover: delay until after the 800 ms animation so
-  // the shadow doesn't snap to half-width while the opposite page is still animating.
-  function handleFlip(e: any) {
-    const page = e.data as number;
-    clearTimeout(shadowTimer.current);
+  // Only update shadow once the flip animation has fully settled ("read" state).
+  // Using onFlip (fires at animation START) caused the shadow to snap to
+  // half-width while the opposite page was still animating — visible flash.
+  // onChangeState("read") fires after the 800 ms animation, so the book is
+  // already in its final position before we change the shadow.
+  function handleChangeState(e: any) {
+    if (e.data !== "read") return;
+    const page = bookRef.current?.pageFlip?.()?.getCurrentPageIndex?.() ?? 0;
     if (!portrait && page === 0) {
-      shadowTimer.current = setTimeout(() => setShadowMode("cover"), 900);
+      setShadowMode("cover");
     } else if (!portrait && page === totalPages - 1) {
-      shadowTimer.current = setTimeout(() => setShadowMode("backCover"), 900);
+      setShadowMode("backCover");
     } else {
       setShadowMode("spread");
     }
@@ -386,7 +381,7 @@ export default function BookReaderV2() {
           style={{ width: pageW, zIndex: 0, boxShadow: BOOK_SHADOW }}
         />
       ) : (
-        // Two-page spread — full width
+        // Two-page spread (or portrait) — full width
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ zIndex: 0, boxShadow: BOOK_SHADOW }}
@@ -417,14 +412,14 @@ export default function BookReaderV2() {
         showCover={true}
         maxShadowOpacity={0.45}
         showPageCorners={false}
-        mobileScrollSupport={false}
-        clickEventForward={true}
+        mobileScrollSupport={true}
+        clickEventForward={false}
         useMouseEvents={true}
         swipeDistance={10}
         disableFlipByClick={false}
         className=""
         style={{}}
-        onFlip={handleFlip}
+        onChangeState={handleChangeState}
       >
         {pages}
       </HTMLFlipBook>
