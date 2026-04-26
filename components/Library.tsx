@@ -31,7 +31,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <p className="text-[11px] tracking-[0.35em] text-stone-400 uppercase mb-1">Recipe Vault</p>
+          <p className="text-[11px] tracking-[0.35em] text-stone-400 uppercase mb-3">Recipe Vault</p>
           <h1 className="text-3xl font-bold text-stone-800">
             {tab === "mine" ? `ชั้นหนังสือของ ${username}` : "สูตรสาธารณะ"}
           </h1>

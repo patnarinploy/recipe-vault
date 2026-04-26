@@ -178,7 +178,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
           <div className="w-7 h-px bg-white/20" />
           <h2
             className="font-bold leading-tight break-words w-full"
-            style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display', Georgia, serif" }}
+            style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display', 'Thonburi', Georgia, serif" }}
           >
             สูตรอร่อย
           </h2>
@@ -212,7 +212,7 @@ const PageToC = forwardRef<HTMLDivElement, object>((_p, ref) => (
       </p>
       <h2
         className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        style={{ fontFamily: "'Playfair Display', 'Thonburi', Georgia, serif" }}
       >
         สารบัญ
       </h2>
