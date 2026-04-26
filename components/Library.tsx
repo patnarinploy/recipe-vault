@@ -22,7 +22,7 @@ interface Props {
 export default function Library({ myBooks, publicBooks, username }: Props) {
   const [tab, setTab] = useState<"mine" | "public">("mine");
   const [newBookOpen, setNewBookOpen] = useState(false);
-  const [openBookId, setOpenBookId] = useState<string | null>(null);
+  const [openBook, setOpenBook] = useState<{ id: string; isOwner: boolean } | null>(null);
 
   const books = tab === "mine" ? myBooks : publicBooks;
 
@@ -92,7 +92,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
                 book={book}
                 size="sm"
                 publicCount={book.public_count}
-                onClick={() => setOpenBookId(book.id)}
+                onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
               />
               <p className="mt-4 text-sm font-medium text-stone-700 text-center line-clamp-1 max-w-[160px]">
                 {book.title}
@@ -131,15 +131,16 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
       >
         <BookCoverEditor
           inModal
-          onSuccess={(id) => { setNewBookOpen(false); setOpenBookId(id); }}
+          onSuccess={(id) => { setNewBookOpen(false); setOpenBook({ id, isOwner: true }); }}
           onCancel={() => setNewBookOpen(false)}
         />
       </Modal>
 
       {/* Book reader modal */}
       <BookReaderModalV2
-        open={openBookId !== null}
-        onClose={() => setOpenBookId(null)}
+        bookId={openBook?.id ?? null}
+        isOwner={openBook?.isOwner ?? false}
+        onClose={() => setOpenBook(null)}
       />
     </div>
   );

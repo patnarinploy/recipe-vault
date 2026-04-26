@@ -12,6 +12,7 @@ export type Recipe = {
   servings: number | null;
   is_public: boolean;
   created_at: string;
+  sort_order: number | null;
 };
 
 export type Book = {

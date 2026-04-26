@@ -102,6 +102,33 @@ export async function deleteRecipe(
   return { success: true };
 }
 
+export async function updateRecipeOrder(
+  bookId: string,
+  orderedIds: string[]
+): Promise<{ success: true } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const supabase = await createClient();
+  const { data: book } = await supabase
+    .from("books")
+    .select("user_id")
+    .eq("id", bookId)
+    .single<{ user_id: string }>();
+
+  if (!book || book.user_id !== user.id) return { error: "ไม่มีสิทธิ์" };
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    await supabase
+      .from("recipes")
+      .update({ sort_order: i + 1 })
+      .eq("id", orderedIds[i])
+      .eq("book_id", bookId);
+  }
+
+  return { success: true };
+}
+
 export async function togglePublic(
   id: string,
   isPublic: boolean
