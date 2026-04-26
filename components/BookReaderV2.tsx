@@ -307,7 +307,23 @@ PageBackCover.displayName = "PageBackCover";
 export default function BookReaderV2() {
   const bookRef = useRef<any>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
-  const [currentPage, setCurrentPage] = useState(0);
+
+  // 'cover'     → only right half visible (front cover alone on right)
+  // 'backCover' → only left half visible (back cover alone on left)
+  // 'spread'    → full two-page spread
+  // Starts at 'cover' because page 0 (front cover) is the first thing shown.
+  const [shadowMode, setShadowMode] = useState<"cover" | "spread" | "backCover">("cover");
+  const shadowTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // When HTMLFlipBook remounts after a resize it resets to page 0 — sync shadow.
+  const flipKey = `${pageW}x${pageH}`;
+  useEffect(() => {
+    setShadowMode("cover");
+    clearTimeout(shadowTimer.current);
+  }, [flipKey]);
+
+  // Cancel any pending timer when the modal unmounts.
+  useEffect(() => () => clearTimeout(shadowTimer.current), []);
 
   if (!ready) return null;
 
@@ -326,10 +342,24 @@ export default function BookReaderV2() {
 
   const totalPages = pages.length;
 
-  // In landscape, cover sits alone on the right and back cover alone on the left.
-  // Track current page so we can restrict the drop-shadow to only the filled half.
-  const coverOnly = !portrait && currentPage === 0;
-  const backCoverOnly = !portrait && currentPage === totalPages - 1;
+  // onFlip fires at the START of the flip animation.
+  // When arriving at a spread: switch shadow immediately (left page becomes visible).
+  // When arriving at cover/backCover: delay until after the 800 ms animation so
+  // the shadow doesn't snap to half-width while the opposite page is still animating.
+  function handleFlip(e: any) {
+    const page = e.data as number;
+    clearTimeout(shadowTimer.current);
+    if (!portrait && page === 0) {
+      shadowTimer.current = setTimeout(() => setShadowMode("cover"), 900);
+    } else if (!portrait && page === totalPages - 1) {
+      shadowTimer.current = setTimeout(() => setShadowMode("backCover"), 900);
+    } else {
+      setShadowMode("spread");
+    }
+  }
+
+  const coverOnly = !portrait && shadowMode === "cover";
+  const backCoverOnly = !portrait && shadowMode === "backCover";
 
   return (
     /*
@@ -364,12 +394,12 @@ export default function BookReaderV2() {
       )}
 
       {/*
-        key={`${pageW}x${pageH}`} forces HTMLFlipBook to fully remount when
-        dimensions change after a resize. react-pageflip ignores width/height
-        prop updates after the initial mount (size="fixed" mode).
+        key={flipKey} forces HTMLFlipBook to fully remount when dimensions
+        change after a resize. react-pageflip ignores width/height prop
+        updates after the initial mount (size="fixed" mode).
       */}
       <HTMLFlipBook
-        key={`${pageW}x${pageH}`}
+        key={flipKey}
         ref={bookRef}
         width={pageW}
         height={pageH}
@@ -390,11 +420,11 @@ export default function BookReaderV2() {
         mobileScrollSupport={false}
         clickEventForward={true}
         useMouseEvents={true}
-        swipeDistance={30}
+        swipeDistance={10}
         disableFlipByClick={false}
         className=""
         style={{}}
-        onFlip={(e: any) => setCurrentPage(e.data)}
+        onFlip={handleFlip}
       >
         {pages}
       </HTMLFlipBook>
