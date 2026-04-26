@@ -31,13 +31,13 @@ export function SkeletonBookGrid({ count = 8 }: { count?: number }) {
   );
 }
 
-// Open-book shimmer for V2 modal loading state
+// Open-book shimmer for V2 modal loading state.
+// No centering wrapper — the modal (flex items-center justify-center) handles it.
 export function SkeletonOpenBook() {
   return (
-    <div className="flex items-center justify-center w-full" style={{ minHeight: "100vh" }}>
-      <div className="flex flex-col items-center gap-4">
-        {/* Open book: two pages on desktop, one on mobile */}
-        <div className="flex items-stretch gap-0">
+    <div className="flex flex-col items-center gap-4">
+      {/* Open book: two pages on desktop, one on mobile */}
+      <div className="flex items-stretch gap-0">
           {/* Left page — hidden on mobile */}
           <div
             className="hidden sm:block skeleton"
@@ -85,7 +85,6 @@ export function SkeletonOpenBook() {
             borderRadius: "50%",
           }}
         />
-      </div>
     </div>
   );
 }

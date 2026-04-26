@@ -3,7 +3,7 @@
 import HTMLFlipBook from "react-pageflip";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
-// ─── Fake data (mockup only — no real API calls) ─────────────────
+// ─── Fake data ───────────────────────────────────────────────────
 const COVER_COLOR = "#b5651d";
 
 function darken(hex: string, amt: number) {
@@ -44,6 +44,9 @@ const FAKE_RECIPES = [
 // ─── Page sizing ─────────────────────────────────────────────────
 const BASE_W = 390;
 const BASE_H = 540;
+// Fixed px headroom above & below book so flipping page corner tips
+// never hit the viewport edge (the modal centers the book)
+const CORNER_PAD = 40;
 
 function usePageDimensions() {
   const [dims, setDims] = useState({
@@ -58,10 +61,9 @@ function usePageDimensions() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const portrait = vw < 640;
-      // 18% vertical headroom keeps page-corner tips visible during flip
-      const availH = vh * 0.82;
-      const availW = portrait ? vw * 0.84 : (vw * 0.9) / 2;
-      const scale = Math.max(0.35, Math.min(availH / BASE_H, availW / BASE_W, 1.8));
+      const availH = vh - CORNER_PAD * 2;
+      const availW = portrait ? vw - 32 : (vw - 32) / 2;
+      const scale = Math.max(0.3, Math.min(availH / BASE_H, availW / BASE_W, 1.6));
       setDims({
         pageW: Math.round(BASE_W * scale),
         pageH: Math.round(BASE_H * scale),
@@ -77,7 +79,13 @@ function usePageDimensions() {
   return dims;
 }
 
-// ─── Page helper components ──────────────────────────────────────
+// ─── Shared style tokens ─────────────────────────────────────────
+// Subtle inset border on every content page so the page edge is visible
+// even when the page is mid-flip (unlike an outer container border which stays fixed).
+const PAGE_BORDER = "inset 0 0 0 1px rgba(180,150,110,0.16)";
+const COVER_BORDER = "inset 0 0 0 1px rgba(255,255,255,0.14)";
+
+// ─── Page helpers ────────────────────────────────────────────────
 function Tape({ right }: { right?: boolean }) {
   return (
     <div
@@ -106,15 +114,15 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
   );
 }
 
-// ─── ForwardRef page wrappers (required by react-pageflip) ───────
+// ─── ForwardRef page wrappers ────────────────────────────────────
 //
-// IMPORTANT: react-pageflip sets its own style/transform on the root ref div.
-// All visual styling must live one level IN — in the inner content div.
+// react-pageflip controls the root ref div (transforms, size, z-index).
+// All visual styling lives in the INNER div so it travels with the page
+// during flip — including the per-page border box-shadow.
 
 const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    {/* Inner div owns all visual styling */}
-    <div className="w-full h-full flex overflow-hidden">
+    <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER }}>
       {/* Spine */}
       <div
         className="shrink-0 flex items-center justify-center"
@@ -130,7 +138,6 @@ const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
           RECIPE BOOK
         </span>
       </div>
-
       {/* Face */}
       <div
         className="flex-1 relative flex items-center justify-center"
@@ -150,14 +157,10 @@ const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
             boxShadow: "0 1px 3px rgba(0,0,0,.1)",
           }}
         />
-
         {/* Title frame */}
         <div
           className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3"
-          style={{
-            width: "calc(100% - 1.5rem)",
-            padding: "clamp(1.5rem,8%,3rem) 1rem",
-          }}
+          style={{ width: "calc(100% - 1.5rem)", padding: "clamp(1.5rem,8%,3rem) 1rem" }}
         >
           <p
             className="tracking-[.38em] text-white/48 uppercase truncate w-full"
@@ -168,10 +171,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
           <div className="w-7 h-px bg-white/20" />
           <h2
             className="font-bold leading-tight break-words w-full"
-            style={{
-              fontSize: "clamp(1.4rem,5vw,2.4rem)",
-              fontFamily: "'Playfair Display', Georgia, serif",
-            }}
+            style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             สูตรอร่อย
           </h2>
@@ -188,7 +188,7 @@ PageCoverFront.displayName = "PageCoverFront";
 
 const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    <div className="w-full h-full bg-[#fef9f0]" />
+    <div className="w-full h-full bg-[#fef9f0]" style={{ boxShadow: PAGE_BORDER }} />
   </div>
 ));
 PageInsideCover.displayName = "PageInsideCover";
@@ -197,7 +197,7 @@ const PageToC = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref}>
     <div
       className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-      style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
+      style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
     >
       <Tape />
       <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
@@ -211,10 +211,7 @@ const PageToC = forwardRef<HTMLDivElement, object>((_p, ref) => (
       </h2>
       <nav className="flex-1 space-y-1.5 overflow-hidden">
         {FAKE_RECIPES.map((r, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-1 px-2 py-2 rounded-lg text-sm text-stone-500"
-          >
+          <div key={i} className="flex items-center gap-1 px-2 py-2 text-sm">
             <span className="flex-1 text-stone-700 truncate">{r.title}</span>
             <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
             <span className="shrink-0 text-[11px] font-mono text-stone-400">
@@ -230,24 +227,21 @@ PageToC.displayName = "PageToC";
 
 const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref) => {
   const r = FAKE_RECIPES[idx];
-  const pn = idx * 2 + 1;
   return (
     <div ref={ref}>
       <div
         className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
+        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
       >
         <Tape />
         <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
           {r.category}
         </p>
-        <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">
-          {r.title}
-        </h2>
+        <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
         <div className="h-px bg-[#e8d5b7] mb-4" />
         <div
           className="rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mb-4"
-          style={{ height: "clamp(100px,22vh,200px)" }}
+          style={{ height: "clamp(90px,20vh,190px)" }}
         >
           <span className="text-stone-300 text-xs italic">[ ภาพประกอบ ]</span>
         </div>
@@ -257,7 +251,7 @@ const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref
         <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.85] whitespace-pre-line">
           {r.ingredients}
         </div>
-        <Pn n={pn} />
+        <Pn n={idx * 2 + 1} />
       </div>
     </div>
   );
@@ -266,12 +260,11 @@ PageRecipeLeft.displayName = "PageRecipeLeft";
 
 const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref) => {
   const r = FAKE_RECIPES[idx];
-  const pn = idx * 2 + 2;
   return (
     <div ref={ref}>
       <div
         className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)" }}
+        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
       >
         <Tape right />
         <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-3">
@@ -280,7 +273,7 @@ const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, re
         <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.95] whitespace-pre-line">
           {r.instructions}
         </div>
-        <Pn n={pn} right />
+        <Pn n={idx * 2 + 2} right />
       </div>
     </div>
   );
@@ -291,7 +284,7 @@ const PageBackCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
     <div
       className="w-full h-full flex items-center justify-center"
-      style={{ background: COVER_COLOR }}
+      style={{ background: COVER_COLOR, boxShadow: COVER_BORDER }}
     >
       <div className="w-8 h-px bg-white/20" />
     </div>
@@ -300,16 +293,15 @@ const PageBackCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
 PageBackCover.displayName = "PageBackCover";
 
 // ─── Main component ──────────────────────────────────────────────
+// Returns the book element only — the modal handles centering.
 export default function BookReaderV2() {
   const bookRef = useRef<any>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
 
-  if (!ready) return <div style={{ minHeight: "100vh" }} />;
+  if (!ready) return null;
 
   const bookW = portrait ? pageW : pageW * 2;
-  const borderColor = `${COVER_COLOR}55`;
-  const spineGrad = `linear-gradient(to bottom, transparent, ${COVER_COLOR}60, transparent)`;
-  const vPad = Math.round(pageH * 0.14);
+  const borderColor = `${COVER_COLOR}50`;
 
   const pages: React.ReactElement[] = [
     <PageCoverFront key="cf" />,
@@ -323,70 +315,50 @@ export default function BookReaderV2() {
   pages.push(<PageBackCover key="cb" />);
 
   return (
+    /*
+      Book container: NO background (pages fill their own halves, so the left
+      side is transparent when showing the cover — only the right cover page
+      is visible). NO overflow:hidden (pages extend past border during flip).
+      NO spine line (it was at z-index 60 and cut across the flipping page).
+    */
     <div
-      className="font-apple flex items-center justify-center w-full"
-      style={{ minHeight: "100vh", padding: `${vPad}px 16px` }}
+      className="font-apple relative"
+      style={{
+        width: bookW,
+        height: pageH,
+        border: `2px solid ${borderColor}`,
+        borderRadius: "2px 8px 8px 2px",
+        boxShadow: "0 32px 80px rgba(0,0,0,.2), 0 8px 24px rgba(0,0,0,.10)",
+      }}
     >
-      {/*
-        book container gets a paper background so the left half (empty when
-        at the cover page) shows warm paper instead of the transparent backdrop.
-        NO overflow:hidden — pages extend beyond the border during animation.
-      */}
-      <div
-        className="relative"
-        style={{
-          width: bookW,
-          height: pageH,
-          background: "#fef9f0",
-          border: `2px solid ${borderColor}`,
-          borderRadius: "2px 8px 8px 2px",
-          boxShadow:
-            "0 32px 80px rgba(0,0,0,.22), 0 8px 28px rgba(0,0,0,.12)",
-        }}
+      <HTMLFlipBook
+        ref={bookRef}
+        width={pageW}
+        height={pageH}
+        minWidth={100}
+        maxWidth={800}
+        minHeight={100}
+        maxHeight={1100}
+        size="fixed"
+        startPage={0}
+        startZIndex={20}
+        autoSize={false}
+        flippingTime={800}
+        usePortrait={portrait}
+        drawShadow={true}
+        showCover={true}
+        maxShadowOpacity={0.45}
+        showPageCorners={false}
+        mobileScrollSupport={false}
+        clickEventForward={true}
+        useMouseEvents={true}
+        swipeDistance={30}
+        disableFlipByClick={false}
+        className=""
+        style={{}}
       >
-        <HTMLFlipBook
-          ref={bookRef}
-          width={pageW}
-          height={pageH}
-          minWidth={100}
-          maxWidth={800}
-          minHeight={100}
-          maxHeight={1100}
-          size="fixed"
-          startPage={0}
-          startZIndex={20}
-          autoSize={false}
-          flippingTime={800}
-          usePortrait={portrait}
-          drawShadow={true}
-          showCover={true}
-          maxShadowOpacity={0.45}
-          showPageCorners={false}
-          mobileScrollSupport={false}
-          clickEventForward={true}
-          useMouseEvents={true}
-          swipeDistance={30}
-          disableFlipByClick={false}
-          className=""
-          style={{}}
-        >
-          {pages}
-        </HTMLFlipBook>
-
-        {/* Center spine line — landscape only */}
-        {!portrait && (
-          <div
-            className="absolute top-0 bottom-0 pointer-events-none"
-            style={{
-              left: "50%",
-              width: 1,
-              background: spineGrad,
-              transform: "translateX(-0.5px)",
-              zIndex: 60,
-            }}
-          />
-        )}
-      </div>
+        {pages}
+      </HTMLFlipBook>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function BookReaderModalV2({ open, onClose }: Props) {
       visible behind, giving the feeling of a book "floating" over the page.
     */
     <div
-      className="fixed inset-0 overflow-auto"
+      className="fixed inset-0 flex items-center justify-center overflow-hidden"
       style={{
         zIndex: 9999,
         background: "rgba(255,255,255,0.6)",
