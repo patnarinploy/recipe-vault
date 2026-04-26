@@ -2,8 +2,14 @@
 
 import HTMLFlipBook from "react-pageflip";
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SkeletonOpenBook } from "./Skeleton";
+import Modal from "./Modal";
+import RecipeForm from "./RecipeForm";
+import BookCoverEditor from "./BookCoverEditor";
+import toast from "react-hot-toast";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal } from "lucide-react";
 import type { Book, Recipe } from "@/lib/types";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -211,14 +217,26 @@ interface Props {
 }
 
 // ─── Main component ───────────────────────────────────────────────
-export default function BookReaderV2({ bookId }: Props) {
+export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
+  const router = useRouter();
   const bookRef = useRef<any>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
 
-  const [book, setBook] = useState<Book | null>(null);
+  const [book,    setBook]    = useState<Book | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataVersion, setDataVersion] = useState(0);
 
+  // Page tracking
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // FAB
+  const [fabOpen,         setFabOpen]         = useState(false);
+  const [newRecipeOpen,   setNewRecipeOpen]   = useState(false);
+  const [editRecipeOpen,  setEditRecipeOpen]  = useState(false);
+  const [coverEditorOpen, setCoverEditorOpen] = useState(false);
+
+  // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     const sb = createClient();
     const [bk, rc] = await Promise.all([
@@ -233,12 +251,38 @@ export default function BookReaderV2({ bookId }: Props) {
     setLoading(false);
   }, [bookId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
+  // ── Page context ──────────────────────────────────────────────────
+  // pages layout: [cover(0), inside(1), toc(2), ...recipe pairs..., backcover(last)]
+  const totalPages = 3 + recipes.length * 2 + 1; // cover+inside+toc + pairs + back
+  const lastPage   = totalPages - 1;
+
+  type Ctx = "cover" | "toc" | "recipe" | "backcover";
+  let ctx: Ctx = "cover";
+  if (currentPage === 0)                          ctx = "cover";
+  else if (currentPage <= 2)                      ctx = "toc";
+  else if (currentPage === lastPage)              ctx = "backcover";
+  else                                            ctx = "recipe";
+
+  const recipeIdx     = ctx === "recipe" ? Math.floor((currentPage - 3) / 2) : -1;
+  const currentRecipe = recipeIdx >= 0 ? recipes[recipeIdx] ?? null : null;
+
+  const goToToC = () => bookRef.current?.pageFlip().turnToPage(2);
+
+  // ── Refresh helpers ────────────────────────────────────────────────
+  const refreshAndReset = useCallback(async (goTo = 0) => {
+    await fetchData();
+    setCurrentPage(goTo);
+    setDataVersion(v => v + 1);
+    router.refresh();
+  }, [fetchData, router]);
+
+  // ─────────────────────────────────────────────────────────────────
   if (!ready || loading || !book) return <SkeletonOpenBook />;
 
-  const bookW  = portrait ? pageW : pageW * 2;
-  const flipKey = `${pageW}x${pageH}`;
+  const bookW   = portrait ? pageW : pageW * 2;
+  const flipKey = `${pageW}x${pageH}:${dataVersion}`;
 
   const pages: React.ReactElement[] = [
     <PageCoverFront key="cf" book={book} />,
@@ -252,23 +296,123 @@ export default function BookReaderV2({ bookId }: Props) {
   pages.push(<PageBackCover key="cb" book={book} />);
 
   return (
-    <div className="font-apple" style={{ width: bookW, height: pageH }}>
-      <HTMLFlipBook
-        key={flipKey}
-        ref={bookRef}
-        width={pageW} height={pageH}
-        minWidth={100} maxWidth={900}
-        minHeight={100} maxHeight={1300}
-        size="fixed" startPage={0} startZIndex={20} autoSize={false}
-        flippingTime={800} usePortrait={portrait}
-        drawShadow={true} showCover={true} maxShadowOpacity={0.45}
-        showPageCorners={false} mobileScrollSupport={true}
-        clickEventForward={false} useMouseEvents={true}
-        swipeDistance={10} disableFlipByClick={false}
-        className="" style={{}}
-      >
-        {pages}
-      </HTMLFlipBook>
-    </div>
+    <>
+      <div className="font-apple" style={{ width: bookW, height: pageH }}>
+        <HTMLFlipBook
+          key={flipKey}
+          ref={bookRef}
+          width={pageW} height={pageH}
+          minWidth={100} maxWidth={900}
+          minHeight={100} maxHeight={1300}
+          size="fixed" startPage={currentPage} startZIndex={20} autoSize={false}
+          flippingTime={800} usePortrait={portrait}
+          drawShadow={true} showCover={true} maxShadowOpacity={0.45}
+          showPageCorners={false} mobileScrollSupport={true}
+          clickEventForward={false} useMouseEvents={true}
+          swipeDistance={10} disableFlipByClick={false}
+          className="" style={{}}
+          onFlip={(e: any) => setCurrentPage(e.data)}
+          onChangeState={(e: any) => {
+            if (e.data === "read") {
+              const p = bookRef.current?.pageFlip().getCurrentPageIndex();
+              if (p != null) setCurrentPage(p);
+            }
+          }}
+        >
+          {pages}
+        </HTMLFlipBook>
+      </div>
+
+      {/* ── FAB (owner only) ─────────────────────────────────────── */}
+      {isOwner && (
+        <div className="fixed bottom-6 right-6 z-[10001] flex flex-col items-end gap-2">
+          {fabOpen && (
+            <div className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+
+              {/* เพิ่มสูตร — ทุก context */}
+              <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                <Plus className="w-4 h-4 text-stone-400" /> เพิ่มสูตรในเล่มนี้
+              </button>
+
+              {/* แก้ไขปก — cover / backcover */}
+              {(ctx === "cover" || ctx === "backcover") && (
+                <button onClick={() => { setFabOpen(false); setCoverEditorOpen(true); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                  <Palette className="w-4 h-4 text-stone-400" /> แก้ไขปกหนังสือ
+                </button>
+              )}
+
+              {/* แก้ไขสารบัญ — toc (logic ยังไม่ได้ทำ) */}
+              {ctx === "toc" && (
+                <button onClick={() => { setFabOpen(false); toast("แก้ไขสารบัญ — เร็วๆ นี้"); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                  <List className="w-4 h-4 text-stone-400" /> แก้ไขสารบัญ
+                </button>
+              )}
+
+              {/* แก้ไขสูตร — recipe */}
+              {ctx === "recipe" && currentRecipe && (
+                <button onClick={() => { setFabOpen(false); setEditRecipeOpen(true); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                  <Edit2 className="w-4 h-4 text-stone-400" /> แก้ไขสูตรนี้
+                </button>
+              )}
+
+              {/* เปิดสารบัญ — cover / backcover / recipe */}
+              {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
+                <>
+                  <div className="border-t border-stone-100 my-0.5" />
+                  <button onClick={() => { setFabOpen(false); goToToC(); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
+                  </button>
+                </>
+              )}
+
+              {/* ปิดหนังสือ — cover / backcover */}
+              {(ctx === "cover" || ctx === "backcover") && (
+                <button onClick={() => { setFabOpen(false); onClose(); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl">
+                  <X className="w-4 h-4 text-red-400" /> ปิดหนังสือ
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* FAB trigger */}
+          <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
+                  className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all ${
+                    fabOpen
+                      ? "bg-stone-700 text-white rotate-90"
+                      : "bg-orange-500 text-white hover:bg-orange-600 hover:scale-105"
+                  }`}>
+            {fabOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+          </button>
+        </div>
+      )}
+
+      {/* ── Sub-modals ──────────────────────────────────────────── */}
+      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title="เพิ่มสูตรในเล่มนี้">
+        <RecipeForm bookId={bookId} inModal
+          onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
+          onCancel={() => setNewRecipeOpen(false)} />
+      </Modal>
+
+      {currentRecipe && (
+        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title="แก้ไขสูตรอาหาร">
+          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete
+            onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
+            onCancel={() => setEditRecipeOpen(false)}
+            onDeleted={() => { setEditRecipeOpen(false); refreshAndReset(2); }} />
+        </Modal>
+      )}
+
+      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl">
+        <BookCoverEditor book={book} inModal
+          onSuccess={() => { setCoverEditorOpen(false); refreshAndReset(currentPage); }}
+          onCancel={() => setCoverEditorOpen(false)} />
+      </Modal>
+    </>
   );
 }
