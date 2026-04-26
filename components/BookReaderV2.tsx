@@ -9,7 +9,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import type { Book, Recipe } from "@/lib/types";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -125,35 +125,41 @@ const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
 ));
 PageInsideCover.displayName = "PageInsideCover";
 
-const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[] }>(({ recipes }, ref) => (
-  <div ref={ref}>
-    <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-      <Tape />
-      <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
-        Table of Contents
-      </p>
-      <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
-          style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
-        สารบัญ
-      </h2>
-      <nav className="flex-1 space-y-1.5 overflow-hidden">
-        {recipes.length === 0
-          ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
-          : recipes.map((r, i) => (
-              <div key={r.id} className="flex items-center gap-1 px-2 py-2 text-sm">
-                <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-                <span className="border-b border-dotted border-stone-300 w-10 shrink-0 mx-2" />
-                <span className="shrink-0 text-[11px] font-mono text-stone-400">
-                  {String(i * 2 + 1).padStart(2, "0")}
-                </span>
-              </div>
-            ))
-        }
-      </nav>
+const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pageIdx: number) => void }>(
+  ({ recipes, onNavigate }, ref) => (
+    <div ref={ref}>
+      <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
+           style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+        <Tape />
+        <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
+          Table of Contents
+        </p>
+        <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
+            style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
+          สารบัญ
+        </h2>
+        <nav className="flex-1 space-y-0.5 overflow-hidden">
+          {recipes.length === 0
+            ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
+            : recipes.map((r, i) => (
+                <button
+                  key={r.id}
+                  onClick={() => onNavigate(3 + i * 2)}
+                  className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+                >
+                  <span className="flex-1 text-stone-700 truncate">{r.title}</span>
+                  <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
+                  <span className="shrink-0 text-[11px] font-mono text-stone-400">
+                    {String(i * 2 + 1).padStart(2, "0")}
+                  </span>
+                </button>
+              ))
+          }
+        </nav>
+      </div>
     </div>
-  </div>
-));
+  )
+);
 PageToC.displayName = "PageToC";
 
 const PageRecipeLeft = forwardRef<HTMLDivElement, { recipe: Recipe; pn: number }>(({ recipe: r, pn }, ref) => (
@@ -209,6 +215,74 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
 ));
 PageBackCover.displayName = "PageBackCover";
 
+// ─── TOC Sort Modal ───────────────────────────────────────────────
+function TocSortModal({ recipes, open, onClose, onSave }: {
+  recipes: Recipe[];
+  open: boolean;
+  onClose: () => void;
+  onSave: (sorted: Recipe[]) => Promise<void>;
+}) {
+  const [sorted, setSorted] = useState<Recipe[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { if (open) setSorted([...recipes]); }, [open, recipes]);
+
+  const move = (i: number, dir: -1 | 1) => {
+    setSorted(s => {
+      const n = [...s], j = i + dir;
+      if (j < 0 || j >= n.length) return s;
+      [n[i], n[j]] = [n[j], n[i]];
+      return n;
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try { await onSave(sorted); } finally { setSaving(false); }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="เรียงลำดับสูตรอาหาร">
+      <div className="bg-white rounded-b-2xl border border-stone-100 border-t-0 p-4 sm:p-5">
+        <p className="text-xs text-stone-400 mb-3">กดลูกศรเพื่อเปลี่ยนลำดับ แล้วกด บันทึก</p>
+        <div className="space-y-1 max-h-[52vh] overflow-y-auto">
+          {sorted.map((r, i) => (
+            <div key={r.id}
+                 className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-100">
+              <GripVertical className="w-4 h-4 text-stone-300 shrink-0" />
+              <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
+              <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
+              {r.category && (
+                <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
+              )}
+              <div className="flex gap-0.5 shrink-0">
+                <button onClick={() => move(i, -1)} disabled={i === 0}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+                <button onClick={() => move(i, 1)} disabled={i === sorted.length - 1}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-stone-100">
+          <button onClick={onClose}
+                  className="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-xl transition-colors">
+            ยกเลิก
+          </button>
+          <button onClick={handleSave} disabled={saving}
+                  className="px-4 py-2 text-sm bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 flex items-center gap-1.5 transition-colors">
+            {saving ? <><div className="spinner" style={{ width: 14, height: 14 }} /> กำลังบันทึก...</> : "บันทึก"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Props ────────────────────────────────────────────────────────
 interface Props {
   bookId: string;
@@ -235,6 +309,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   const [newRecipeOpen,   setNewRecipeOpen]   = useState(false);
   const [editRecipeOpen,  setEditRecipeOpen]  = useState(false);
   const [coverEditorOpen, setCoverEditorOpen] = useState(false);
+  const [tocSortOpen,     setTocSortOpen]     = useState(false);
 
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -269,6 +344,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   const currentRecipe = recipeIdx >= 0 ? recipes[recipeIdx] ?? null : null;
 
   const goToToC = () => bookRef.current?.pageFlip().turnToPage(2);
+  const goToPage = (idx: number) => bookRef.current?.pageFlip().turnToPage(idx);
+
+  const handleSort = async (sorted: Recipe[]) => {
+    const { updateRecipeOrder } = await import("@/app/actions/recipes");
+    const res = await updateRecipeOrder(bookId, sorted.map(r => r.id));
+    if ("error" in res) { toast.error(res.error); return; }
+    toast.success("บันทึกลำดับแล้ว");
+    setTocSortOpen(false);
+    await refreshAndReset(2);
+  };
 
   // ── Refresh helpers ────────────────────────────────────────────────
   const refreshAndReset = useCallback(async (goTo = 0) => {
@@ -287,7 +372,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   const pages: React.ReactElement[] = [
     <PageCoverFront key="cf" book={book} />,
     <PageInsideCover key="ic" />,
-    <PageToC key="toc" recipes={recipes} />,
+    <PageToC key="toc" recipes={recipes} onNavigate={goToPage} />,
   ];
   recipes.forEach((r, i) => {
     pages.push(<PageRecipeLeft  key={`l${i}`} recipe={r} pn={i * 2 + 1} />);
@@ -345,7 +430,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
 
               {/* แก้ไขสารบัญ — toc (logic ยังไม่ได้ทำ) */}
               {ctx === "toc" && (
-                <button onClick={() => { setFabOpen(false); toast("แก้ไขสารบัญ — เร็วๆ นี้"); }}
+                <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
                   <List className="w-4 h-4 text-stone-400" /> แก้ไขสารบัญ
                 </button>
@@ -413,6 +498,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
           onSuccess={() => { setCoverEditorOpen(false); refreshAndReset(currentPage); }}
           onCancel={() => setCoverEditorOpen(false)} />
       </Modal>
+
+      <TocSortModal
+        recipes={recipes}
+        open={tocSortOpen}
+        onClose={() => setTocSortOpen(false)}
+        onSave={handleSort}
+      />
     </>
   );
 }
