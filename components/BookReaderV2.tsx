@@ -336,30 +336,48 @@ export default function BookReaderV2() {
 
   const totalPages = pages.length;
 
-  // Shadow timing is direction-dependent:
+  // Shadow timing is direction-dependent.
   //
   //  spread → cover / backCover  (closing):
-  //    Switch shadow at flip START (onFlip) so the half-shadow lifts away
-  //    together with the page — matches the user's expectation exactly.
+  //    Remove shadow at flip START so it lifts away with the page.
+  //    We try two early-detection hooks in order of reliability:
+  //      1. onFlip(e.data)           – fires when flip commits, data = destination page
+  //      2. onChangeState("flipping")– also fires early; getCurrentPageIndex() may have
+  //                                   already updated to destination at this state
+  //    If both fire with source page instead of destination, onChangeState("read")
+  //    acts as a guaranteed fallback (shadow removes at animation end, not ideal but safe).
   //
   //  cover / backCover → spread  (opening):
-  //    Switch shadow at flip END (onChangeState "read") because the empty
-  //    half stays empty for the whole animation; switching early would flash
-  //    a shadow on a side that has no page yet.
+  //    Add shadow only at flip END (onChangeState "read") so it doesn't flash on the
+  //    empty side before the page visually arrives there.
+  //    None of the early hooks set "spread", so there is no premature shadow.
 
   function handleFlip(e: any) {
     const page = e.data as number;
     if (!portrait && page === 0) setShadowMode("cover");
     else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
-    // Spread arrival: handled by onChangeState to avoid early-flash on empty side
+    // spread arrival: handled by onChangeState("read")
   }
 
   function handleChangeState(e: any) {
+    const pf = bookRef.current?.pageFlip?.();
+    const page = pf?.getCurrentPageIndex?.() ?? -1;
+
+    if (e.data === "flipping") {
+      // When getCurrentPageIndex() has already updated to the destination
+      // (behaviour varies by StPageFlip version), catch it here.
+      // If it still returns the source page, these conditions just won't match and
+      // we fall through to "read" — no harm done.
+      if (!portrait && page === 0) setShadowMode("cover");
+      else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
+      return;
+    }
+
     if (e.data !== "read") return;
-    const page = bookRef.current?.pageFlip?.()?.getCurrentPageIndex?.() ?? 0;
-    // Only update shadow when the settled page is a spread.
-    // cover / backCover are already set by onFlip (or by useEffect on resize).
-    if (page !== 0 && page !== totalPages - 1) setShadowMode("spread");
+    if (page < 0) return;
+    if (!portrait && page === 0) setShadowMode("cover");
+    else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
+    else setShadowMode("spread");
   }
 
   const coverOnly = !portrait && shadowMode === "cover";
