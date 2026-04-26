@@ -336,21 +336,30 @@ export default function BookReaderV2() {
 
   const totalPages = pages.length;
 
-  // Only update shadow once the flip animation has fully settled ("read" state).
-  // Using onFlip (fires at animation START) caused the shadow to snap to
-  // half-width while the opposite page was still animating — visible flash.
-  // onChangeState("read") fires after the 800 ms animation, so the book is
-  // already in its final position before we change the shadow.
+  // Shadow timing is direction-dependent:
+  //
+  //  spread → cover / backCover  (closing):
+  //    Switch shadow at flip START (onFlip) so the half-shadow lifts away
+  //    together with the page — matches the user's expectation exactly.
+  //
+  //  cover / backCover → spread  (opening):
+  //    Switch shadow at flip END (onChangeState "read") because the empty
+  //    half stays empty for the whole animation; switching early would flash
+  //    a shadow on a side that has no page yet.
+
+  function handleFlip(e: any) {
+    const page = e.data as number;
+    if (!portrait && page === 0) setShadowMode("cover");
+    else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
+    // Spread arrival: handled by onChangeState to avoid early-flash on empty side
+  }
+
   function handleChangeState(e: any) {
     if (e.data !== "read") return;
     const page = bookRef.current?.pageFlip?.()?.getCurrentPageIndex?.() ?? 0;
-    if (!portrait && page === 0) {
-      setShadowMode("cover");
-    } else if (!portrait && page === totalPages - 1) {
-      setShadowMode("backCover");
-    } else {
-      setShadowMode("spread");
-    }
+    // Only update shadow when the settled page is a spread.
+    // cover / backCover are already set by onFlip (or by useEffect on resize).
+    if (page !== 0 && page !== totalPages - 1) setShadowMode("spread");
   }
 
   const coverOnly = !portrait && shadowMode === "cover";
@@ -419,6 +428,7 @@ export default function BookReaderV2() {
         disableFlipByClick={false}
         className=""
         style={{}}
+        onFlip={handleFlip}
         onChangeState={handleChangeState}
       >
         {pages}
