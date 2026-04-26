@@ -313,10 +313,15 @@ export default function BookReaderV2() {
   // 'spread'    → full two-page spread
   const [shadowMode, setShadowMode] = useState<"cover" | "spread" | "backCover">("cover");
 
-  // When HTMLFlipBook remounts after a resize it resets to page 0 — sync shadow.
+  // Track the last-settled page so handleFlip can distinguish flip directions.
+  // Lives in a ref (not state) so reads inside event handlers are always fresh.
+  const currentPageRef = useRef(0);
+
+  // When HTMLFlipBook remounts after a resize it resets to page 0 — sync both.
   const flipKey = `${pageW}x${pageH}`;
   useEffect(() => {
     setShadowMode("cover");
+    currentPageRef.current = 0;
   }, [flipKey]);
 
   if (!ready) return null;
@@ -336,48 +341,62 @@ export default function BookReaderV2() {
 
   const totalPages = pages.length;
 
-  // Shadow timing is direction-dependent.
+  // ── Shadow removal strategy ──────────────────────────────────────
   //
-  //  spread → cover / backCover  (closing):
-  //    Remove shadow at flip START so it lifts away with the page.
-  //    We try two early-detection hooks in order of reliability:
-  //      1. onFlip(e.data)           – fires when flip commits, data = destination page
-  //      2. onChangeState("flipping")– also fires early; getCurrentPageIndex() may have
-  //                                   already updated to destination at this state
-  //    If both fire with source page instead of destination, onChangeState("read")
-  //    acts as a guaranteed fallback (shadow removes at animation end, not ideal but safe).
+  //  Opening (cover → spread):
+  //    Shadow MUST appear at animation END ("read") only — the empty left side
+  //    should not flash a shadow before the inside-cover page visually arrives.
   //
-  //  cover / backCover → spread  (opening):
-  //    Add shadow only at flip END (onChangeState "read") so it doesn't flash on the
-  //    empty side before the page visually arrives there.
-  //    None of the early hooks set "spread", so there is no premature shadow.
+  //  Closing (spread → cover):
+  //    Shadow MUST disappear at animation START — it should lift away with the page.
+  //
+  //  Problem: StPageFlip's e.data in onFlip is ambiguous — it could be either the
+  //  DESTINATION page (0 = cover) or the PAGE BEING FLIPPED (1 = InsideCover).
+  //  We handle both interpretations simultaneously using currentPageRef:
+  //
+  //  Interpretation A  e.data = destination page
+  //    → page === 0  means "going to cover"  → switch immediately ✓
+  //    → page === 1  means "going to spread" → do nothing (wait for "read")
+  //
+  //  Interpretation B  e.data = page being flipped
+  //    → page === 1 while currentPageRef.current === 1 means InsideCover is flipping
+  //      back from spread-1. This combination is IMPOSSIBLE in interpretation A
+  //      (you cannot flip to the same page you are already on), so it is exclusively
+  //      the "closing the book" scenario → switch immediately ✓
+  //
+  //  onChangeState("read") fires unconditionally at animation end and is the
+  //  definitive correction for all cases, including spread arrivals.
 
   function handleFlip(e: any) {
     const page = e.data as number;
-    if (!portrait && page === 0) setShadowMode("cover");
-    else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
-    // spread arrival: handled by onChangeState("read")
+    if (portrait) return;
+
+    // Interpretation A: e.data = destination page
+    if (page === 0)               { setShadowMode("cover");     return; }
+    if (page === totalPages - 1)  { setShadowMode("backCover"); return; }
+
+    // Interpretation B: e.data = page being flipped
+    // InsideCover (1) can only be the flipped page when closing from spread-1.
+    // (If e.data were the destination, page === currentPage is impossible.)
+    if (page === 1 && currentPageRef.current === 1)
+      { setShadowMode("cover"); return; }
+    // Recipe3-right (totalPages-2) can only be the flipped page when going
+    // forward from the last content spread to the back cover.
+    if (page === totalPages - 2 && currentPageRef.current === totalPages - 3)
+      { setShadowMode("backCover"); return; }
   }
 
   function handleChangeState(e: any) {
-    const pf = bookRef.current?.pageFlip?.();
-    const page = pf?.getCurrentPageIndex?.() ?? -1;
-
-    if (e.data === "flipping") {
-      // When getCurrentPageIndex() has already updated to the destination
-      // (behaviour varies by StPageFlip version), catch it here.
-      // If it still returns the source page, these conditions just won't match and
-      // we fall through to "read" — no harm done.
-      if (!portrait && page === 0) setShadowMode("cover");
-      else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
-      return;
-    }
-
     if (e.data !== "read") return;
+    const pf  = bookRef.current?.pageFlip?.();
+    const page = pf?.getCurrentPageIndex?.() ?? -1;
     if (page < 0) return;
-    if (!portrait && page === 0) setShadowMode("cover");
+
+    // Definitive state after animation completes.
+    currentPageRef.current = page;
+    if (!portrait && page === 0)              setShadowMode("cover");
     else if (!portrait && page === totalPages - 1) setShadowMode("backCover");
-    else setShadowMode("spread");
+    else                                      setShadowMode("spread");
   }
 
   const coverOnly = !portrait && shadowMode === "cover";
