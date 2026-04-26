@@ -80,10 +80,11 @@ function usePageDimensions() {
 }
 
 // ─── Shared style tokens ─────────────────────────────────────────
-// Subtle inset border on every content page so the page edge is visible
-// even when the page is mid-flip (unlike an outer container border which stays fixed).
-const PAGE_BORDER = "inset 0 0 0 1px rgba(180,150,110,0.16)";
-const COVER_BORDER = "inset 0 0 0 1px rgba(255,255,255,0.14)";
+// Each page's inner div carries its own border via inset shadow so the edge
+// travels with the page during flip. Opacity raised from 0.16 → 0.10 (dark)
+// so it's visible against both light and dark backgrounds.
+const PAGE_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.10)";
+const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
 // ─── Page helpers ────────────────────────────────────────────────
 function Tape({ right }: { right?: boolean }) {
@@ -122,7 +123,7 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 
 const PageCoverFront = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER }}>
+    <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
       {/* Spine */}
       <div
         className="shrink-0 flex items-center justify-center"
@@ -188,7 +189,7 @@ PageCoverFront.displayName = "PageCoverFront";
 
 const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    <div className="w-full h-full bg-[#fef9f0]" style={{ boxShadow: PAGE_BORDER }} />
+    <div className="w-full h-full bg-[#fef9f0]" style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }} />
   </div>
 ));
 PageInsideCover.displayName = "PageInsideCover";
@@ -197,7 +198,7 @@ const PageToC = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref}>
     <div
       className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-      style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
+      style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}
     >
       <Tape />
       <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
@@ -231,7 +232,7 @@ const PageRecipeLeft = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, ref
     <div ref={ref}>
       <div
         className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
+        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}
       >
         <Tape />
         <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
@@ -264,7 +265,7 @@ const PageRecipeRight = forwardRef<HTMLDivElement, { idx: number }>(({ idx }, re
     <div ref={ref}>
       <div
         className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER }}
+        style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}
       >
         <Tape right />
         <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-3">
@@ -284,7 +285,7 @@ const PageBackCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
     <div
       className="w-full h-full flex items-center justify-center"
-      style={{ background: COVER_COLOR, boxShadow: COVER_BORDER }}
+      style={{ background: COVER_COLOR, boxShadow: COVER_BORDER, borderRadius: 2 }}
     >
       <div className="w-8 h-px bg-white/20" />
     </div>
@@ -301,7 +302,6 @@ export default function BookReaderV2() {
   if (!ready) return null;
 
   const bookW = portrait ? pageW : pageW * 2;
-  const borderColor = `${COVER_COLOR}50`;
 
   const pages: React.ReactElement[] = [
     <PageCoverFront key="cf" />,
@@ -321,14 +321,19 @@ export default function BookReaderV2() {
       is visible). NO overflow:hidden (pages extend past border during flip).
       NO spine line (it was at z-index 60 and cut across the flipping page).
     */
+    /*
+      Container has NO border and NO borderRadius.
+      - Each page inner div carries its own uniform inset shadow (travels during flip).
+      - A container border would create asymmetric corners: "2px 8px" spine vs edge,
+        which looks wrong when the back cover appears on the LEFT side.
+      - Box-shadow on the container provides overall depth without affecting corners.
+    */
     <div
       className="font-apple relative"
       style={{
         width: bookW,
         height: pageH,
-        border: `2px solid ${borderColor}`,
-        borderRadius: "2px 8px 8px 2px",
-        boxShadow: "0 32px 80px rgba(0,0,0,.2), 0 8px 24px rgba(0,0,0,.10)",
+        boxShadow: "0 24px 64px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.10)",
       }}
     >
       <HTMLFlipBook
