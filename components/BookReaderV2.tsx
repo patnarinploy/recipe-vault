@@ -72,8 +72,17 @@ function usePageDimensions() {
       });
     }
     calc();
-    window.addEventListener("resize", calc);
-    return () => window.removeEventListener("resize", calc);
+    // Debounce resize so HTMLFlipBook only remounts after the user stops dragging
+    let t: ReturnType<typeof setTimeout>;
+    function onResize() {
+      clearTimeout(t);
+      t = setTimeout(calc, 300);
+    }
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(t);
+    };
   }, []);
 
   return dims;
@@ -81,10 +90,10 @@ function usePageDimensions() {
 
 // ─── Shared style tokens ─────────────────────────────────────────
 // Each page's inner div carries its own border via inset shadow so the edge
-// travels with the page during flip. Opacity raised from 0.16 → 0.10 (dark)
-// so it's visible against both light and dark backgrounds.
+// travels with the page during flip.
 const PAGE_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
+const BOOK_SHADOW = "0 24px 64px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.10)";
 
 // ─── Page helpers ────────────────────────────────────────────────
 function Tape({ right }: { right?: boolean }) {
@@ -298,6 +307,7 @@ PageBackCover.displayName = "PageBackCover";
 export default function BookReaderV2() {
   const bookRef = useRef<any>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
+  const [currentPage, setCurrentPage] = useState(0);
 
   if (!ready) return null;
 
@@ -314,29 +324,52 @@ export default function BookReaderV2() {
   });
   pages.push(<PageBackCover key="cb" />);
 
+  const totalPages = pages.length;
+
+  // In landscape, cover sits alone on the right and back cover alone on the left.
+  // Track current page so we can restrict the drop-shadow to only the filled half.
+  const coverOnly = !portrait && currentPage === 0;
+  const backCoverOnly = !portrait && currentPage === totalPages - 1;
+
   return (
     /*
-      Book container: NO background (pages fill their own halves, so the left
-      side is transparent when showing the cover — only the right cover page
-      is visible). NO overflow:hidden (pages extend past border during flip).
-      NO spine line (it was at z-index 60 and cut across the flipping page).
-    */
-    /*
-      Container has NO border and NO borderRadius.
-      - Each page inner div carries its own uniform inset shadow (travels during flip).
-      - A container border would create asymmetric corners: "2px 8px" spine vs edge,
-        which looks wrong when the back cover appears on the LEFT side.
-      - Box-shadow on the container provides overall depth without affecting corners.
+      No background: pages fill their own halves, empty half stays transparent.
+      No overflow:hidden: pages extend past the container during flip corners.
+      Shadow is on an absolutely-positioned inner div so it covers only the
+      side(s) that have a visible page — no ghost shadow on the empty half.
     */
     <div
       className="font-apple relative"
-      style={{
-        width: bookW,
-        height: pageH,
-        boxShadow: "0 24px 64px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.10)",
-      }}
+      style={{ width: bookW, height: pageH }}
     >
+      {/* Shadow layer — tracks which side(s) have a visible page */}
+      {coverOnly ? (
+        // Front cover alone on right
+        <div
+          className="absolute inset-y-0 right-0 pointer-events-none"
+          style={{ width: pageW, zIndex: 0, boxShadow: BOOK_SHADOW }}
+        />
+      ) : backCoverOnly ? (
+        // Back cover alone on left
+        <div
+          className="absolute inset-y-0 left-0 pointer-events-none"
+          style={{ width: pageW, zIndex: 0, boxShadow: BOOK_SHADOW }}
+        />
+      ) : (
+        // Two-page spread — full width
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ zIndex: 0, boxShadow: BOOK_SHADOW }}
+        />
+      )}
+
+      {/*
+        key={`${pageW}x${pageH}`} forces HTMLFlipBook to fully remount when
+        dimensions change after a resize. react-pageflip ignores width/height
+        prop updates after the initial mount (size="fixed" mode).
+      */}
       <HTMLFlipBook
+        key={`${pageW}x${pageH}`}
         ref={bookRef}
         width={pageW}
         height={pageH}
@@ -361,6 +394,7 @@ export default function BookReaderV2() {
         disableFlipByClick={false}
         className=""
         style={{}}
+        onFlip={(e: any) => setCurrentPage(e.data)}
       >
         {pages}
       </HTMLFlipBook>
