@@ -144,7 +144,7 @@ const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pag
             : recipes.map((r, i) => (
                 <button
                   key={r.id}
-                  onClick={() => onNavigate(3 + i * 2)}
+                  onClick={(e) => { e.stopPropagation(); onNavigate(3 + i * 2); }}
                   className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                 >
                   <span className="flex-1 text-stone-700 truncate">{r.title}</span>
@@ -222,8 +222,10 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
   onClose: () => void;
   onSave: (sorted: Recipe[]) => Promise<void>;
 }) {
-  const [sorted, setSorted] = useState<Recipe[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [sorted,   setSorted]   = useState<Recipe[]>([]);
+  const [saving,   setSaving]   = useState(false);
+  const [dragIdx,  setDragIdx]  = useState<number | null>(null);
+  const [overIdx,  setOverIdx]  = useState<number | null>(null);
 
   useEffect(() => { if (open) setSorted([...recipes]); }, [open, recipes]);
 
@@ -236,6 +238,20 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
     });
   };
 
+  const onDragStart = (i: number) => setDragIdx(i);
+  const onDragOver  = (e: React.DragEvent, i: number) => { e.preventDefault(); setOverIdx(i); };
+  const onDrop      = (i: number) => {
+    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setOverIdx(null); return; }
+    setSorted(s => {
+      const n = [...s];
+      const [item] = n.splice(dragIdx, 1);
+      n.splice(i, 0, item);
+      return n;
+    });
+    setDragIdx(null); setOverIdx(null);
+  };
+  const onDragEnd   = () => { setDragIdx(null); setOverIdx(null); };
+
   const handleSave = async () => {
     setSaving(true);
     try { await onSave(sorted); } finally { setSaving(false); }
@@ -244,12 +260,25 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
   return (
     <Modal open={open} onClose={onClose} title="เรียงลำดับสูตรอาหาร">
       <div className="bg-white rounded-b-2xl border border-stone-100 border-t-0 p-4 sm:p-5">
-        <p className="text-xs text-stone-400 mb-3">กดลูกศรเพื่อเปลี่ยนลำดับ แล้วกด บันทึก</p>
+        <p className="text-xs text-stone-400 mb-3">ลากที่ไอคอน ⠿ หรือกดลูกศร เพื่อเปลี่ยนลำดับ</p>
         <div className="space-y-1 max-h-[52vh] overflow-y-auto">
           {sorted.map((r, i) => (
-            <div key={r.id}
-                 className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-100">
-              <GripVertical className="w-4 h-4 text-stone-300 shrink-0" />
+            <div
+              key={r.id}
+              draggable
+              onDragStart={() => onDragStart(i)}
+              onDragOver={(e) => onDragOver(e, i)}
+              onDrop={() => onDrop(i)}
+              onDragEnd={onDragEnd}
+              className={`flex items-center gap-2 px-2 py-2 rounded-xl border transition-all select-none ${
+                dragIdx === i
+                  ? "opacity-40 border-stone-200 bg-stone-50"
+                  : overIdx === i && dragIdx !== null
+                  ? "border-orange-300 bg-orange-50"
+                  : "border-transparent hover:bg-stone-50 hover:border-stone-100"
+              }`}
+            >
+              <GripVertical className="w-4 h-4 text-stone-300 shrink-0 cursor-grab active:cursor-grabbing" />
               <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
               <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
               {r.category && (
