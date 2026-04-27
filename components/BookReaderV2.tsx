@@ -127,7 +127,25 @@ const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
 PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pageIdx: number) => void }>(
-  ({ recipes, onNavigate }, ref) => (
+  ({ recipes, onNavigate }, ref) => {
+    const navRef = useRef<HTMLElement>(null);
+
+    // Native listeners in bubble phase on the nav element — fires BEFORE page-flip's
+    // mousedown/touchstart listener on the container, so stopPropagation prevents
+    // page-flip from tracking the event and triggering an extra page flip.
+    useEffect(() => {
+      const el = navRef.current;
+      if (!el) return;
+      const stop = (e: Event) => e.stopPropagation();
+      el.addEventListener("mousedown", stop);
+      el.addEventListener("touchstart", stop);
+      return () => {
+        el.removeEventListener("mousedown", stop);
+        el.removeEventListener("touchstart", stop);
+      };
+    }, []);
+
+    return (
     <div ref={ref}>
       <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
            style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
@@ -139,15 +157,13 @@ const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pag
             style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
           สารบัญ
         </h2>
-        <nav className="flex-1 space-y-0.5 overflow-hidden">
+        <nav ref={navRef} className="flex-1 space-y-0.5 overflow-hidden">
           {recipes.length === 0
             ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
             : recipes.map((r, i) => (
                 <button
                   key={r.id}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); onNavigate(3 + i * 2); }}
+                  onClick={() => onNavigate(3 + i * 2)}
                   className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                 >
                   <span className="flex-1 text-stone-700 truncate">{r.title}</span>
@@ -161,7 +177,8 @@ const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pag
         </nav>
       </div>
     </div>
-  )
+  );
+  }
 );
 PageToC.displayName = "PageToC";
 
