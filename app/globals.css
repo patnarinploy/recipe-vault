@@ -187,3 +187,24 @@ button, a {
   );
   pointer-events: none;
 }
+
+/* ─── SortableJS drag-and-drop classes ─────────────────────── */
+.sortable-ghost {
+  opacity: 0.35;
+  border: 1.5px dashed #f97316 !important;
+  background: #fff7ed !important;
+  border-radius: 0.75rem;
+}
+.sortable-chosen {
+  background: #ffffff;
+  border-color: #e7e5e4 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  z-index: 9999;
+}
+.sortable-drag {
+  opacity: 0.95;
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+}

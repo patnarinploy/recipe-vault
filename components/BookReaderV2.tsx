@@ -1,6 +1,7 @@
 "use client";
 
 import HTMLFlipBook from "react-pageflip";
+import { ReactSortable } from "react-sortablejs";
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -144,6 +145,8 @@ const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pag
             : recipes.map((r, i) => (
                 <button
                   key={r.id}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onNavigate(3 + i * 2); }}
                   className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                 >
@@ -222,10 +225,8 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
   onClose: () => void;
   onSave: (sorted: Recipe[]) => Promise<void>;
 }) {
-  const [sorted,   setSorted]   = useState<Recipe[]>([]);
-  const [saving,   setSaving]   = useState(false);
-  const [dragIdx,  setDragIdx]  = useState<number | null>(null);
-  const [overIdx,  setOverIdx]  = useState<number | null>(null);
+  const [sorted, setSorted] = useState<Recipe[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (open) setSorted([...recipes]); }, [open, recipes]);
 
@@ -238,20 +239,6 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
     });
   };
 
-  const onDragStart = (i: number) => setDragIdx(i);
-  const onDragOver  = (e: React.DragEvent, i: number) => { e.preventDefault(); setOverIdx(i); };
-  const onDrop      = (i: number) => {
-    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setOverIdx(null); return; }
-    setSorted(s => {
-      const n = [...s];
-      const [item] = n.splice(dragIdx, 1);
-      n.splice(i, 0, item);
-      return n;
-    });
-    setDragIdx(null); setOverIdx(null);
-  };
-  const onDragEnd   = () => { setDragIdx(null); setOverIdx(null); };
-
   const handleSave = async () => {
     setSaving(true);
     try { await onSave(sorted); } finally { setSaving(false); }
@@ -262,40 +249,39 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
       <div className="bg-white rounded-b-2xl border border-stone-100 border-t-0 p-4 sm:p-5">
         <p className="text-xs text-stone-400 mb-3">ลากที่ไอคอน ⠿ หรือกดลูกศร เพื่อเปลี่ยนลำดับ</p>
         <div className="space-y-1 max-h-[52vh] overflow-y-auto">
-          {sorted.map((r, i) => (
-            <div
-              key={r.id}
-              draggable
-              onDragStart={() => onDragStart(i)}
-              onDragOver={(e) => onDragOver(e, i)}
-              onDrop={() => onDrop(i)}
-              onDragEnd={onDragEnd}
-              className={`flex items-center gap-2 px-2 py-2 rounded-xl border transition-all select-none ${
-                dragIdx === i
-                  ? "opacity-40 border-stone-200 bg-stone-50"
-                  : overIdx === i && dragIdx !== null
-                  ? "border-orange-300 bg-orange-50"
-                  : "border-transparent hover:bg-stone-50 hover:border-stone-100"
-              }`}
-            >
-              <GripVertical className="w-4 h-4 text-stone-300 shrink-0 cursor-grab active:cursor-grabbing" />
-              <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
-              <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
-              {r.category && (
-                <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
-              )}
-              <div className="flex gap-0.5 shrink-0">
-                <button onClick={() => move(i, -1)} disabled={i === 0}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
-                  <ChevronUp className="w-4 h-4" />
-                </button>
-                <button onClick={() => move(i, 1)} disabled={i === sorted.length - 1}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+          <ReactSortable
+            list={sorted}
+            setList={setSorted}
+            handle=".toc-drag-handle"
+            animation={150}
+            ghostClass="sortable-ghost"
+            chosenClass="sortable-chosen"
+            dragClass="sortable-drag"
+          >
+            {sorted.map((r, i) => (
+              <div
+                key={r.id}
+                className="flex items-center gap-2 px-2 py-2 rounded-xl border border-transparent hover:bg-stone-50 hover:border-stone-100 transition-colors select-none"
+              >
+                <GripVertical className="toc-drag-handle w-4 h-4 text-stone-400 shrink-0 cursor-grab active:cursor-grabbing" />
+                <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
+                <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
+                {r.category && (
+                  <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
+                )}
+                <div className="flex gap-0.5 shrink-0">
+                  <button onClick={() => move(i, -1)} disabled={i === 0}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => move(i, 1)} disabled={i === sorted.length - 1}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </ReactSortable>
         </div>
         <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-stone-100">
           <button onClick={onClose}
