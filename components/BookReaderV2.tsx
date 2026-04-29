@@ -136,7 +136,9 @@ const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pag
     useEffect(() => {
       const el = navRef.current;
       if (!el) return;
-      const stop = (e: Event) => e.stopPropagation();
+      const stop = (e: Event) => {
+        if ((e.target as Element)?.closest("button")) e.stopPropagation();
+      };
       el.addEventListener("mousedown", stop);
       el.addEventListener("touchstart", stop);
       return () => {
