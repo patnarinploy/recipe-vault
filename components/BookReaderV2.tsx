@@ -72,9 +72,10 @@ function pageLimits(pageH: number, pageW: number) {
   const overheadCont = 40 + 18 + 13 + 22 + 25;            // ≈118 px
   const contLines    = Math.max(4, Math.floor((pageH - overheadCont) / LINE_H_PX));
 
-  // TOC: subtract label + title area
+  // TOC: subtract label + title area, then -1 as a safety margin so the last
+  // row is never half-clipped by overflow-hidden.
   const overheadToc  = 40 + 26 + 48;                       // ≈114 px
-  const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX));
+  const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
   return { charsPerLine, ingLinesFirst, contLines, itemsPerPage };
 }
@@ -610,9 +611,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
     }
   });
 
+  // FAB size scales with page width (36–56 px)
+  const fabSize = Math.max(36, Math.min(56, Math.round(pageW * 0.13)));
+
   return (
     <>
-      <div className="font-apple" style={{ width: bookW, height: pageH }}>
+      {/* Book container — relative so the FAB can be absolutely positioned
+          at the bottom-right of the right page without overlapping content */}
+      <div className="relative font-apple" style={{ width: bookW, height: pageH }}>
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}
@@ -636,76 +642,78 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
         >
           {pages}
         </HTMLFlipBook>
-      </div>
 
-      {/* ── FAB (owner only) ─────────────────────────────────────── */}
-      {isOwner && (
-        <div className="fixed bottom-6 right-6 z-[10001] flex flex-col items-end gap-2">
-          {fabOpen && (
-            <div className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+        {/* ── FAB (owner only) — bottom-right of the right page ─── */}
+        {isOwner && (
+          <div className="absolute z-[10001] flex flex-col items-end gap-2"
+               style={{ bottom: Math.round(fabSize * 0.22), right: Math.round(fabSize * 0.22) }}>
+            {fabOpen && (
+              <div className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
-              {/* เพิ่มสูตร — ทุก context */}
-              <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                <Plus className="w-4 h-4 text-stone-400" /> เพิ่มสูตรในเล่มนี้
-              </button>
-
-              {/* แก้ไขปก — cover / backcover */}
-              {(ctx === "cover" || ctx === "backcover") && (
-                <button onClick={() => { setFabOpen(false); setCoverEditorOpen(true); }}
+                {/* เพิ่มสูตร — ทุก context */}
+                <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                  <Palette className="w-4 h-4 text-stone-400" /> แก้ไขปกหนังสือ
+                  <Plus className="w-4 h-4 text-stone-400" /> เพิ่มสูตรในเล่มนี้
                 </button>
-              )}
 
-              {/* แก้ไขสารบัญ — toc (logic ยังไม่ได้ทำ) */}
-              {ctx === "toc" && (
-                <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                  <List className="w-4 h-4 text-stone-400" /> แก้ไขสารบัญ
-                </button>
-              )}
-
-              {/* แก้ไขสูตร — recipe */}
-              {ctx === "recipe" && currentRecipe && (
-                <button onClick={() => { setFabOpen(false); setEditRecipeOpen(true); }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                  <Edit2 className="w-4 h-4 text-stone-400" /> แก้ไขสูตรนี้
-                </button>
-              )}
-
-              {/* เปิดสารบัญ — cover / backcover / recipe */}
-              {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
-                <>
-                  <div className="border-t border-stone-100 my-0.5" />
-                  <button onClick={() => { setFabOpen(false); goToToC(); }}
+                {/* แก้ไขปก — cover / backcover */}
+                {(ctx === "cover" || ctx === "backcover") && (
+                  <button onClick={() => { setFabOpen(false); setCoverEditorOpen(true); }}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
+                    <Palette className="w-4 h-4 text-stone-400" /> แก้ไขปกหนังสือ
                   </button>
-                </>
-              )}
+                )}
 
-              {/* ปิดหนังสือ — cover / backcover */}
-              {(ctx === "cover" || ctx === "backcover") && (
-                <button onClick={() => { setFabOpen(false); onClose(); }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl">
-                  <X className="w-4 h-4 text-red-400" /> ปิดหนังสือ
-                </button>
-              )}
-            </div>
-          )}
+                {/* แก้ไขสารบัญ — toc */}
+                {ctx === "toc" && (
+                  <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <List className="w-4 h-4 text-stone-400" /> แก้ไขสารบัญ
+                  </button>
+                )}
 
-          {/* FAB trigger */}
-          <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
-                  className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all ${
-                    fabOpen
-                      ? "bg-stone-700 text-white rotate-90"
-                      : "bg-orange-500 text-white hover:bg-orange-600 hover:scale-105"
-                  }`}>
-            {fabOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
-          </button>
-        </div>
-      )}
+                {/* แก้ไขสูตร — recipe */}
+                {ctx === "recipe" && currentRecipe && (
+                  <button onClick={() => { setFabOpen(false); setEditRecipeOpen(true); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <Edit2 className="w-4 h-4 text-stone-400" /> แก้ไขสูตรนี้
+                  </button>
+                )}
+
+                {/* เปิดสารบัญ — cover / backcover / recipe */}
+                {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
+                  <>
+                    <div className="border-t border-stone-100 my-0.5" />
+                    <button onClick={() => { setFabOpen(false); goToToC(); }}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                      <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
+                    </button>
+                  </>
+                )}
+
+                {/* ปิดหนังสือ — cover / backcover */}
+                {(ctx === "cover" || ctx === "backcover") && (
+                  <button onClick={() => { setFabOpen(false); onClose(); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl">
+                    <X className="w-4 h-4 text-red-400" /> ปิดหนังสือ
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* FAB trigger — scales with pageW */}
+            <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
+                    style={{ width: fabSize, height: fabSize }}
+                    className={`rounded-full shadow-xl flex items-center justify-center transition-all ${
+                      fabOpen
+                        ? "bg-stone-700 text-white rotate-90"
+                        : "bg-orange-500 text-white hover:bg-orange-600 hover:scale-105"
+                    }`}>
+              {fabOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
       <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title="เพิ่มสูตรในเล่มนี้">
