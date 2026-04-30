@@ -238,7 +238,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             )}
           </div>
           {publicCount > 0 && (
-            <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+            <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
               <Globe className="w-3 h-3" /> แชร์ {publicCount}
             </div>
           )}
@@ -337,14 +337,12 @@ const PageRecipeFirst = forwardRef<
       <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
         {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
       </p>
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
-        {r.is_public && (
-          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full shrink-0 mt-1">
-            <Globe className="w-2.5 h-2.5" /> แชร์
-          </span>
-        )}
-      </div>
+      <h2 className="text-xl font-bold text-stone-800 leading-tight mb-1.5">{r.title}</h2>
+      {r.is_public && (
+        <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mb-2">
+          <Globe className="w-2.5 h-2.5" /> แชร์
+        </span>
+      )}
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
         ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
