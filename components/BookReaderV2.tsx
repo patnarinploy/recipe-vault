@@ -221,7 +221,9 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
           <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3"
                style={{ width: "calc(100% - 1.5rem)", padding: "clamp(1.5rem,8%,3rem) 1rem" }}>
             <p className="tracking-[.38em] text-white/48 uppercase truncate w-full"
-               style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>ตำรับอาหาร</p>
+               style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
+              {book.tagline ?? "ตำรับอาหาร"}
+            </p>
             <div className="w-7 h-px bg-white/20" />
             <h2 className="font-bold leading-tight break-words w-full"
                 style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
@@ -230,10 +232,6 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
             {book.subtitle && (
               <p className="text-white/65 text-sm leading-snug">{book.subtitle}</p>
             )}
-            <div className="w-7 h-px bg-white/20" />
-            <p className="text-white/55" style={{ fontSize: "clamp(9px,2vw,12px)" }}>
-              {book.tagline ?? "คอลเลกชันส่วนตัว"}
-            </p>
           </div>
         </div>
       </div>
