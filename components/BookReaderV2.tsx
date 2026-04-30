@@ -208,9 +208,9 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
       <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
         <div className="shrink-0 flex items-center justify-center"
              style={{ width: "8.2%", background: `linear-gradient(to right,${darken(C, 28)},${C})` }}>
-          <span className="text-white/30 tracking-[.4em] truncate"
+          <span className="text-white/30 tracking-[.4em] truncate uppercase"
                 style={{ writingMode: "vertical-rl", fontSize: "clamp(6px,1.6vw,8px)" }}>
-            RECIPE BOOK
+            {book.title}
           </span>
         </div>
         <div className="flex-1 relative flex items-center justify-center" style={{ background: C }}>
@@ -224,7 +224,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
                style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
               {book.tagline ?? "ตำรับอาหาร"}
             </p>
-            <div className="w-12 h-px bg-white/20" />
+            <div className="w-1/3 h-px bg-white/20" />
             <h2 className="font-bold leading-tight break-words w-full"
                 style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
               {book.title}
