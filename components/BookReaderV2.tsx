@@ -2,7 +2,7 @@
 
 import HTMLFlipBook from "react-pageflip";
 import { ReactSortable } from "react-sortablejs";
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SkeletonOpenBook } from "./Skeleton";
@@ -51,6 +51,82 @@ function usePageDimensions() {
 // ─── Style tokens ─────────────────────────────────────────────────
 const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
+
+// ─── Pagination constants (estimated at BASE_H=540, 14px font) ───
+const CHARS_PER_LINE     = 38;   // avg chars per line in content area
+const TOC_ITEMS_PER_PAGE = 10;   // TOC rows per page
+const ING_LINES_FIRST    = 7;    // ingredient lines on first left page (image takes space)
+const ING_LINES_CONT     = 16;   // ingredient lines on continuation left pages
+const INST_LINES         = 16;   // instruction lines per right page
+
+// ─── Page slot types ──────────────────────────────────────────────
+type PageSlot =
+  | { kind: "cover-front" }
+  | { kind: "inside-cover" }
+  | { kind: "toc"; tocPage: number }
+  | { kind: "filler" }
+  | { kind: "recipe-l"; recipeIdx: number; pairIdx: number; ingText: string }
+  | { kind: "recipe-r"; recipeIdx: number; pairIdx: number; instText: string; isWatermark: boolean }
+  | { kind: "back-cover" }
+
+// Splits text so the first returned value fits within maxLines display rows.
+// Always takes at least one raw line to prevent infinite loops.
+function splitText(text: string, charsPerLine: number, maxLines: number): [string, string] {
+  const lines = (text || "").split("\n");
+  let count = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const w = Math.max(1, Math.ceil((lines[i].length || 0.1) / charsPerLine));
+    if (count + w > maxLines) {
+      const cut = Math.max(1, i);
+      return [lines.slice(0, cut).join("\n"), lines.slice(cut).join("\n")];
+    }
+    count += w;
+  }
+  return [text || "", ""];
+}
+
+function toChunks(text: string, charsPerLine: number, firstMax: number, contMax: number): string[] {
+  const chunks: string[] = [];
+  let rem = text || "";
+  let first = true;
+  do {
+    const [chunk, rest] = splitText(rem, charsPerLine, first ? firstMax : contMax);
+    chunks.push(chunk);
+    rem = rest;
+    first = false;
+  } while (rem);
+  return chunks.length ? chunks : [""];
+}
+
+// Builds the flat ordered array of page slots from the recipe list.
+// Ensures each recipe's first page lands on an odd slot index (left page).
+function buildSlots(recipes: Recipe[]): { slots: PageSlot[]; recipeSlotMap: number[] } {
+  const slots: PageSlot[] = [{ kind: "cover-front" }, { kind: "inside-cover" }];
+
+  const tocPages = Math.max(1, Math.ceil(recipes.length / TOC_ITEMS_PER_PAGE));
+  for (let t = 0; t < tocPages; t++) slots.push({ kind: "toc", tocPage: t });
+
+  // Align: first recipe must land on an odd index (left page in spread).
+  if (recipes.length > 0 && slots.length % 2 === 0) slots.push({ kind: "filler" });
+
+  const recipeSlotMap: number[] = [];
+  for (let ri = 0; ri < recipes.length; ri++) {
+    recipeSlotMap.push(slots.length);
+    const r = recipes[ri];
+    const ingChunks  = toChunks(r.ingredients  || "", CHARS_PER_LINE, ING_LINES_FIRST, ING_LINES_CONT);
+    const instChunks = toChunks(r.instructions || "", CHARS_PER_LINE, INST_LINES, INST_LINES);
+    const pairs = Math.max(ingChunks.length, instChunks.length);
+    for (let ci = 0; ci < pairs; ci++) {
+      const ingText  = ingChunks[ci]  ?? "";
+      const instText = instChunks[ci] ?? "";
+      slots.push({ kind: "recipe-l", recipeIdx: ri, pairIdx: ci, ingText });
+      slots.push({ kind: "recipe-r", recipeIdx: ri, pairIdx: ci, instText, isWatermark: !instText });
+    }
+  }
+
+  slots.push({ kind: "back-cover" });
+  return { slots, recipeSlotMap };
+}
 
 // ─── Page helpers ─────────────────────────────────────────────────
 function Tape({ right }: { right?: boolean }) {
@@ -126,85 +202,104 @@ const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
 ));
 PageInsideCover.displayName = "PageInsideCover";
 
-const PageToC = forwardRef<HTMLDivElement, { recipes: Recipe[]; onNavigate: (pageIdx: number) => void }>(
-  ({ recipes, onNavigate }, ref) => {
-    const navRef = useRef<HTMLElement>(null);
+const PageToC = forwardRef<
+  HTMLDivElement,
+  { recipes: Recipe[]; tocPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void }
+>(({ recipes, tocPage, recipeSlotMap, onNavigate }, ref) => {
+  const navRef = useRef<HTMLElement>(null);
 
-    // Native listeners in bubble phase on the nav element — fires BEFORE page-flip's
-    // mousedown/touchstart listener on the container, so stopPropagation prevents
-    // page-flip from tracking the event and triggering an extra page flip.
-    useEffect(() => {
-      const el = navRef.current;
-      if (!el) return;
-      const stop = (e: Event) => {
-        if ((e.target as Element)?.closest("button")) e.stopPropagation();
-      };
-      el.addEventListener("mousedown", stop);
-      el.addEventListener("touchstart", stop);
-      return () => {
-        el.removeEventListener("mousedown", stop);
-        el.removeEventListener("touchstart", stop);
-      };
-    }, []);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const stop = (e: Event) => {
+      if ((e.target as Element)?.closest("button")) e.stopPropagation();
+    };
+    el.addEventListener("mousedown", stop);
+    el.addEventListener("touchstart", stop);
+    return () => {
+      el.removeEventListener("mousedown", stop);
+      el.removeEventListener("touchstart", stop);
+    };
+  }, []);
 
-    return (
+  const start        = tocPage * TOC_ITEMS_PER_PAGE;
+  const pageRecipes  = recipes.slice(start, start + TOC_ITEMS_PER_PAGE);
+  const isCont       = tocPage > 0;
+
+  return (
     <div ref={ref}>
       <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
            style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape />
         <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
-          Table of Contents
+          {isCont ? "Table of Contents (cont.)" : "Table of Contents"}
         </p>
         <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
             style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
-          สารบัญ
+          {isCont ? "สารบัญ (ต่อ)" : "สารบัญ"}
         </h2>
         <nav ref={navRef} className="flex-1 space-y-0.5 overflow-hidden">
           {recipes.length === 0
             ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
-            : recipes.map((r, i) => (
-                <button
-                  key={r.id}
-                  onClick={() => onNavigate(3 + i * 2)}
-                  className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
-                >
-                  <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-                  <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
-                  <span className="shrink-0 text-[11px] font-mono text-stone-400">
-                    {String(i * 2 + 1).padStart(2, "0")}
-                  </span>
-                </button>
-              ))
+            : pageRecipes.map((r, localIdx) => {
+                const ri      = start + localIdx;
+                const slotIdx = recipeSlotMap[ri] ?? 0;
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => onNavigate(slotIdx)}
+                    className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+                  >
+                    <span className="flex-1 text-stone-700 truncate">{r.title}</span>
+                    <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
+                    <span className="shrink-0 text-[11px] font-mono text-stone-400">
+                      {String(slotIdx).padStart(2, "0")}
+                    </span>
+                  </button>
+                );
+              })
           }
         </nav>
       </div>
     </div>
   );
-  }
-);
+});
 PageToC.displayName = "PageToC";
 
-const PageRecipeLeft = forwardRef<HTMLDivElement, { recipe: Recipe; pn: number }>(({ recipe: r, pn }, ref) => (
+const PageRecipeLeft = forwardRef<
+  HTMLDivElement,
+  { recipe: Recipe; pairIdx: number; ingText: string; pn: number }
+>(({ recipe: r, pairIdx, ingText, pn }, ref) => (
   <div ref={ref}>
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
-        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-      </p>
-      <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
-      <div className="h-px bg-[#e8d5b7] mb-4" />
-      {r.image_url
-        ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
-               style={{ height: "clamp(90px,20vh,190px)" }} />
-        : <div className="rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mb-4"
-               style={{ height: "clamp(90px,20vh,190px)" }}>
-            <span className="text-stone-300 text-xs italic">[ ภาพประกอบ ]</span>
-          </div>
-      }
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
+      {pairIdx === 0 ? (
+        <>
+          <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
+            {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
+          </p>
+          <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
+          <div className="h-px bg-[#e8d5b7] mb-4" />
+          {r.image_url
+            ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
+                   style={{ height: "clamp(90px,20vh,190px)" }} />
+            : <div className="rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mb-4"
+                   style={{ height: "clamp(90px,20vh,190px)" }}>
+                <span className="text-stone-300 text-xs italic">[ ภาพประกอบ ]</span>
+              </div>
+          }
+          <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
+        </>
+      ) : (
+        <>
+          <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1">{r.title}</p>
+          <div className="h-px bg-[#e8d5b7] mb-3" />
+          <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ (ต่อ):</p>
+        </>
+      )}
       <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.85] whitespace-pre-line">
-        {r.ingredients}
+        {ingText || <span className="text-stone-300 italic text-xs">— จบวัตถุดิบ —</span>}
       </div>
       <Pn n={pn} />
     </div>
@@ -212,20 +307,50 @@ const PageRecipeLeft = forwardRef<HTMLDivElement, { recipe: Recipe; pn: number }
 ));
 PageRecipeLeft.displayName = "PageRecipeLeft";
 
-const PageRecipeRight = forwardRef<HTMLDivElement, { recipe: Recipe; pn: number }>(({ recipe: r, pn }, ref) => (
+const PageRecipeRight = forwardRef<
+  HTMLDivElement,
+  { recipe: Recipe; pairIdx: number; instText: string; isWatermark: boolean; pn: number }
+>(({ recipe: r, pairIdx, instText, isWatermark, pn }, ref) => (
   <div ref={ref}>
-    <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-      <Tape right />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-3">วิธีทำ:</p>
-      <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.95] whitespace-pre-line">
-        {r.instructions}
+    {isWatermark ? (
+      <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center relative"
+           style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+        <Tape right />
+        <p className="text-[clamp(1.6rem,6vw,3rem)] font-bold text-stone-100 text-center leading-tight px-8 break-words pointer-events-none select-none"
+           style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif", transform: "rotate(-12deg)" }}>
+          {r.title}
+        </p>
       </div>
-      <Pn n={pn} right />
-    </div>
+    ) : (
+      <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
+           style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+        <Tape right />
+        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-3">
+          {pairIdx === 0 ? "วิธีทำ:" : "วิธีทำ (ต่อ):"}
+        </p>
+        <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.95] whitespace-pre-line">
+          {instText}
+        </div>
+        <Pn n={pn} right />
+      </div>
+    )}
   </div>
 ));
 PageRecipeRight.displayName = "PageRecipeRight";
+
+const PageFiller = forwardRef<HTMLDivElement, object>((_p, ref) => (
+  <div ref={ref}>
+    <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center"
+         style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+      <div className="text-center select-none pointer-events-none">
+        <div className="w-12 h-px bg-stone-200 mx-auto mb-3" />
+        <p className="text-[9px] tracking-[.32em] text-stone-200 uppercase">ตำรับอาหาร</p>
+        <div className="w-12 h-px bg-stone-200 mx-auto mt-3" />
+      </div>
+    </div>
+  </div>
+));
+PageFiller.displayName = "PageFiller";
 
 const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref) => (
   <div ref={ref} data-density="hard">
@@ -362,23 +487,24 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
 
   useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
-  // ── Page context ──────────────────────────────────────────────────
-  // pages layout: [cover(0), inside(1), toc(2), ...recipe pairs..., backcover(last)]
-  const totalPages = 3 + recipes.length * 2 + 1; // cover+inside+toc + pairs + back
-  const lastPage   = totalPages - 1;
+  // ── Slot-based page layout ────────────────────────────────────────
+  const { slots, recipeSlotMap } = useMemo(() => buildSlots(recipes), [recipes]);
 
+  const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
+  const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
+
+  const currentSlot = slots[currentPage] ?? slots[0];
   type Ctx = "cover" | "toc" | "recipe" | "backcover";
   let ctx: Ctx = "cover";
-  if (currentPage === 0)                          ctx = "cover";
-  else if (currentPage <= 2)                      ctx = "toc";
-  else if (currentPage === lastPage)              ctx = "backcover";
-  else                                            ctx = "recipe";
-
-  const recipeIdx     = ctx === "recipe" ? Math.floor((currentPage - 3) / 2) : -1;
+  let recipeIdx = -1;
+  if (currentSlot.kind === "cover-front") ctx = "cover";
+  else if (currentSlot.kind === "inside-cover" || currentSlot.kind === "toc" || currentSlot.kind === "filler") ctx = "toc";
+  else if (currentSlot.kind === "back-cover") ctx = "backcover";
+  else if (currentSlot.kind === "recipe-l" || currentSlot.kind === "recipe-r") {
+    ctx = "recipe";
+    recipeIdx = currentSlot.recipeIdx;
+  }
   const currentRecipe = recipeIdx >= 0 ? recipes[recipeIdx] ?? null : null;
-
-  const goToToC = () => bookRef.current?.pageFlip().turnToPage(2);
-  const goToPage = (idx: number) => bookRef.current?.pageFlip().turnToPage(idx);
 
   const handleSort = async (sorted: Recipe[]) => {
     const { updateRecipeOrder } = await import("@/app/actions/recipes");
@@ -403,16 +529,28 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   const bookW   = portrait ? pageW : pageW * 2;
   const flipKey = `${pageW}x${pageH}:${dataVersion}`;
 
-  const pages: React.ReactElement[] = [
-    <PageCoverFront key="cf" book={book} />,
-    <PageInsideCover key="ic" />,
-    <PageToC key="toc" recipes={recipes} onNavigate={goToPage} />,
-  ];
-  recipes.forEach((r, i) => {
-    pages.push(<PageRecipeLeft  key={`l${i}`} recipe={r} pn={i * 2 + 1} />);
-    pages.push(<PageRecipeRight key={`r${i}`} recipe={r} pn={i * 2 + 2} />);
+  const pages: React.ReactElement[] = slots.map((slot, si) => {
+    switch (slot.kind) {
+      case "cover-front":  return <PageCoverFront key="cf" book={book} />;
+      case "inside-cover": return <PageInsideCover key="ic" />;
+      case "toc": return (
+        <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
+                 recipeSlotMap={recipeSlotMap} onNavigate={goToPage} />
+      );
+      case "filler": return <PageFiller key={`f-${si}`} />;
+      case "recipe-l": return (
+        <PageRecipeLeft key={`rl-${slot.recipeIdx}-${slot.pairIdx}`}
+                        recipe={recipes[slot.recipeIdx]} pairIdx={slot.pairIdx}
+                        ingText={slot.ingText} pn={si} />
+      );
+      case "recipe-r": return (
+        <PageRecipeRight key={`rr-${slot.recipeIdx}-${slot.pairIdx}`}
+                         recipe={recipes[slot.recipeIdx]} pairIdx={slot.pairIdx}
+                         instText={slot.instText} isWatermark={slot.isWatermark} pn={si} />
+      );
+      case "back-cover": return <PageBackCover key="cb" book={book} />;
+    }
   });
-  pages.push(<PageBackCover key="cb" book={book} />);
 
   return (
     <>
