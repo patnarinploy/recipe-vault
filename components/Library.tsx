@@ -102,67 +102,71 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
               className="flex flex-col items-center anim-fade-up"
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              {/* Cover + settings button wrapper */}
-              <div
-                ref={book.id === settingsBookId ? settingsRef : undefined}
-                className="relative"
-              >
-                <BookCover
-                  book={book}
-                  size="sm"
-                  publicCount={book.public_count}
-                  onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
-                />
+              {/* Cover */}
+              <BookCover
+                book={book}
+                size="sm"
+                publicCount={book.public_count}
+                onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
+              />
 
-                {/* Settings button — mine tab only */}
+              {/* Title + count row, with settings button on the right (mine tab) */}
+              <div className="mt-4 flex items-start justify-between gap-1 w-full max-w-[160px]">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-stone-700 text-left line-clamp-1">
+                    {book.title}
+                  </p>
+                  <p className="text-xs text-stone-400">
+                    {tab === "public"
+                      ? `${book.public_count} สูตรสาธารณะ`
+                      : `${book.recipe_count} สูตร`}
+                  </p>
+                </div>
+
+                {/* Settings button + dropdown */}
                 {tab === "mine" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSettingsBookId(settingsBookId === book.id ? null : book.id);
-                    }}
-                    className="absolute bottom-3 right-2 z-10 w-7 h-7 rounded-full bg-black/35 hover:bg-black/55 flex items-center justify-center transition-colors"
-                    aria-label="ตั้งค่าหนังสือ"
+                  <div
+                    ref={book.id === settingsBookId ? settingsRef : undefined}
+                    className="relative shrink-0"
                   >
-                    <Settings className="w-3.5 h-3.5 text-white" />
-                  </button>
-                )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSettingsBookId(settingsBookId === book.id ? null : book.id);
+                      }}
+                      className="w-7 h-7 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors text-stone-400 hover:text-stone-600"
+                      aria-label="ตั้งค่าหนังสือ"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
 
-                {/* Settings dropdown */}
-                {tab === "mine" && settingsBookId === book.id && (
-                  <div className="absolute bottom-11 right-0 z-20 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
-                    <button
-                      onClick={() => {
-                        setSettingsBookId(null);
-                        setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true });
-                      }}
-                      className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
-                    >
-                      <Plus className="w-4 h-4 text-stone-400 shrink-0" />
-                      เพิ่มสูตรในเล่มนี้
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSettingsBookId(null);
-                        setEditCoverBook(book);
-                      }}
-                      className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
-                    >
-                      <Palette className="w-4 h-4 text-stone-400 shrink-0" />
-                      แก้ไขปกหนังสือ
-                    </button>
+                    {settingsBookId === book.id && (
+                      <div className="absolute bottom-full right-0 mb-1 z-20 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
+                        <button
+                          onClick={() => {
+                            setSettingsBookId(null);
+                            setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true });
+                          }}
+                          className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
+                        >
+                          <Plus className="w-4 h-4 text-stone-400 shrink-0" />
+                          เพิ่มสูตรในเล่มนี้
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSettingsBookId(null);
+                            setEditCoverBook(book);
+                          }}
+                          className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
+                        >
+                          <Palette className="w-4 h-4 text-stone-400 shrink-0" />
+                          แก้ไขปกหนังสือ
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-
-              <p className="mt-4 text-sm font-medium text-stone-700 text-center line-clamp-1 max-w-[160px]">
-                {book.title}
-              </p>
-              <p className="text-xs text-stone-400">
-                {tab === "public"
-                  ? `${book.public_count} สูตรสาธารณะ`
-                  : `${book.recipe_count} สูตร`}
-              </p>
             </div>
           ))}
 
