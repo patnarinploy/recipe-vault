@@ -350,7 +350,7 @@ const PageRecipeFirst = forwardRef<
       <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
         {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
       </p>
-      <div className="flex items-start gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
         {r.is_public && <ShareBadge coverColor={coverColor} />}
       </div>
