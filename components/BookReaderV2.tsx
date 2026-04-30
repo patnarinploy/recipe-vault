@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, Globe } from "lucide-react";
 import type { Book, Recipe } from "@/lib/types";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -297,6 +297,11 @@ const PageToC = forwardRef<
                     className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                   >
                     <span className="flex-1 text-stone-700 truncate">{r.title}</span>
+                    {r.is_public && (
+                      <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                        <Globe className="w-2.5 h-2.5" /> แชร์
+                      </span>
+                    )}
                     <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
                     <span className="shrink-0 text-[11px] font-mono text-stone-400">
                       {String(slotIdx).padStart(2, "0")}
@@ -321,9 +326,16 @@ const PageRecipeFirst = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
-        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-      </p>
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold">
+          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
+        </p>
+        {r.is_public && (
+          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+            <Globe className="w-2.5 h-2.5" /> แชร์
+          </span>
+        )}
+      </div>
       <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
@@ -455,6 +467,11 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
                 <GripVertical className="toc-drag-handle w-4 h-4 text-stone-400 shrink-0 cursor-grab active:cursor-grabbing" />
                 <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
                 <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
+                {r.is_public && (
+                  <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full shrink-0">
+                    <Globe className="w-2.5 h-2.5" /> แชร์
+                  </span>
+                )}
                 {r.category && (
                   <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
                 )}
