@@ -123,22 +123,28 @@ function toChunks(text: string, charsPerLine: number, firstMax: number, contMax:
 
 // Builds the flat ordered array of page slots from the recipe list.
 // Content flows sequentially: all ingredients pages first, then instructions.
-// Each recipe takes an even number of slots so the next recipe always starts
-// on a left (odd-index) page. A watermark slot is appended when needed.
+// In spread mode each recipe takes an even number of slots so the next
+// recipe starts on a left page; watermark/filler slots enforce this.
+// In portrait mode all spacing slots are omitted — every page is content.
 function buildSlots(
   recipes: Recipe[],
   pageH: number,
   pageW: number,
+  portrait: boolean,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, ingLinesFirst, contLines, itemsPerPage } = pageLimits(pageH, pageW);
 
-  const slots: PageSlot[] = [{ kind: "cover-front" }, { kind: "inside-cover" }];
+  const slots: PageSlot[] = [{ kind: "cover-front" }];
+
+  // Inside-cover is purely a spread spacer — skip in portrait
+  if (!portrait) slots.push({ kind: "inside-cover" });
 
   const tocPages = Math.max(1, Math.ceil(recipes.length / itemsPerPage));
   for (let t = 0; t < tocPages; t++) slots.push({ kind: "toc", tocPage: t });
 
-  // Align: first recipe must land on an odd index (left page in spread).
-  if (recipes.length > 0 && slots.length % 2 === 0) slots.push({ kind: "filler" });
+  // Filler for spread alignment — not needed in portrait
+  if (!portrait && recipes.length > 0 && slots.length % 2 === 0)
+    slots.push({ kind: "filler" });
 
   const recipeSlotMap: number[] = [];
   for (let ri = 0; ri < recipes.length; ri++) {
@@ -150,20 +156,19 @@ function buildSlots(
                          .filter(c => c.trim().length > 0);
     const ingContChunks = ingChunks.slice(1).filter(c => c.trim().length > 0);
 
-    // First page: header + image + first ingredient chunk (always left)
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: ingChunks[0] ?? "" });
 
-    // Remaining ingredient chunks flow into subsequent pages
     for (let ci = 0; ci < ingContChunks.length; ci++)
       slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci + 1, ingText: ingContChunks[ci] });
 
-    // Instruction chunks start immediately after all ingredients
     for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci] });
 
-    // If total pages is odd, append a watermark so the next recipe starts on a left page
-    const total = 1 + ingContChunks.length + instChunks.length;
-    if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
+    // Watermark for spread alignment — skip in portrait
+    if (!portrait) {
+      const total = 1 + ingContChunks.length + instChunks.length;
+      if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
+    }
   }
 
   slots.push({ kind: "back-cover" });
@@ -530,8 +535,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
 
   // ── Slot-based page layout ────────────────────────────────────────
   const { slots, recipeSlotMap, itemsPerPage } = useMemo(
-    () => buildSlots(recipes, pageH, pageW),
-    [recipes, pageH, pageW],
+    () => buildSlots(recipes, pageH, pageW, portrait),
+    [recipes, pageH, pageW, portrait],
   );
 
   const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
