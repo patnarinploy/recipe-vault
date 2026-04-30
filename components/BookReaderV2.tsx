@@ -560,7 +560,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     return () => document.removeEventListener("mousedown", onDown);
   }, [fabOpen]);
 
-  const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
+  const firstTocIdx = slots.findIndex(s => s.kind === "toc");
+  const goToToC = () => bookRef.current?.pageFlip().turnToPage(Math.max(0, firstTocIdx));
   const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
 
   const currentSlot = slots[currentPage] ?? slots[0];
