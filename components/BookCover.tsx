@@ -58,9 +58,9 @@ export default function BookCover({
             background: `linear-gradient(to right, ${darken(book.cover_color, 20)}, ${book.cover_color})`,
           }}
         >
-          {[25, 50, 75].map(p => (
+          {[1].map(p => (
             <div key={p} className="absolute top-0 bottom-0 pointer-events-none"
-                 style={{ left: `${p}%`, width: 1, background: "rgba(255,255,255,0.22)" }} />
+                 style={{ left: "70%", width: 1, background: "rgba(255,255,255,0.28)" }} />
           ))}
           <span
             className="text-white/35 tracking-[.4em] truncate relative z-10"
