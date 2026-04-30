@@ -672,10 +672,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
         {/* ── FAB (owner only) — bottom-right of the right page ─── */}
         {isOwner && (
-          <div ref={fabRef} className="absolute z-[10001] flex flex-col items-end gap-2"
+          <div className="absolute z-[10001] flex flex-col items-end gap-2"
                style={{ bottom: Math.round(fabSize * 0.22), right: Math.round(fabSize * 0.22) }}>
             {fabOpen && (
-              <div className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+              <div ref={fabRef} className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
                 {/* เพิ่มสูตร — ทุก context */}
                 <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
