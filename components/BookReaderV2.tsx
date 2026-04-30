@@ -33,7 +33,7 @@ function usePageDimensions() {
     function calc() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const portrait = vw < 640;
+      const portrait = vw < 1024;   // single-page below lg breakpoint
       const availH = vh - CORNER_PAD * 2;
       const availW = portrait ? vw - 16 : (vw - 16) / 2;
       const scale = Math.max(0.3, Math.min(availH / BASE_H, availW / BASE_W, 2.0));
