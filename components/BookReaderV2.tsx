@@ -41,7 +41,7 @@ function usePageDimensions() {
     }
     calc();
     let t: ReturnType<typeof setTimeout>;
-    const onResize = () => { clearTimeout(t); t = setTimeout(calc, 300); };
+    const onResize = () => { clearTimeout(t); t = setTimeout(calc, 80); };
     window.addEventListener("resize", onResize);
     return () => { window.removeEventListener("resize", onResize); clearTimeout(t); };
   }, []);
@@ -538,6 +538,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
     [recipes, pageH, pageW, portrait],
   );
 
+  // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
+  useEffect(() => {
+    if (currentPage >= slots.length) setCurrentPage(0);
+  }, [slots.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
   const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
 
@@ -578,7 +583,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   if (!ready || loading || !book) return <SkeletonOpenBook />;
 
   const bookW   = portrait ? pageW : pageW * 2;
-  const flipKey = `${pageW}x${pageH}:${dataVersion}`;
+  const flipKey = `${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
 
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
@@ -622,7 +627,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
     <>
       {/* Book container — relative so the FAB can be absolutely positioned
           at the bottom-right of the right page without overlapping content */}
-      <div className="relative font-apple" style={{ width: bookW, height: pageH }}>
+      <div className="relative font-apple" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}
