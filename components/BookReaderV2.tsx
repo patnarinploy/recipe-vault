@@ -252,8 +252,8 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             </>)}
           </div>
           {publicCount > 0 && (
-            <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold pointer-events-none"
-                 style={{ color: C }}>
+            <div className="absolute bg-white/95 backdrop-blur-sm text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold pointer-events-none"
+                 style={{ bottom: 44, right: 5, color: C }}>
               <Globe className="w-3.5 h-3.5" /> แชร์ {publicCount}
             </div>
           )}
@@ -715,7 +715,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         {/* ── FAB (owner only) — bottom-right of the right page ─── */}
         {isOwner && (
           <div className="absolute z-[10001] flex flex-col items-end gap-2"
-               style={{ bottom: Math.round(fabSize * 0.22), right: Math.round(fabSize * 0.22) }}>
+               style={{ bottom: 5, right: 5 }}>
             {fabOpen && (
               <div ref={fabRef} className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
@@ -770,9 +770,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               </div>
             )}
 
-            {/* FAB trigger — scales with pageW */}
+            {/* FAB trigger */}
             <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
-                    style={{ width: fabSize, height: fabSize }}
+                    style={{ width: 30, height: 30 }}
                     className={`rounded-full shadow-xl flex items-center justify-center transition-all ${
                       fabOpen
                         ? "bg-stone-700 text-white rotate-90"
