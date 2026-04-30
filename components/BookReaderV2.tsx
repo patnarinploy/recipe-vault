@@ -52,11 +52,32 @@ function usePageDimensions() {
 const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
-// ─── Pagination constants (estimated at BASE_H=540, 14px font) ───
-const CHARS_PER_LINE     = 38;   // avg chars per line in content area
-const TOC_ITEMS_PER_PAGE = 10;   // TOC rows per page
-const ING_LINES_FIRST    = 7;    // ingredient lines on first page (image takes space)
-const CONT_LINES         = 15;   // lines available on continuation pages (both ing & inst)
+// ─── Pagination — fixed pixel measurements (14 px text, fixed font) ─
+const LINE_H_PX     = 26;  // ~14px × 1.85 line-height
+const TOC_ITEM_H_PX = 36;  // height of one TOC row
+const CHAR_W_PX     = 9;   // avg Thai char width at 14 px
+
+// Derive per-page limits from the real rendered page size so that content
+// never overflows when the user resizes the window.
+function pageLimits(pageH: number, pageW: number) {
+  const innerW      = Math.max(180, pageW - 40);           // subtract h-padding
+  const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
+
+  // First recipe page: subtract fixed chrome (title, divider, image, label, pn)
+  const imgH         = Math.min(190, Math.max(90, Math.round(pageH * 0.35)));
+  const overheadFirst = 40 + 20 + 36 + 17 + imgH + 16 + 22 + 25; // ≈366 at base
+  const ingLinesFirst = Math.max(2, Math.floor((pageH - overheadFirst) / LINE_H_PX));
+
+  // Continuation / instruction pages: subtract mini-header + pn
+  const overheadCont = 40 + 18 + 13 + 22 + 25;            // ≈118 px
+  const contLines    = Math.max(4, Math.floor((pageH - overheadCont) / LINE_H_PX));
+
+  // TOC: subtract label + title area
+  const overheadToc  = 40 + 26 + 48;                       // ≈114 px
+  const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX));
+
+  return { charsPerLine, ingLinesFirst, contLines, itemsPerPage };
+}
 
 // ─── Page slot types ──────────────────────────────────────────────
 type PageSlot =
@@ -103,10 +124,16 @@ function toChunks(text: string, charsPerLine: number, firstMax: number, contMax:
 // Content flows sequentially: all ingredients pages first, then instructions.
 // Each recipe takes an even number of slots so the next recipe always starts
 // on a left (odd-index) page. A watermark slot is appended when needed.
-function buildSlots(recipes: Recipe[]): { slots: PageSlot[]; recipeSlotMap: number[] } {
+function buildSlots(
+  recipes: Recipe[],
+  pageH: number,
+  pageW: number,
+): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
+  const { charsPerLine, ingLinesFirst, contLines, itemsPerPage } = pageLimits(pageH, pageW);
+
   const slots: PageSlot[] = [{ kind: "cover-front" }, { kind: "inside-cover" }];
 
-  const tocPages = Math.max(1, Math.ceil(recipes.length / TOC_ITEMS_PER_PAGE));
+  const tocPages = Math.max(1, Math.ceil(recipes.length / itemsPerPage));
   for (let t = 0; t < tocPages; t++) slots.push({ kind: "toc", tocPage: t });
 
   // Align: first recipe must land on an odd index (left page in spread).
@@ -117,8 +144,8 @@ function buildSlots(recipes: Recipe[]): { slots: PageSlot[]; recipeSlotMap: numb
     recipeSlotMap.push(slots.length);
     const r = recipes[ri];
 
-    const ingChunks = toChunks(r.ingredients || "", CHARS_PER_LINE, ING_LINES_FIRST, CONT_LINES);
-    const instChunks = toChunks(r.instructions || "", CHARS_PER_LINE, CONT_LINES, CONT_LINES)
+    const ingChunks = toChunks(r.ingredients || "", charsPerLine, ingLinesFirst, contLines);
+    const instChunks = toChunks(r.instructions || "", charsPerLine, contLines, contLines)
                          .filter(c => c.trim().length > 0);
     const ingContChunks = ingChunks.slice(1).filter(c => c.trim().length > 0);
 
@@ -139,7 +166,7 @@ function buildSlots(recipes: Recipe[]): { slots: PageSlot[]; recipeSlotMap: numb
   }
 
   slots.push({ kind: "back-cover" });
-  return { slots, recipeSlotMap };
+  return { slots, recipeSlotMap, itemsPerPage };
 }
 
 // ─── Page helpers ─────────────────────────────────────────────────
@@ -218,8 +245,8 @@ PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<
   HTMLDivElement,
-  { recipes: Recipe[]; tocPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void }
->(({ recipes, tocPage, recipeSlotMap, onNavigate }, ref) => {
+  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void }
+>(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate }, ref) => {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -236,8 +263,8 @@ const PageToC = forwardRef<
     };
   }, []);
 
-  const start        = tocPage * TOC_ITEMS_PER_PAGE;
-  const pageRecipes  = recipes.slice(start, start + TOC_ITEMS_PER_PAGE);
+  const start        = tocPage * itemsPerPage;
+  const pageRecipes  = recipes.slice(start, start + itemsPerPage);
   const isCont       = tocPage > 0;
 
   return (
@@ -501,7 +528,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
   // ── Slot-based page layout ────────────────────────────────────────
-  const { slots, recipeSlotMap } = useMemo(() => buildSlots(recipes), [recipes]);
+  const { slots, recipeSlotMap, itemsPerPage } = useMemo(
+    () => buildSlots(recipes, pageH, pageW),
+    [recipes, pageH, pageW],
+  );
 
   const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
   const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
@@ -552,7 +582,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
-                 recipeSlotMap={recipeSlotMap} onNavigate={goToPage} />
+                 itemsPerPage={itemsPerPage} recipeSlotMap={recipeSlotMap} onNavigate={goToPage} />
       );
       case "filler": return <PageFiller key={`f-${si}`} />;
       case "recipe-first": return (
