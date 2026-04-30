@@ -201,7 +201,7 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 }
 
 // ─── Page components ──────────────────────────────────────────────
-const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref) => {
+const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number }>(({ book, publicCount }, ref) => {
   const C = book.cover_color;
   return (
     <div ref={ref} data-density="hard">
@@ -233,7 +233,15 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
               <div className="w-12 h-px bg-white/20 mt-1" />
               <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
             </>)}
+            {publicCount > 0 && (
+              <div className="w-1/3 h-px bg-white/20 mt-1" />
+            )}
           </div>
+          {publicCount > 0 && (
+            <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+              <Globe className="w-3 h-3" /> แชร์ {publicCount}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -326,17 +334,17 @@ const PageRecipeFirst = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold">
-          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-        </p>
+      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
+        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
+      </p>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
         {r.is_public && (
-          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+          <span className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full shrink-0 mt-1">
             <Globe className="w-2.5 h-2.5" /> แชร์
           </span>
         )}
       </div>
-      <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
         ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
@@ -623,7 +631,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
