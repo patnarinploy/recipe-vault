@@ -126,6 +126,21 @@ function toChunks(text: string, charsPerLine: number, firstMax: number, contMax:
 // In spread mode each recipe takes an even number of slots so the next
 // recipe starts on a left page; watermark/filler slots enforce this.
 // In portrait mode all spacing slots are omitted — every page is content.
+
+function hexToRgba(hex: string, alpha: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 0xff},${(n >> 8) & 0xff},${n & 0xff},${alpha})`;
+}
+
+function ShareBadge({ coverColor }: { coverColor: string }) {
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap"
+          style={{ background: hexToRgba(coverColor, 0.18), color: coverColor }}>
+      <Globe className="w-2.5 h-2.5" /> แชร์แล้ว
+    </span>
+  );
+}
+
 function buildSlots(
   recipes: Recipe[],
   pageH: number,
@@ -206,9 +221,13 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
   return (
     <div ref={ref} data-density="hard">
       <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
-        <div className="shrink-0 flex items-center justify-center"
+        <div className="shrink-0 flex items-center justify-center relative overflow-hidden"
              style={{ width: "8.2%", background: `linear-gradient(to right,${darken(C, 28)},${C})` }}>
-          <span className="text-white/30 tracking-[.4em] truncate uppercase"
+          {[18, 32, 46, 60, 74].map(p => (
+            <div key={p} className="absolute left-0 right-0 pointer-events-none"
+                 style={{ top: `${p}%`, height: 1, background: "rgba(255,255,255,0.22)" }} />
+          ))}
+          <span className="text-white/30 tracking-[.4em] truncate uppercase relative z-10"
                 style={{ writingMode: "vertical-rl", fontSize: "clamp(6px,1.6vw,8px)" }}>
             {book.title}
           </span>
@@ -255,8 +274,8 @@ PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<
   HTMLDivElement,
-  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void }
->(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate }, ref) => {
+  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string }
+>(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor }, ref) => {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -302,11 +321,7 @@ const PageToC = forwardRef<
                     className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                   >
                     <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-                    {r.is_public && (
-                      <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-semibold text-white bg-orange-500 px-1.5 py-0.5 rounded-full">
-                        <Globe className="w-2.5 h-2.5" /> แชร์
-                      </span>
-                    )}
+                    {r.is_public && <ShareBadge coverColor={coverColor} />}
                     <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
                     <span className="shrink-0 text-[11px] font-mono text-stone-400">
                       {String(slotIdx).padStart(2, "0")}
@@ -325,8 +340,8 @@ PageToC.displayName = "PageToC";
 // First page of a recipe — always a left page (odd slot index).
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number }
->(({ recipe: r, ingText, pn }, ref) => (
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string }
+>(({ recipe: r, ingText, pn, coverColor }, ref) => (
   <div ref={ref}>
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
@@ -336,11 +351,7 @@ const PageRecipeFirst = forwardRef<
       </p>
       <div className="flex items-start justify-between gap-2 mb-3">
         <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
-        {r.is_public && (
-          <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-semibold text-white bg-orange-500 px-1.5 py-0.5 rounded-full mt-0.5">
-            <Globe className="w-2.5 h-2.5" /> แชร์
-          </span>
-        )}
+        {r.is_public && <ShareBadge coverColor={coverColor} />}
       </div>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
@@ -425,11 +436,12 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
 PageBackCover.displayName = "PageBackCover";
 
 // ─── TOC Sort Modal ───────────────────────────────────────────────
-function TocSortModal({ recipes, open, onClose, onSave }: {
+function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
   recipes: Recipe[];
   open: boolean;
   onClose: () => void;
   onSave: (sorted: Recipe[]) => Promise<void>;
+  coverColor: string;
 }) {
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
@@ -472,11 +484,7 @@ function TocSortModal({ recipes, open, onClose, onSave }: {
                 <GripVertical className="toc-drag-handle w-4 h-4 text-stone-400 shrink-0 cursor-grab active:cursor-grabbing" />
                 <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
                 <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
-                {r.is_public && (
-                  <span className="flex items-center gap-0.5 text-[9px] font-semibold text-white bg-orange-500 px-1.5 py-0.5 rounded-full shrink-0">
-                    <Globe className="w-2.5 h-2.5" /> แชร์
-                  </span>
-                )}
+                {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.category && (
                   <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
                 )}
@@ -632,12 +640,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
-                 itemsPerPage={itemsPerPage} recipeSlotMap={recipeSlotMap} onNavigate={goToPage} />
+                 itemsPerPage={itemsPerPage} recipeSlotMap={recipeSlotMap} onNavigate={goToPage}
+                 coverColor={book.cover_color} />
       );
       case "filler": return <PageFiller key={`f-${si}`} />;
       case "recipe-first": return (
         <PageRecipeFirst key={`rf-${slot.recipeIdx}`}
-                         recipe={recipes[slot.recipeIdx]} ingText={slot.ingText} pn={si} />
+                         recipe={recipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
+                         coverColor={book.cover_color} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -791,6 +801,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         open={tocSortOpen}
         onClose={() => setTocSortOpen(false)}
         onSave={handleSort}
+        coverColor={book.cover_color}
       />
     </>
   );

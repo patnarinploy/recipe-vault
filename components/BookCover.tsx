@@ -52,14 +52,18 @@ export default function BookCover({
       >
         {/* Spine */}
         <div
-          className="shrink-0 flex items-center justify-center"
+          className="shrink-0 flex items-center justify-center relative overflow-hidden"
           style={{
             width: DIMS.spine,
             background: `linear-gradient(to right, ${darken(book.cover_color, 20)}, ${book.cover_color})`,
           }}
         >
+          {[18, 32, 46, 60, 74].map(p => (
+            <div key={p} className="absolute left-0 right-0 pointer-events-none"
+                 style={{ top: `${p}%`, height: 1, background: "rgba(255,255,255,0.22)" }} />
+          ))}
           <span
-            className="text-white/35 tracking-[.4em] truncate"
+            className="text-white/35 tracking-[.4em] truncate relative z-10"
             style={{ writingMode: "vertical-rl", fontSize: size === "xs" ? 6 : 7.5 }}
           >
             {book.title.slice(0, 18).toUpperCase()}
