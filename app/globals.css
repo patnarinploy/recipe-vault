@@ -11,6 +11,9 @@
   body {
     @apply antialiased;
   }
+  *:focus {
+    outline: none;
+  }
 }
 
 .font-apple {
