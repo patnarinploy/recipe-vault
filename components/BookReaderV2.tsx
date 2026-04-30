@@ -254,7 +254,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             </>)}
           </div>
           {publicCount > 0 && (
-            <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
+            <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold pointer-events-none">
               <Globe className="w-3 h-3" /> แชร์ {publicCount}
             </div>
           )}
@@ -321,11 +321,11 @@ const PageToC = forwardRef<
                     className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                   >
                     <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-                    {r.is_public && <ShareBadge coverColor={coverColor} />}
                     <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
                     <span className="shrink-0 text-[11px] font-mono text-stone-400">
                       {String(slotIdx).padStart(2, "0")}
                     </span>
+                    {r.is_public && <ShareBadge coverColor={coverColor} />}
                   </button>
                 );
               })
@@ -346,13 +346,13 @@ const PageRecipeFirst = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
-        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-      </p>
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
+      <div className="flex items-center justify-between mb-2 mt-1">
+        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold">
+          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
+        </p>
         {r.is_public && <ShareBadge coverColor={coverColor} />}
       </div>
+      <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
         ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
