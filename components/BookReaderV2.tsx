@@ -560,12 +560,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     const sb = createClient();
+    let recipeQ = sb.from("recipes").select("*").eq("book_id", bookId)
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true });
+    if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
       sb.from("books").select("*").eq("id", bookId).single<Book>(),
-      sb.from("recipes").select("*").eq("book_id", bookId)
-        .order("sort_order", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true })
-        .returns<Recipe[]>(),
+      recipeQ.returns<Recipe[]>(),
     ]);
     if (bk.data) setBook(bk.data);
     if (rc.data) setRecipes(rc.data);
