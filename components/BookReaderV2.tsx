@@ -224,14 +224,15 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref
                style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
               {book.tagline ?? "ตำรับอาหาร"}
             </p>
-            <div className="w-7 h-px bg-white/20" />
+            <div className="w-12 h-px bg-white/20" />
             <h2 className="font-bold leading-tight break-words w-full"
                 style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
               {book.title}
             </h2>
-            {book.subtitle && (
-              <p className="text-white/65 text-sm leading-snug">{book.subtitle}</p>
-            )}
+            {book.subtitle && (<>
+              <div className="w-12 h-px bg-white/20 mt-1" />
+              <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
+            </>)}
           </div>
         </div>
       </div>
