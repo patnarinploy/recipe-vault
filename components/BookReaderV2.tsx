@@ -223,9 +223,9 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
       <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
         <div className="shrink-0 flex items-center justify-center relative overflow-hidden"
              style={{ width: "8.2%", background: `linear-gradient(to right,${darken(C, 28)},${C})` }}>
-          {[18, 32, 46, 60, 74].map(p => (
-            <div key={p} className="absolute left-0 right-0 pointer-events-none"
-                 style={{ top: `${p}%`, height: 1, background: "rgba(255,255,255,0.22)" }} />
+          {[25, 50, 75].map(p => (
+            <div key={p} className="absolute top-0 bottom-0 pointer-events-none"
+                 style={{ left: `${p}%`, width: 1, background: "rgba(255,255,255,0.22)" }} />
           ))}
           <span className="text-white/30 tracking-[.4em] truncate uppercase relative z-10"
                 style={{ writingMode: "vertical-rl", fontSize: "clamp(6px,1.6vw,8px)" }}>
@@ -254,8 +254,9 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             </>)}
           </div>
           {publicCount > 0 && (
-            <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold pointer-events-none">
-              <Globe className="w-3 h-3" /> แชร์ {publicCount}
+            <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold pointer-events-none"
+                 style={{ color: C }}>
+              <Globe className="w-3.5 h-3.5" /> แชร์ {publicCount}
             </div>
           )}
         </div>
@@ -320,12 +321,12 @@ const PageToC = forwardRef<
                     onClick={() => onNavigate(slotIdx)}
                     className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
                   >
-                    <span className="flex-1 text-stone-700 truncate">{r.title}</span>
-                    <span className="border-b border-dotted border-stone-300 w-8 shrink-0 mx-2" />
+                    <span className="shrink-0 text-stone-700 truncate max-w-[55%]">{r.title}</span>
+                    {r.is_public && <ShareBadge coverColor={coverColor} />}
+                    <span className="border-b border-dotted border-stone-300 flex-1 mx-2" />
                     <span className="shrink-0 text-[11px] font-mono text-stone-400">
                       {String(slotIdx).padStart(2, "0")}
                     </span>
-                    {r.is_public && <ShareBadge coverColor={coverColor} />}
                   </button>
                 );
               })
@@ -346,13 +347,13 @@ const PageRecipeFirst = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <div className="flex items-center justify-between mb-2 mt-1">
-        <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold">
-          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-        </p>
+      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
+        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
+      </p>
+      <div className="flex items-start gap-2 mb-3">
+        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
         {r.is_public && <ShareBadge coverColor={coverColor} />}
       </div>
-      <h2 className="text-xl font-bold text-stone-800 leading-tight mb-3">{r.title}</h2>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
         ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
