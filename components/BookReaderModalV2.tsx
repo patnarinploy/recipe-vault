@@ -9,9 +9,10 @@ interface Props {
   bookId: string | null;
   isOwner: boolean;
   onClose: () => void;
+  autoNewRecipe?: boolean;
 }
 
-export default function BookReaderModalV2({ bookId, isOwner, onClose }: Props) {
+export default function BookReaderModalV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -49,7 +50,7 @@ export default function BookReaderModalV2({ bookId, isOwner, onClose }: Props) {
       </button>
 
       <div className="anim-scale-in">
-        <BookReaderV2 bookId={bookId} isOwner={isOwner} onClose={onClose} />
+        <BookReaderV2 bookId={bookId} isOwner={isOwner} onClose={onClose} autoNewRecipe={autoNewRecipe} />
       </div>
     </div>,
     document.body

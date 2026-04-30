@@ -492,12 +492,14 @@ interface Props {
   bookId: string;
   isOwner: boolean;
   onClose: () => void;
+  autoNewRecipe?: boolean;
 }
 
 // ─── Main component ───────────────────────────────────────────────
-export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
+export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   const router = useRouter();
   const bookRef = useRef<any>(null);
+  const fabRef  = useRef<HTMLDivElement>(null);
   const { pageW, pageH, portrait, ready } = usePageDimensions();
 
   const [book,    setBook]    = useState<Book | null>(null);
@@ -542,6 +544,21 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
   useEffect(() => {
     if (currentPage >= slots.length) setCurrentPage(0);
   }, [slots.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-open new recipe dialog when launched from bookshelf shortcut
+  useEffect(() => {
+    if (autoNewRecipe && !loading && book) setNewRecipeOpen(true);
+  }, [autoNewRecipe, loading, book]);
+
+  // Close FAB menu on outside click
+  useEffect(() => {
+    if (!fabOpen) return;
+    function onDown(e: MouseEvent) {
+      if (fabRef.current && !fabRef.current.contains(e.target as Node)) setFabOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [fabOpen]);
 
   const goToToC  = () => bookRef.current?.pageFlip().turnToPage(2);
   const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
@@ -654,7 +671,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose }: Props) {
 
         {/* ── FAB (owner only) — bottom-right of the right page ─── */}
         {isOwner && (
-          <div className="absolute z-[10001] flex flex-col items-end gap-2"
+          <div ref={fabRef} className="absolute z-[10001] flex flex-col items-end gap-2"
                style={{ bottom: Math.round(fabSize * 0.22), right: Math.round(fabSize * 0.22) }}>
             {fabOpen && (
               <div className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
