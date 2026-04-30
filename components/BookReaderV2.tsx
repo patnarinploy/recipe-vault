@@ -223,8 +223,8 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
       <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
         <div className="shrink-0 flex items-center justify-center relative overflow-hidden"
              style={{ width: "8.2%", background: `linear-gradient(to right,${darken(C, 28)},${C})` }}>
-          <div className="absolute top-0 bottom-0 pointer-events-none"
-               style={{ left: "70%", width: 1, background: "rgba(255,255,255,0.28)" }} />
+          <div className="absolute top-0 bottom-0 right-0 pointer-events-none"
+               style={{ width: 1, background: "rgba(255,255,255,0.28)" }} />
           <span className="text-white/30 tracking-[.4em] truncate uppercase relative z-10"
                 style={{ writingMode: "vertical-rl", fontSize: "clamp(6px,1.6vw,8px)" }}>
             {book.title}
@@ -436,8 +436,8 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
         {/* Spine — right side, mirrored from front */}
         <div className="shrink-0 relative overflow-hidden flex items-center justify-center"
              style={{ width: "8.2%", background: `linear-gradient(to left,${darken(C, 28)},${C})` }}>
-          <div className="absolute top-0 bottom-0 pointer-events-none"
-               style={{ left: "30%", width: 1, background: "rgba(255,255,255,0.28)" }} />
+          <div className="absolute top-0 bottom-0 left-0 pointer-events-none"
+               style={{ width: 1, background: "rgba(255,255,255,0.28)" }} />
         </div>
       </div>
     </div>
