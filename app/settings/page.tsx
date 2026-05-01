@@ -52,13 +52,13 @@ export default async function SettingsPage() {
         ) : (
           <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
             <span className="text-2xl font-bold text-white select-none">
-              {user.username[0].toUpperCase()}
+              {(user.display_name ?? user.username)[0].toUpperCase()}
             </span>
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-base font-bold text-stone-800 truncate">{user.username}</p>
-          <p className="text-xs text-stone-400 mt-0.5">นักเขียนสูตรอาหาร</p>
+          <p className="text-base font-bold text-stone-800 truncate">{user.display_name ?? user.username}</p>
+          <p className="text-xs text-stone-400 mt-0.5">@{user.username}</p>
         </div>
         <Link
           href="/settings/profile"

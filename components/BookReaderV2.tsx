@@ -581,12 +581,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*, users(username)").eq("id", bookId).single(),
+      sb.from("books").select("*, users(username, display_name)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
-      setAuthorName((bk.data as any).users?.username ?? "");
+      const u = (bk.data as any).users;
+      setAuthorName(u?.display_name ?? u?.username ?? "");
     }
     if (rc.data) setRecipes(rc.data);
     setLoading(false);

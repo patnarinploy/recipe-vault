@@ -44,10 +44,10 @@ export default function UserMenu({ user }: { user: User }) {
           </span>
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-            {user.username[0].toUpperCase()}
+            {(user.display_name ?? user.username)[0].toUpperCase()}
           </span>
         )}
-        <span className="max-w-[120px] truncate">{user.username}</span>
+        <span className="max-w-[120px] truncate">{user.display_name ?? user.username}</span>
         {user.role === "admin" && (
           <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">
             Admin
@@ -60,7 +60,8 @@ export default function UserMenu({ user }: { user: User }) {
         <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-stone-100 py-1.5 z-50">
           <div className="px-4 py-2 border-b border-stone-100 mb-1">
             <p className="text-xs text-stone-400">เข้าสู่ระบบในฐานะ</p>
-            <p className="text-sm font-semibold text-stone-800 truncate">{user.username}</p>
+            <p className="text-sm font-semibold text-stone-800 truncate">{user.display_name ?? user.username}</p>
+            <p className="text-xs text-stone-400">@{user.username}</p>
           </div>
 
           <Link

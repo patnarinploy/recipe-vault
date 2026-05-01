@@ -39,6 +39,7 @@ export const BOOK_COLORS = [
 export type User = {
   id: string;
   username: string;
+  display_name: string | null;
   role: "admin" | "user";
   avatar: string | null;
   created_at: string;

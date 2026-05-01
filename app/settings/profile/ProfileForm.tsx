@@ -13,9 +13,11 @@ const MAX_MB = 5;
 
 export default function ProfileForm({
   currentUsername,
+  currentDisplayName,
   currentAvatar,
 }: {
   currentUsername: string;
+  currentDisplayName: string | null;
   currentAvatar: string | null;
 }) {
   const [state, action, pending] = useActionState(updateProfile, undefined);
@@ -161,23 +163,35 @@ export default function ProfileForm({
         </div>
 
         {/* ── นามแฝง ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-          <p className="text-sm font-semibold text-stone-700 mb-0.5">นามแฝง</p>
-          <p className="text-xs text-stone-400 mb-4">
-            ชื่อที่แสดงในเว็บและบนปกหนังสือของคุณ
-          </p>
-          <input
-            name="username"
-            type="text"
-            defaultValue={currentUsername}
-            required
-            minLength={3}
-            placeholder="a-z, A-Z, 0-9, _"
-            className={inputCls}
-          />
-          <p className="text-xs text-stone-400 mt-2">
-            อย่างน้อย 3 ตัวอักษร · ตัวอักษรภาษาอังกฤษ ตัวเลข และ _ เท่านั้น
-          </p>
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-stone-700 mb-0.5">นามแฝง</p>
+            <p className="text-xs text-stone-400 mb-3">
+              ชื่อที่แสดงในเว็บและบนปกหนังสือของคุณ (ใส่อะไรก็ได้)
+            </p>
+            <input
+              name="display_name"
+              type="text"
+              defaultValue={currentDisplayName ?? ""}
+              minLength={2}
+              maxLength={50}
+              placeholder={currentUsername}
+              className={inputCls}
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-stone-700 mb-0.5">ชื่อสำหรับเข้าสู่ระบบ</p>
+            <p className="text-xs text-stone-400 mb-3">
+              ใช้สำหรับ Login เท่านั้น ไม่สามารถเปลี่ยนได้ที่นี่
+            </p>
+            <input
+              type="text"
+              value={currentUsername}
+              disabled
+              className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm bg-stone-50 text-stone-400 cursor-not-allowed"
+            />
+          </div>
         </div>
 
         {/* Feedback */}

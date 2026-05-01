@@ -187,25 +187,16 @@ export async function updateProfile(
   const currentUser = await getSession();
   if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
 
-  const username = (formData.get("username") as string)?.trim();
-  const avatar   = formData.get("avatar") as string | null;
+  const displayName = (formData.get("display_name") as string)?.trim() || null;
+  const avatar      = formData.get("avatar") as string | null;
 
-  if (!username) return { error: "กรุณากรอกนามแฝง" };
-  if (username.length < 3) return { error: "นามแฝงต้องมีอย่างน้อย 3 ตัวอักษร" };
-  if (!/^[a-zA-Z0-9_]+$/.test(username))
-    return { error: "ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข และ _" };
-
-  if (username !== currentUser.username) {
-    const supabase = await createClient();
-    const { data: existing } = await supabase
-      .from("users").select("id").eq("username", username).maybeSingle();
-    if (existing) return { error: "นามแฝงนี้มีผู้ใช้แล้ว" };
-  }
+  if (displayName !== null && displayName.length < 2)
+    return { error: "นามแฝงต้องมีอย่างน้อย 2 ตัวอักษร" };
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("users")
-    .update({ username, avatar: avatar || null })
+    .update({ display_name: displayName, avatar: avatar || null })
     .eq("id", currentUser.id);
 
   if (error) return { error: error.message };

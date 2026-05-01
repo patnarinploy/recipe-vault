@@ -63,6 +63,6 @@ export default async function HomePage() {
   });
 
   return (
-    <Library myBooks={myBooks} publicBooks={publicBooks} username={user.username} />
+    <Library myBooks={myBooks} publicBooks={publicBooks} username={user.display_name ?? user.username} />
   );
 }
