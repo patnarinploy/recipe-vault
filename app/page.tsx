@@ -47,7 +47,7 @@ export default async function HomePage() {
   const { data: publicBooksRaw } = publicBookIds.length
     ? await supabase
         .from("books")
-        .select("*, users(username, display_name, bio, avatar)")
+        .select("*, users(username, display_name, bio, avatar, role)")
         .in("id", publicBookIds)
         .order("created_at", { ascending: true })
         .returns<PublicBookRaw[]>()
@@ -63,6 +63,7 @@ export default async function HomePage() {
     display_name: user.display_name,
     bio: user.bio,
     avatar: user.avatar,
+    role: user.role,
   };
 
   return (

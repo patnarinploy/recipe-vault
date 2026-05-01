@@ -251,24 +251,28 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
               <div className="w-12 h-px bg-white/20 mt-1" />
               <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
             </>)}
-            {authorName && (<>
-              <div className="w-full h-px bg-white/12 mt-2" />
+          </div>
+
+          {/* Author — bottom-left outside frame */}
+          {authorName && (
+            <div className="absolute z-10" style={{ bottom: 14, left: 14 }}>
               {onAuthorClick ? (
                 <button
-                  onClick={onAuthorClick}
-                  className="text-white/40 hover:text-white/75 italic tracking-widest truncate w-full transition-colors text-left"
-                  style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); onAuthorClick(); }}
+                  className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
+                  style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}
                 >
                   by {authorName}
                 </button>
               ) : (
-                <p className="text-white/40 italic tracking-widest truncate w-full"
-                   style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                <p className="text-white/50 italic tracking-widest"
+                   style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
                   by {authorName}
                 </p>
               )}
-            </>)}
-          </div>
+            </div>
+          )}
         </div>
       </div>
       {publicCount > 0 && (
@@ -594,14 +598,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*, users(username, display_name, bio, avatar)").eq("id", bookId).single(),
+      sb.from("books").select("*, users(username, display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? u?.username ?? "");
-      if (u?.username) setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null });
+      if (u?.username) setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
     }
     if (rc.data) setRecipes(rc.data);
     setLoading(false);

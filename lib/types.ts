@@ -41,6 +41,7 @@ export type WriterInfo = {
   display_name: string | null;
   bio: string | null;
   avatar: string | null;
+  role?: "admin" | "user";
 };
 
 export type User = {

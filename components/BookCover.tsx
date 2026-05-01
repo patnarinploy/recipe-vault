@@ -116,28 +116,33 @@ export default function BookCover({
                 </p>
               </>
             )}
-            {author && (
-              <>
-                <div className="w-full h-px bg-white/12 mt-1" />
-                {onAuthorClick ? (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
-                    className="text-white/40 hover:text-white/75 italic tracking-widest truncate w-full transition-colors text-left"
-                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    by {author}
-                  </button>
-                ) : (
-                  <p
-                    className="text-white/40 italic tracking-widest truncate w-full"
-                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                  >
-                    by {author}
-                  </p>
-                )}
-              </>
-            )}
           </div>
+
+          {/* Author — bottom-left outside frame */}
+          {author && (
+            <div
+              className="absolute z-10"
+              style={{ bottom: size === "xs" ? 6 : 10, left: size === "xs" ? 6 : 10 }}
+            >
+              {onAuthorClick ? (
+                <button
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
+                  className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
+                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  by {author}
+                </button>
+              ) : (
+                <p
+                  className="text-white/50 italic tracking-widest"
+                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  by {author}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
