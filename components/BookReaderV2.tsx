@@ -302,7 +302,7 @@ const PageToC = forwardRef<
       <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
            style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape />
-        <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-1">
+        <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-5">
           {isCont ? "Table of Contents (cont.)" : "Table of Contents"}
         </p>
         <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
@@ -347,7 +347,7 @@ const PageRecipeFirst = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5">
+      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5 mt-5">
         {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
       </p>
       <div className="flex items-center gap-2 mb-3">
@@ -383,7 +383,7 @@ const PageRecipeCont = forwardRef<
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape right={isRight} />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1 truncate">{r.title}</p>
+      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1 mt-5 truncate">{r.title}</p>
       <div className="h-px bg-[#e8d5b7] mb-3" />
       <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">{label}</p>
       <div className="flex-1 overflow-hidden text-sm text-stone-600 whitespace-pre-line" style={{ lineHeight: lh }}>
