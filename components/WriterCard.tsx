@@ -1,4 +1,4 @@
-import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
+import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
 
 const ROLE_BADGE: Record<string, { label: string; className: string }> = {
@@ -8,11 +8,8 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
 
 export default function WriterCard({ info }: { info: WriterInfo }) {
   const isUrl   = isAvatarUrl(info.avatar);
-  const isEmoji = !!info.avatar && !isUrl;
-  const bg      = isEmoji ? emojiAvatarBg(info.avatar!) : "#fed7aa";
   const initial = (info.display_name ?? info.username)[0].toUpperCase();
-
-  const badge = info.role ? ROLE_BADGE[info.role] : null;
+  const badge   = info.role ? ROLE_BADGE[info.role] : null;
 
   return (
     <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 text-center">
@@ -20,19 +17,12 @@ export default function WriterCard({ info }: { info: WriterInfo }) {
       <div className="flex justify-center mb-4">
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden"
-          style={{ background: isUrl ? "#f5f5f4" : bg }}
+          style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
         >
           {isUrl ? (
             <img src={info.avatar!} alt={initial} className="w-full h-full object-cover" />
-          ) : isEmoji ? (
-            <span className="text-4xl leading-none">{info.avatar}</span>
           ) : (
-            <span
-              className="text-3xl font-bold text-white"
-              style={{ background: "#f97316", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              {initial}
-            </span>
+            <span className="text-3xl font-bold text-white">{initial}</span>
           )}
         </div>
       </div>

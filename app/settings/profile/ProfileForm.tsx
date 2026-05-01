@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { updatePublicProfile } from "@/app/actions/auth";
-import { AVATAR_ANIMALS, emojiAvatarBg, isAvatarUrl } from "@/lib/avatar";
+import { AVATAR_PRESETS, isAvatarUrl } from "@/lib/avatar";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { ArrowLeft, Camera, CheckCircle2, Loader2 } from "lucide-react";
@@ -49,9 +49,7 @@ export default function ProfileForm({
     setUploading(false);
   }
 
-  const isUrl    = isAvatarUrl(selected);
-  const isEmoji  = !!selected && !isUrl;
-  const previewBg = isEmoji ? emojiAvatarBg(selected) : "#fed7aa";
+  const isUrl = isAvatarUrl(selected);
 
   const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none";
 
@@ -78,61 +76,51 @@ export default function ProfileForm({
           <div className="flex justify-center mb-6">
             <div
               className="w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden"
-              style={{ background: isUrl ? "#f5f5f4" : previewBg }}
+              style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
             >
               {isUrl ? (
                 <img src={selected} alt="avatar" className="w-full h-full object-cover" />
-              ) : isEmoji ? (
-                <span className="text-5xl leading-none">{selected}</span>
               ) : (
-                <span className="text-3xl font-bold text-white" style={{ background: "#f97316", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span className="text-3xl font-bold text-white">
                   {(currentDisplayName ?? currentUsername)[0].toUpperCase()}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-6 gap-2">
+            {/* Upload custom image */}
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className={`relative aspect-square rounded-xl border-2 flex items-center justify-center transition-all ${
-                isUrl
-                  ? "border-orange-500 shadow-md scale-105 overflow-hidden"
-                  : "border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50"
-              }`}
+              className="relative aspect-square rounded-xl border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all overflow-hidden"
               title="อัปโหลดรูปของคุณ"
             >
               {uploading ? (
                 <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
-              ) : isUrl ? (
-                <>
-                  <img src={selected} alt="uploaded" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <Camera className="w-4 h-4 text-white" />
-                  </div>
-                  <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
-                </>
               ) : (
-                <Camera className="w-4 h-4 text-stone-400" />
+                <>
+                  <Camera className="w-4 h-4 text-stone-400" />
+                  <span className="text-[9px] text-stone-400">อัปโหลด</span>
+                </>
               )}
             </button>
 
-            {AVATAR_ANIMALS.map(({ value, name, bg }) => (
+            {/* Preset images */}
+            {AVATAR_PRESETS.map(({ value, name }) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setSelected(value)}
-                className={`relative aspect-square rounded-xl border-2 flex items-center justify-center text-2xl transition-all ${
+                className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${
                   selected === value
                     ? "border-orange-500 shadow-md scale-105"
                     : "border-transparent hover:border-stone-200"
                 }`}
-                style={{ background: bg }}
                 title={name}
               >
-                {value}
+                <img src={value} alt={name} className="w-full h-full object-cover" />
                 {selected === value && (
                   <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
                 )}

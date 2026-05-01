@@ -5,7 +5,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Settings, Users, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
-import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
+import { isAvatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 
 export default function UserMenu({ user }: { user: User }) {
@@ -35,13 +35,6 @@ export default function UserMenu({ user }: { user: User }) {
             alt={user.username}
             className="w-7 h-7 rounded-full object-cover shrink-0"
           />
-        ) : user.avatar ? (
-          <span
-            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-lg leading-none"
-            style={{ background: emojiAvatarBg(user.avatar) }}
-          >
-            {user.avatar}
-          </span>
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
             {(user.display_name ?? "กระรอกสายลับ")[0].toUpperCase()}
