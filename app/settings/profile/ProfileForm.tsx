@@ -161,7 +161,7 @@ export default function ProfileForm({
               defaultValue={currentDisplayName ?? ""}
               minLength={2}
               maxLength={50}
-              placeholder="เช่น Chef Ploy, คุณแม่สูตรลับ..."
+              placeholder="เช่น Chef แมวเหมียว, สูตรลับคุณแพนกวิ้น"
               className={inputCls}
             />
           </div>
