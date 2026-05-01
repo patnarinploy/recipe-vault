@@ -281,7 +281,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
 
           {/* Author — inside the page so it animates with the cover flip */}
           {authorName && (
-            <div className="absolute z-10" style={{ bottom: 14, left: "calc(8.2% + 2px)" }}>
+            <div className="absolute z-10" style={{ bottom: 15, left: 10 }}>
               {onAuthorClick
                 ? <AuthorClickButton label={authorName} onClick={onAuthorClick} />
                 : <p className="text-white/50 italic tracking-widest"
