@@ -48,7 +48,7 @@ export default async function SettingsPage() {
             แก้ไข
           </Link>
         </div>
-        <WriterCard info={{ username: user.username, display_name: user.display_name, bio: user.bio, avatar: user.avatar }} />
+        <WriterCard info={{ username: user.username, display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role }} />
       </div>
 
       {/* Nav groups */}

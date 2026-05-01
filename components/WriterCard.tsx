@@ -44,9 +44,8 @@ export default function WriterCard({ info }: { info: WriterInfo }) {
       {!info.display_name && (
         <p className="text-sm italic text-stone-300 mt-0.5">(ไม่ได้กำหนดนามแฝง)</p>
       )}
-      <p className="text-sm text-stone-400 mt-1 mb-4">@{info.username}</p>
 
-      <div className="w-10 h-px bg-orange-200 mx-auto mb-4" />
+      <div className="w-10 h-px bg-orange-200 mx-auto mt-4 mb-4" />
 
       {/* Bio */}
       {info.bio && (
