@@ -275,8 +275,8 @@ PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<
   HTMLDivElement,
-  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string }
->(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor }, ref) => {
+  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string; density: "soft" | "hard" }
+>(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor, density }, ref) => {
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -298,7 +298,7 @@ const PageToC = forwardRef<
   const isCont       = tocPage > 0;
 
   return (
-    <div ref={ref}>
+    <div ref={ref} data-density={density}>
       <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
            style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape />
@@ -341,9 +341,9 @@ PageToC.displayName = "PageToC";
 // First page of a recipe — always a left page (odd slot index).
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number; coverColor: string }
->(({ recipe: r, ingText, pn, coverColor }, ref) => (
-  <div ref={ref}>
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
+>(({ recipe: r, ingText, pn, coverColor, density }, ref) => (
+  <div ref={ref} data-density={density}>
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape />
@@ -377,9 +377,9 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // isRight is derived from the slot index (even = right, odd = left).
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number }
->(({ recipe: r, label, text, lh, isRight, pn }, ref) => (
-  <div ref={ref}>
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard" }
+>(({ recipe: r, label, text, lh, isRight, pn, density }, ref) => (
+  <div ref={ref} data-density={density}>
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <Tape right={isRight} />
@@ -396,9 +396,9 @@ const PageRecipeCont = forwardRef<
 PageRecipeCont.displayName = "PageRecipeCont";
 
 // Watermark page — shown when a recipe ends on an odd page count.
-const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight: boolean }>(
-  ({ recipe: r, isRight }, ref) => (
-    <div ref={ref}>
+const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight: boolean; density: "soft" | "hard" }>(
+  ({ recipe: r, isRight, density }, ref) => (
+    <div ref={ref} data-density={density}>
       <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center relative"
            style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape right={isRight} />
@@ -412,8 +412,8 @@ const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight
 );
 PageRecipeWatermark.displayName = "PageRecipeWatermark";
 
-const PageFiller = forwardRef<HTMLDivElement, object>((_p, ref) => (
-  <div ref={ref}>
+const PageFiller = forwardRef<HTMLDivElement, { density: "soft" | "hard" }>(({ density }, ref) => (
+  <div ref={ref} data-density={density}>
     <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center"
          style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
       <div className="text-center select-none pointer-events-none">
@@ -548,6 +548,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
+  const [flipType, setFlipType] = useState<"soft" | "hard">("soft");
+
+  useEffect(() => {
+    const v = localStorage.getItem("rv_page_flip_type");
+    if (v === "hard" || v === "soft") setFlipType(v);
+  }, []);
 
   // Page tracking
   const [currentPage, setCurrentPage] = useState(0);
@@ -646,7 +652,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   if (!ready || loading || !book) return <SkeletonOpenBook />;
 
   const bookW   = portrait ? pageW : pageW * 2;
-  const flipKey = `${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
+  const flipKey = `${flipType}:${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
 
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
@@ -656,30 +662,30 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
                  itemsPerPage={itemsPerPage} recipeSlotMap={recipeSlotMap} onNavigate={goToPage}
-                 coverColor={book.cover_color} />
+                 coverColor={book.cover_color} density={flipType} />
       );
-      case "filler": return <PageFiller key={`f-${si}`} />;
+      case "filler": return <PageFiller key={`f-${si}`} density={flipType} />;
       case "recipe-first": return (
         <PageRecipeFirst key={`rf-${slot.recipeIdx}`}
                          recipe={recipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
-                         coverColor={book.cover_color} />
+                         coverColor={book.cover_color} density={flipType} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
                         label="วัตถุดิบ (ต่อ):" text={slot.ingText} lh="1.85"
-                        isRight={isRight} pn={si} />
+                        isRight={isRight} pn={si} density={flipType} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
                         label={slot.chunkIdx === 0 ? "วิธีทำ:" : "วิธีทำ (ต่อ):"}
                         text={slot.instText} lh="1.95"
-                        isRight={isRight} pn={si} />
+                        isRight={isRight} pn={si} density={flipType} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
-                             recipe={recipes[slot.recipeIdx]} isRight={isRight} />
+                             recipe={recipes[slot.recipeIdx]} isRight={isRight} density={flipType} />
       );
       case "back-cover": return <PageBackCover key="cb" book={book} />;
     }
