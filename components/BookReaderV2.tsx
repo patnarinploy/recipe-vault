@@ -10,8 +10,9 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe } from "lucide-react";
-import type { Book, Recipe } from "@/lib/types";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
+import type { Book, Recipe, WriterInfo } from "@/lib/types";
+import WriterCard from "./WriterCard";
 
 // ─── Colour helper ────────────────────────────────────────────────
 function darken(hex: string, amt: number) {
@@ -216,7 +217,7 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 }
 
 // ─── Page components ──────────────────────────────────────────────
-const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string }>(({ book, publicCount, authorName }, ref) => {
+const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string; onAuthorClick?: () => void }>(({ book, publicCount, authorName, onAuthorClick }, ref) => {
   const C = book.cover_color;
   return (
     <div ref={ref} data-density="hard" style={{ position: "relative" }}>
@@ -252,10 +253,20 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             </>)}
             {authorName && (<>
               <div className="w-full h-px bg-white/12 mt-2" />
-              <p className="text-white/40 italic tracking-widest truncate w-full"
-                 style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
-                by {authorName}
-              </p>
+              {onAuthorClick ? (
+                <button
+                  onClick={onAuthorClick}
+                  className="text-white/40 hover:text-white/75 italic tracking-widest truncate w-full transition-colors text-left"
+                  style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}
+                >
+                  by {authorName}
+                </button>
+              ) : (
+                <p className="text-white/40 italic tracking-widest truncate w-full"
+                   style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                  by {authorName}
+                </p>
+              )}
             </>)}
           </div>
         </div>
@@ -555,8 +566,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
-  const [flipType,   setFlipType]   = useState<"soft" | "hard">("soft");
-  const [authorName, setAuthorName] = useState("");
+  const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
+  const [authorName,  setAuthorName]  = useState("");
+  const [writerInfo,  setWriterInfo]  = useState<WriterInfo | null>(null);
+  const [writerCardOpen, setWriterCardOpen] = useState(false);
 
   useEffect(() => {
     const v = localStorage.getItem("rv_page_flip_type");
@@ -581,13 +594,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*, users(username, display_name)").eq("id", bookId).single(),
+      sb.from("books").select("*, users(username, display_name, bio, avatar)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? u?.username ?? "");
+      if (u?.username) setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null });
     }
     if (rc.data) setRecipes(rc.data);
     setLoading(false);
@@ -669,7 +683,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
@@ -757,6 +771,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                   </button>
                 )}
 
+                {/* ดูการ์ดนักเขียน — cover */}
+                {ctx === "cover" && writerInfo && (
+                  <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <User className="w-4 h-4 text-stone-400" /> ดูการ์ดนักเขียน
+                  </button>
+                )}
+
                 {/* แก้ไขสารบัญ — toc */}
                 {ctx === "toc" && (
                   <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
@@ -791,6 +813,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
                 <div className="border-t border-stone-100 my-0.5" />
               </>)}
+
+              {/* ดูการ์ดนักเขียน — cover (non-owner) */}
+              {!isOwner && ctx === "cover" && writerInfo && (
+                <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                  <User className="w-4 h-4 text-stone-400" /> ดูการ์ดนักเขียน
+                </button>
+              )}
 
               {/* navigation — ทุก context ทุก role */}
               <button
@@ -852,6 +882,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         onSave={handleSort}
         coverColor={book.cover_color}
       />
+
+      {writerInfo && (
+        <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-sm">
+          <div className="rounded-2xl overflow-hidden">
+            <WriterCard info={writerInfo} />
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

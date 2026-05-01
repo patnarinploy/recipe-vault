@@ -1,33 +1,37 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, BookOpen, Settings, Palette } from "lucide-react";
+import { Plus, BookOpen, Settings, Palette, User } from "lucide-react";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
 import BookReaderModalV2 from "./BookReaderModalV2";
-import type { Book } from "@/lib/types";
+import WriterCard from "./WriterCard";
+import type { Book, WriterInfo } from "@/lib/types";
 
 interface BookWithCounts extends Book {
   recipe_count: number;
   public_count: number;
+  bookAuthor?: WriterInfo;
 }
 
 interface Props {
   myBooks: BookWithCounts[];
   publicBooks: BookWithCounts[];
-  username: string;
+  currentUser: WriterInfo;
 }
 
-export default function Library({ myBooks, publicBooks, username }: Props) {
+export default function Library({ myBooks, publicBooks, currentUser }: Props) {
   const [tab, setTab] = useState<"mine" | "public">("mine");
   const [newBookOpen, setNewBookOpen] = useState(false);
   const [openBook, setOpenBook] = useState<{ id: string; isOwner: boolean; autoNewRecipe?: boolean } | null>(null);
   const [settingsBookId, setSettingsBookId] = useState<string | null>(null);
   const [editCoverBook, setEditCoverBook] = useState<BookWithCounts | null>(null);
+  const [writerCard, setWriterCard] = useState<WriterInfo | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Close settings dropdown on outside click
+  const displayName = currentUser.display_name ?? currentUser.username;
+
   useEffect(() => {
     if (!settingsBookId) return;
     function onDown(e: MouseEvent) {
@@ -47,7 +51,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
         <div>
           <p className="text-[11px] tracking-[0.35em] text-stone-400 uppercase mb-3">Recipe Vault</p>
           <h1 className="text-3xl font-bold text-stone-800">
-            {tab === "mine" ? `ชั้นหนังสือของ ${username}` : "สูตรสาธารณะ"}
+            {tab === "mine" ? `ชั้นหนังสือของ ${displayName}` : "สูตรสาธารณะ"}
           </h1>
           <p className="text-sm text-stone-500 mt-1">
             {tab === "mine"
@@ -96,82 +100,98 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
-          {books.map((book, i) => (
-            <div
-              key={book.id}
-              className="flex flex-col items-center anim-fade-up"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              {/* Cover */}
-              <BookCover
-                book={book}
-                size="sm"
-                publicCount={book.public_count}
-                author={tab === "mine" ? username : undefined}
-                onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
-              />
+          {books.map((book, i) => {
+            const bookWriter: WriterInfo = tab === "mine"
+              ? currentUser
+              : (book.bookAuthor ?? { username: "", display_name: null, bio: null, avatar: null });
+            const authorLabel = (bookWriter.display_name ?? bookWriter.username) || undefined;
 
-              {/* Title + count row, with settings button on the right (mine tab) */}
-              <div className="mt-4 flex items-start justify-between gap-1 w-full max-w-[160px]">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-stone-700 text-left line-clamp-1">
-                    {book.title}
-                  </p>
-                  <p className="text-xs text-stone-400">
-                    {tab === "public"
-                      ? `${book.public_count} สูตรสาธารณะ`
-                      : `${book.recipe_count} สูตร`}
-                  </p>
-                </div>
+            return (
+              <div
+                key={book.id}
+                className="flex flex-col items-center anim-fade-up"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <BookCover
+                  book={book}
+                  size="sm"
+                  publicCount={book.public_count}
+                  author={authorLabel}
+                  onAuthorClick={authorLabel ? () => setWriterCard(bookWriter) : undefined}
+                  onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
+                />
 
-                {/* Settings button + dropdown */}
-                {tab === "mine" && (
-                  <div
-                    ref={book.id === settingsBookId ? settingsRef : undefined}
-                    className="relative shrink-0"
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSettingsBookId(settingsBookId === book.id ? null : book.id);
-                      }}
-                      className="w-7 h-7 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors text-stone-400 hover:text-stone-600"
-                      aria-label="ตั้งค่าหนังสือ"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
-
-                    {settingsBookId === book.id && (
-                      <div className="absolute bottom-full right-0 mb-1 z-20 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
-                        <button
-                          onClick={() => {
-                            setSettingsBookId(null);
-                            setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true });
-                          }}
-                          className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
-                        >
-                          <Plus className="w-4 h-4 text-stone-400 shrink-0" />
-                          เพิ่มสูตรในเล่มนี้
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSettingsBookId(null);
-                            setEditCoverBook(book);
-                          }}
-                          className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
-                        >
-                          <Palette className="w-4 h-4 text-stone-400 shrink-0" />
-                          แก้ไขปกหนังสือ
-                        </button>
-                      </div>
-                    )}
+                <div className="mt-4 flex items-start justify-between gap-1 w-full max-w-[160px]">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-stone-700 text-left line-clamp-1">
+                      {book.title}
+                    </p>
+                    <p className="text-xs text-stone-400">
+                      {tab === "public"
+                        ? `${book.public_count} สูตรสาธารณะ`
+                        : `${book.recipe_count} สูตร`}
+                    </p>
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
 
-          {/* Add new book tile (mine tab only) */}
+                  {/* Settings button + dropdown */}
+                  {tab === "mine" && (
+                    <div
+                      ref={book.id === settingsBookId ? settingsRef : undefined}
+                      className="relative shrink-0"
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSettingsBookId(settingsBookId === book.id ? null : book.id);
+                        }}
+                        className="w-7 h-7 rounded-full hover:bg-stone-100 flex items-center justify-center transition-colors text-stone-400 hover:text-stone-600"
+                        aria-label="ตั้งค่าหนังสือ"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+
+                      {settingsBookId === book.id && (
+                        <div className="absolute bottom-full right-0 mb-1 z-20 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
+                          <button
+                            onClick={() => {
+                              setSettingsBookId(null);
+                              setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true });
+                            }}
+                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
+                          >
+                            <Plus className="w-4 h-4 text-stone-400 shrink-0" />
+                            เพิ่มสูตรในเล่มนี้
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSettingsBookId(null);
+                              setEditCoverBook(book);
+                            }}
+                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
+                          >
+                            <Palette className="w-4 h-4 text-stone-400 shrink-0" />
+                            แก้ไขปกหนังสือ
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSettingsBookId(null);
+                              setWriterCard(currentUser);
+                            }}
+                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
+                          >
+                            <User className="w-4 h-4 text-stone-400 shrink-0" />
+                            ดูการ์ดนักเขียน
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Add new book tile */}
           {tab === "mine" && (
             <div className="flex flex-col items-center anim-fade-up"
                  style={{ animationDelay: `${books.length * 60}ms` }}>
@@ -189,31 +209,21 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
       )}
 
       {/* New book modal */}
-      <Modal
-        open={newBookOpen}
-        onClose={() => setNewBookOpen(false)}
-        title="สร้างหนังสือสูตรใหม่"
-        maxWidth="max-w-3xl"
-      >
+      <Modal open={newBookOpen} onClose={() => setNewBookOpen(false)} title="สร้างหนังสือสูตรใหม่" maxWidth="max-w-3xl">
         <BookCoverEditor
-          author={username}
+          author={displayName}
           inModal
           onSuccess={(id) => { setNewBookOpen(false); setOpenBook({ id, isOwner: true }); }}
           onCancel={() => setNewBookOpen(false)}
         />
       </Modal>
 
-      {/* Edit cover modal (from settings shortcut) */}
-      <Modal
-        open={!!editCoverBook}
-        onClose={() => setEditCoverBook(null)}
-        title="แก้ไขปกหนังสือ"
-        maxWidth="max-w-3xl"
-      >
+      {/* Edit cover modal */}
+      <Modal open={!!editCoverBook} onClose={() => setEditCoverBook(null)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl">
         {editCoverBook && (
           <BookCoverEditor
             book={editCoverBook}
-            author={username}
+            author={displayName}
             inModal
             onSuccess={() => setEditCoverBook(null)}
             onCancel={() => setEditCoverBook(null)}
@@ -228,6 +238,15 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
         autoNewRecipe={openBook?.autoNewRecipe}
         onClose={() => setOpenBook(null)}
       />
+
+      {/* Writer card modal */}
+      <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-sm">
+        {writerCard && (
+          <div className="rounded-2xl overflow-hidden">
+            <WriterCard info={writerCard} />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

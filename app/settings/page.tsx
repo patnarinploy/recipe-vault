@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/session";
-import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
+import WriterCard from "@/components/WriterCard";
 
 export default async function SettingsPage() {
   const user = await requireSession();
@@ -10,7 +10,7 @@ export default async function SettingsPage() {
     {
       label: "โปรไฟล์",
       items: [
-        { href: "/settings/profile",  icon: User,        label: "โปรไฟล์สาธารณะ",    sub: "นามแฝง, Avatar และคำอธิบายตัวตน" },
+        { href: "/settings/profile",  icon: User,        label: "โปรไฟล์นักเขียน",    sub: "นามแฝง, Avatar และคำอธิบายตัวตน" },
         { href: "/settings/account",  icon: ShieldCheck, label: "ข้อมูลส่วนตัว",      sub: "อีเมลและเบอร์โทร (ไม่แสดงต่อสาธารณะ)" },
       ],
     },
@@ -40,38 +40,15 @@ export default async function SettingsPage() {
 
       <h1 className="text-2xl font-bold text-stone-800 mb-6">ตั้งค่า</h1>
 
-      {/* Profile card */}
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 mb-6 flex items-center gap-4">
-        {isAvatarUrl(user.avatar) ? (
-          <img
-            src={user.avatar!}
-            alt={user.username}
-            className="w-16 h-16 rounded-full object-cover shrink-0"
-          />
-        ) : user.avatar ? (
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center shrink-0 text-4xl leading-none"
-            style={{ background: emojiAvatarBg(user.avatar) }}
-          >
-            {user.avatar}
-          </div>
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
-            <span className="text-2xl font-bold text-white select-none">
-              {(user.display_name ?? user.username)[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="text-base font-bold text-stone-800 truncate">{user.display_name ?? user.username}</p>
-          <p className="text-xs text-stone-400 mt-0.5">@{user.username}</p>
+      {/* Writer card preview */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest">การ์ดนักเขียน</p>
+          <Link href="/settings/profile" className="text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors">
+            แก้ไข
+          </Link>
         </div>
-        <Link
-          href="/settings/profile"
-          className="ml-auto shrink-0 text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors"
-        >
-          แก้ไข
-        </Link>
+        <WriterCard info={{ username: user.username, display_name: user.display_name, bio: user.bio, avatar: user.avatar }} />
       </div>
 
       {/* Nav groups */}

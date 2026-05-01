@@ -10,6 +10,7 @@ export default function BookCover({
   size = "md",
   publicCount = 0,
   author,
+  onAuthorClick,
   className = "",
   onClick,
 }: {
@@ -17,6 +18,7 @@ export default function BookCover({
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   publicCount?: number;
   author?: string;
+  onAuthorClick?: () => void;
   className?: string;
   onClick?: () => void;
 }) {
@@ -117,12 +119,22 @@ export default function BookCover({
             {author && (
               <>
                 <div className="w-full h-px bg-white/12 mt-1" />
-                <p
-                  className="text-white/40 italic tracking-widest truncate w-full"
-                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  by {author}
-                </p>
+                {onAuthorClick ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
+                    className="text-white/40 hover:text-white/75 italic tracking-widest truncate w-full transition-colors text-left"
+                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    by {author}
+                  </button>
+                ) : (
+                  <p
+                    className="text-white/40 italic tracking-widest truncate w-full"
+                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    by {author}
+                  </p>
+                )}
               </>
             )}
           </div>

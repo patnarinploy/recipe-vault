@@ -65,7 +65,7 @@ export default function ProfileForm({
         ตั้งค่า
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-1">โปรไฟล์สาธารณะ</h1>
+      <h1 className="text-2xl font-bold text-stone-800 mb-1">โปรไฟล์นักเขียน</h1>
       <p className="text-sm text-stone-400 mb-6">ข้อมูลที่คนอื่นจะเห็นเมื่อดูหนังสือของคุณ</p>
 
       <form action={action} className="space-y-5">
@@ -161,7 +161,7 @@ export default function ProfileForm({
               defaultValue={currentDisplayName ?? ""}
               minLength={2}
               maxLength={50}
-              placeholder={currentUsername}
+              placeholder="เช่น Chef Ploy, คุณแม่สูตรลับ..."
               className={inputCls}
             />
           </div>
@@ -193,7 +193,7 @@ export default function ProfileForm({
           disabled={pending || uploading}
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm"
         >
-          {pending ? "กำลังบันทึก…" : "บันทึกโปรไฟล์สาธารณะ"}
+          {pending ? "กำลังบันทึก…" : "บันทึกโปรไฟล์นักเขียน"}
         </button>
       </form>
     </div>

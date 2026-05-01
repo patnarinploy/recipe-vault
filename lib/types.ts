@@ -36,6 +36,13 @@ export const BOOK_COLORS = [
   { name: "Cream",    value: "#c9a876" },
 ] as const;
 
+export type WriterInfo = {
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  avatar: string | null;
+};
+
 export type User = {
   id: string;
   username: string;

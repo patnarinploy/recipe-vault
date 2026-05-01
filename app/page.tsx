@@ -1,17 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireSession } from "@/lib/session";
 import Library from "@/components/Library";
-import type { Book } from "@/lib/types";
+import type { Book, WriterInfo } from "@/lib/types";
 
 export const revalidate = 0;
 
-type BookWithCounts = Book & { recipe_count: number; public_count: number };
+type BookWithCounts = Book & { recipe_count: number; public_count: number; bookAuthor?: WriterInfo };
 
 export default async function HomePage() {
   const user = await requireSession();
   const supabase = await createClient();
 
-  // Fetch user's books with recipe counts
+  // My books
   const { data: myBooksRaw } = await supabase
     .from("books")
     .select("*")
@@ -21,7 +21,6 @@ export default async function HomePage() {
 
   const myBookIds = (myBooksRaw ?? []).map((b) => b.id);
 
-  // Counts per book (my books)
   const { data: myRecipes } = myBookIds.length
     ? await supabase
         .from("recipes")
@@ -32,14 +31,10 @@ export default async function HomePage() {
 
   const myBooks: BookWithCounts[] = (myBooksRaw ?? []).map((b) => {
     const list = (myRecipes ?? []).filter((r) => r.book_id === b.id);
-    return {
-      ...b,
-      recipe_count: list.length,
-      public_count: list.filter((r) => r.is_public).length,
-    };
+    return { ...b, recipe_count: list.length, public_count: list.filter((r) => r.is_public).length };
   });
 
-  // Public view: fetch all books that have at least 1 public recipe
+  // Public books (with author info)
   const { data: publicRecipes } = await supabase
     .from("recipes")
     .select("book_id")
@@ -48,21 +43,29 @@ export default async function HomePage() {
 
   const publicBookIds = Array.from(new Set((publicRecipes ?? []).map((r) => r.book_id)));
 
+  type PublicBookRaw = Book & { users: WriterInfo };
   const { data: publicBooksRaw } = publicBookIds.length
     ? await supabase
         .from("books")
-        .select("*")
+        .select("*, users(username, display_name, bio, avatar)")
         .in("id", publicBookIds)
         .order("created_at", { ascending: true })
-        .returns<Book[]>()
+        .returns<PublicBookRaw[]>()
     : { data: [] };
 
   const publicBooks: BookWithCounts[] = (publicBooksRaw ?? []).map((b) => {
     const count = (publicRecipes ?? []).filter((r) => r.book_id === b.id).length;
-    return { ...b, recipe_count: count, public_count: count };
+    return { ...b, recipe_count: count, public_count: count, bookAuthor: (b as any).users ?? undefined };
   });
 
+  const currentUser: WriterInfo = {
+    username: user.username,
+    display_name: user.display_name,
+    bio: user.bio,
+    avatar: user.avatar,
+  };
+
   return (
-    <Library myBooks={myBooks} publicBooks={publicBooks} username={user.display_name ?? user.username} />
+    <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={currentUser} />
   );
 }

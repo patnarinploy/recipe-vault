@@ -6,6 +6,7 @@ export default async function AccountPage() {
   return (
     <AccountForm
       currentUsername={user.username}
+      currentRole={user.role}
       currentEmail={user.email}
       currentTel={user.tel}
     />

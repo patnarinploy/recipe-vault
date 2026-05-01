@@ -7,10 +7,12 @@ import { ArrowLeft, Lock } from "lucide-react";
 
 export default function AccountForm({
   currentUsername,
+  currentRole,
   currentEmail,
   currentTel,
 }: {
   currentUsername: string;
+  currentRole: "admin" | "user";
   currentEmail: string | null;
   currentTel: string | null;
 }) {
@@ -49,6 +51,21 @@ export default function AccountForm({
             disabled
             className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm bg-stone-50 text-stone-400 cursor-not-allowed"
           />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-stone-700 mb-1">Role</p>
+          <p className="text-xs text-stone-400 mb-3">ระดับสิทธิ์ในระบบ</p>
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+              currentRole === "admin"
+                ? "bg-orange-100 text-orange-600"
+                : "bg-stone-100 text-stone-600"
+            }`}>
+              {currentRole === "admin" ? "👑 Admin" : "👤 User"}
+            </span>
+            <span className="text-xs text-stone-400">ไม่สามารถเปลี่ยนได้</span>
+          </div>
         </div>
 
         {/* Email + Tel */}
