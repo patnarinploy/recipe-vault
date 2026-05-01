@@ -262,35 +262,39 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
                style={{ top: "4%", right: "6%", width: "clamp(28px,12%,52px)", height: "clamp(10px,3.5%,18px)",
                  background: "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.75),rgba(212,184,150,.6))",
                  transform: "rotate(9deg)", boxShadow: "0 1px 3px rgba(0,0,0,.1)" }} />
-          <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3"
-               style={{ width: "calc(100% - 1.5rem)", padding: "clamp(1.5rem,8%,3rem) 1rem" }}>
-            <p className="tracking-[.38em] text-white/48 uppercase truncate w-full"
-               style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
-              {book.tagline ?? "ตำรับอาหาร"}
-            </p>
-            <div className="w-1/3 h-px bg-white/20" />
-            <h2 className="font-bold leading-tight break-words w-full"
-                style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
-              {book.title}
-            </h2>
-            {book.subtitle && (<>
-              <div className="w-12 h-px bg-white/20 mt-1" />
-              <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
-            </>)}
-          </div>
 
-          {/* Author — inside the page so it animates with the cover flip */}
-          {authorName && (
-            <div className="absolute z-10" style={{ bottom: 15, left: 10 }}>
-              {onAuthorClick
-                ? <AuthorClickButton label={authorName} onClick={onAuthorClick} />
-                : <p className="text-white/50 italic tracking-widest"
-                     style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
-                    by {authorName}
-                  </p>
-              }
+          {/* Title frame + author stacked so author sits just below the frame */}
+          <div style={{ width: "calc(100% - 1.5rem)" }}>
+            <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 w-full"
+                 style={{ padding: "clamp(1.5rem,8%,3rem) 1rem" }}>
+              <p className="tracking-[.38em] text-white/48 uppercase truncate w-full"
+                 style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
+                {book.tagline ?? "ตำรับอาหาร"}
+              </p>
+              <div className="w-1/3 h-px bg-white/20" />
+              <h2 className="font-bold leading-tight break-words w-full"
+                  style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
+                {book.title}
+              </h2>
+              {book.subtitle && (<>
+                <div className="w-12 h-px bg-white/20 mt-1" />
+                <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
+              </>)}
             </div>
-          )}
+
+            {/* Author — directly below the title frame, left-aligned */}
+            {authorName && (
+              <div className="mt-2 px-1">
+                {onAuthorClick
+                  ? <AuthorClickButton label={authorName} onClick={onAuthorClick} />
+                  : <p className="text-white/50 italic tracking-widest"
+                       style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                      by {authorName}
+                    </p>
+                }
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {publicCount > 0 && (
