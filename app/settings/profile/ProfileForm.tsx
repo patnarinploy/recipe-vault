@@ -1,10 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { updateProfile } from "@/app/actions/auth";
-import { AVATAR_OPTIONS, avatarUrl } from "@/lib/avatar";
+import { AVATAR_ANIMALS, emojiAvatarBg, isAvatarUrl } from "@/lib/avatar";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle2, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+
+const BUCKET = "recipe-images";
+const MAX_MB = 5;
 
 export default function ProfileForm({
   currentUsername,
@@ -15,6 +20,39 @@ export default function ProfileForm({
 }) {
   const [state, action, pending] = useActionState(updateProfile, undefined);
   const [selected, setSelected] = useState<string>(currentAvatar ?? "");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  /* ── Upload handler ────────────────────────────────────────── */
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      toast.error(`ไฟล์ต้องไม่เกิน ${MAX_MB} MB`);
+      return;
+    }
+
+    setUploading(true);
+    const ext  = file.name.split(".").pop();
+    const path = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const sb   = createClient();
+
+    const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert: true });
+    if (error) {
+      toast.error("อัปโหลดไม่สำเร็จ: " + error.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+    setSelected(data.publicUrl);
+    setUploading(false);
+  }
+
+  /* ── Preview logic ─────────────────────────────────────────── */
+  const isUrl   = isAvatarUrl(selected);
+  const isEmoji = !!selected && !isUrl;
+  const previewBg = isEmoji ? emojiAvatarBg(selected) : "#fed7aa";
 
   const inputCls =
     "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400";
@@ -31,84 +69,102 @@ export default function ProfileForm({
 
       <h1 className="text-2xl font-bold text-stone-800 mb-6">ข้อมูลส่วนตัว</h1>
 
-      <form action={action} className="space-y-6">
-        {/* Avatar preview */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-          <p className="text-sm font-semibold text-stone-700 mb-1">Avatar</p>
-          <p className="text-xs text-stone-400 mb-5">เลือกตัวละครสัตว์ที่เป็นตัวแทนของคุณ</p>
+      <form action={action} className="space-y-5">
 
-          {/* Current preview */}
+        {/* ── Avatar section ──────────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
+          <p className="text-sm font-semibold text-stone-700 mb-0.5">Avatar</p>
+          <p className="text-xs text-stone-400 mb-5">เลือกสัตว์น่ารักหรืออัปโหลดรูปของคุณเอง</p>
+
+          {/* Big preview */}
           <div className="flex justify-center mb-6">
-            <div className="relative">
-              {selected ? (
-                <img
-                  src={avatarUrl(selected, 100)}
-                  alt="avatar"
-                  className="w-24 h-24 rounded-full bg-amber-50 border-4 border-orange-200 shadow"
-                />
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden"
+              style={{ background: isUrl ? "#f5f5f4" : previewBg }}
+            >
+              {isUrl ? (
+                <img src={selected} alt="avatar" className="w-full h-full object-cover" />
+              ) : isEmoji ? (
+                <span className="text-5xl leading-none">{selected}</span>
               ) : (
-                <div className="w-24 h-24 rounded-full bg-orange-500 border-4 border-orange-200 shadow flex items-center justify-center">
-                  <span className="text-3xl font-bold text-white select-none">
-                    {currentUsername[0].toUpperCase()}
-                  </span>
-                </div>
+                <span className="text-3xl font-bold text-white" style={{ background: "#f97316", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {currentUsername[0].toUpperCase()}
+                </span>
               )}
             </div>
           </div>
 
-          {/* Avatar grid */}
-          <div className="grid grid-cols-6 gap-2.5">
-            {/* "ไม่มี" option */}
+          {/* Grid */}
+          <div className="grid grid-cols-7 gap-2">
+
+            {/* Slot 0: Upload */}
             <button
               type="button"
-              onClick={() => setSelected("")}
-              className={`relative aspect-square rounded-xl border-2 flex items-center justify-center text-lg transition-all ${
-                selected === ""
-                  ? "border-orange-500 bg-orange-50 shadow-md scale-105"
-                  : "border-stone-200 hover:border-stone-300 bg-stone-50"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className={`relative aspect-square rounded-xl border-2 flex items-center justify-center transition-all ${
+                isUrl
+                  ? "border-orange-500 shadow-md scale-105 overflow-hidden"
+                  : "border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50"
               }`}
-              title="ตัวอักษร (ค่าเริ่มต้น)"
+              title="อัปโหลดรูปของคุณ"
             >
-              <span className="text-base font-bold text-stone-500">
-                {currentUsername[0].toUpperCase()}
-              </span>
-              {selected === "" && (
-                <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
+              {uploading ? (
+                <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
+              ) : isUrl ? (
+                <>
+                  <img src={selected} alt="uploaded" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <Camera className="w-4 h-4 text-white" />
+                  </div>
+                  <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
+                </>
+              ) : (
+                <Camera className="w-4 h-4 text-stone-400" />
               )}
             </button>
 
-            {AVATAR_OPTIONS.map(({ seed, name }) => (
+            {/* Slots 1-12: emoji animals */}
+            {AVATAR_ANIMALS.map(({ value, name, bg }) => (
               <button
-                key={seed}
+                key={value}
                 type="button"
-                onClick={() => setSelected(seed)}
-                className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${
-                  selected === seed
+                onClick={() => setSelected(value)}
+                className={`relative aspect-square rounded-xl border-2 flex items-center justify-center text-2xl transition-all ${
+                  selected === value
                     ? "border-orange-500 shadow-md scale-105"
-                    : "border-stone-200 hover:border-stone-300"
+                    : "border-transparent hover:border-stone-200"
                 }`}
+                style={{ background: bg }}
                 title={name}
               >
-                <img
-                  src={avatarUrl(seed, 80)}
-                  alt={name}
-                  className="w-full h-full object-cover bg-amber-50"
-                />
-                {selected === seed && (
+                {value}
+                {selected === value && (
                   <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
                 )}
               </button>
             ))}
           </div>
 
-          <input type="hidden" name="avatar" value={selected} />
+          <input
+            type="hidden"
+            name="avatar"
+            value={selected}
+          />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={handleUpload}
+          />
         </div>
 
-        {/* นามแฝง */}
+        {/* ── นามแฝง ──────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-          <p className="text-sm font-semibold text-stone-700 mb-1">นามแฝง</p>
+          <p className="text-sm font-semibold text-stone-700 mb-0.5">นามแฝง</p>
           <p className="text-xs text-stone-400 mb-4">
-            ชื่อที่แสดงในเว็บและบนปกหนังสือสูตรของคุณ
+            ชื่อที่แสดงในเว็บและบนปกหนังสือของคุณ
           </p>
           <input
             name="username"
@@ -136,7 +192,7 @@ export default function ProfileForm({
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || uploading}
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm"
         >
           {pending ? "กำลังบันทึก…" : "บันทึกข้อมูลส่วนตัว"}

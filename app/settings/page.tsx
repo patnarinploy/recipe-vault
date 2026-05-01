@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/session";
-import { avatarUrl } from "@/lib/avatar";
+import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen } from "lucide-react";
 
@@ -36,12 +36,19 @@ export default async function SettingsPage() {
 
       {/* Profile card */}
       <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 mb-6 flex items-center gap-4">
-        {user.avatar ? (
+        {isAvatarUrl(user.avatar) ? (
           <img
-            src={avatarUrl(user.avatar, 64)}
+            src={user.avatar!}
             alt={user.username}
-            className="w-16 h-16 rounded-full object-cover shrink-0 bg-amber-50"
+            className="w-16 h-16 rounded-full object-cover shrink-0"
           />
+        ) : user.avatar ? (
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center shrink-0 text-4xl leading-none"
+            style={{ background: emojiAvatarBg(user.avatar) }}
+          >
+            {user.avatar}
+          </div>
         ) : (
           <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
             <span className="text-2xl font-bold text-white select-none">

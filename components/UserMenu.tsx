@@ -5,7 +5,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Settings, Users, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
-import { avatarUrl } from "@/lib/avatar";
+import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 
 export default function UserMenu({ user }: { user: User }) {
@@ -29,12 +29,19 @@ export default function UserMenu({ user }: { user: User }) {
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors text-sm font-medium text-stone-700"
       >
         {/* Avatar */}
-        {user.avatar ? (
+        {isAvatarUrl(user.avatar) ? (
           <img
-            src={avatarUrl(user.avatar, 56)}
+            src={user.avatar!}
             alt={user.username}
-            className="w-7 h-7 rounded-full object-cover shrink-0 bg-amber-50"
+            className="w-7 h-7 rounded-full object-cover shrink-0"
           />
+        ) : user.avatar ? (
+          <span
+            className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-lg leading-none"
+            style={{ background: emojiAvatarBg(user.avatar) }}
+          >
+            {user.avatar}
+          </span>
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
             {user.username[0].toUpperCase()}

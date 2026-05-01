@@ -1,20 +1,24 @@
-export const AVATAR_OPTIONS = [
-  { seed: "Mittens",  name: "แมว" },
-  { seed: "Rex",      name: "หมา" },
-  { seed: "Foxy",     name: "จิ้งจอก" },
-  { seed: "Panda",    name: "แพนด้า" },
-  { seed: "Bunnyhop", name: "กระต่าย" },
-  { seed: "Teddy",    name: "หมี" },
-  { seed: "Waddles",  name: "เพนกวิน" },
-  { seed: "Bucky",    name: "กวาง" },
-  { seed: "Hootie",   name: "นกฮูก" },
-  { seed: "Koko",     name: "โคอาล่า" },
-  { seed: "Prickles", name: "เม่น" },
-  { seed: "Hammy",    name: "แฮมสเตอร์" },
+export const AVATAR_ANIMALS = [
+  { value: "🐱", name: "แมว",       bg: "#fde68a" },
+  { value: "🐶", name: "หมา",       bg: "#bfdbfe" },
+  { value: "🦊", name: "จิ้งจอก",  bg: "#fecaca" },
+  { value: "🐼", name: "แพนด้า",   bg: "#d1fae5" },
+  { value: "🐰", name: "กระต่าย",  bg: "#fbcfe8" },
+  { value: "🐻", name: "หมี",       bg: "#fed7aa" },
+  { value: "🐧", name: "เพนกวิน",  bg: "#c7d2fe" },
+  { value: "🦌", name: "กวาง",      bg: "#d9f99d" },
+  { value: "🦉", name: "นกฮูก",    bg: "#fef08a" },
+  { value: "🐨", name: "โคอาล่า",  bg: "#e5e7eb" },
+  { value: "🦔", name: "เม่น",      bg: "#fde68a" },
+  { value: "🐹", name: "แฮมสเตอร์", bg: "#fbcfe8" },
 ] as const;
 
-export type AvatarSeed = (typeof AVATAR_OPTIONS)[number]["seed"];
+/** Returns true when the stored avatar value is an uploaded image URL */
+export function isAvatarUrl(avatar: string | null | undefined): boolean {
+  return !!avatar && avatar.startsWith("http");
+}
 
-export function avatarUrl(seed: string, size = 80) {
-  return `https://api.dicebear.com/9.x/lorelei-neutral/svg?seed=${encodeURIComponent(seed)}&size=${size}&backgroundColor=fde68a,fed7aa,fecaca,bbf7d0,bfdbfe,e9d5ff`;
+/** Background colour for an emoji avatar (matches the grid palette) */
+export function emojiAvatarBg(emoji: string): string {
+  return AVATAR_ANIMALS.find(a => a.value === emoji)?.bg ?? "#fed7aa";
 }
