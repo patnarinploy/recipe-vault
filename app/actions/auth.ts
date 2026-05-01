@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   verifyPassword,
@@ -140,5 +141,41 @@ export async function changePassword(
     .eq("id", currentUser.id);
 
   if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function changeUsername(
+  _: unknown,
+  formData: FormData,
+): Promise<{ error: string } | { success: true } | undefined> {
+  const currentUser = await getSession();
+  if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const newUsername = (formData.get("new_username") as string)?.trim();
+
+  if (!newUsername) return { error: "กรุณากรอก username ใหม่" };
+  if (newUsername.length < 3) return { error: "username ต้องมีอย่างน้อย 3 ตัวอักษร" };
+  if (!/^[a-zA-Z0-9_]+$/.test(newUsername))
+    return { error: "ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข และ _" };
+  if (newUsername === currentUser.username) return { error: "username เหมือนเดิม" };
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .eq("username", newUsername)
+    .maybeSingle();
+
+  if (existing) return { error: "username นี้มีผู้ใช้แล้ว" };
+
+  const { error } = await supabase
+    .from("users")
+    .update({ username: newUsername })
+    .eq("id", currentUser.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/", "layout");
   return { success: true };
 }

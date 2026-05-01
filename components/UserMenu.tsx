@@ -53,7 +53,7 @@ export default function UserMenu({ user }: { user: User }) {
             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
           >
             <Settings className="w-4 h-4 text-stone-400" />
-            เปลี่ยนรหัสผ่าน
+            ตั้งค่า
           </Link>
 
           {user.role === "admin" && (

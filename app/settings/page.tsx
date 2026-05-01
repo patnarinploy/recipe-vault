@@ -1,12 +1,13 @@
 "use client";
 
-import { changePassword } from "@/app/actions/auth";
+import { changePassword, changeUsername } from "@/app/actions/auth";
 import { useActionState, useEffect, useState } from "react";
-import { KeyRound, BookOpen, ArrowLeft } from "lucide-react";
+import { KeyRound, BookOpen, ArrowLeft, UserPen } from "lucide-react";
 import Link from "next/link";
 
 export default function SettingsPage() {
-  const [state, action, pending] = useActionState(changePassword, undefined);
+  const [pwState,   pwAction,   pwPending]   = useActionState(changePassword,  undefined);
+  const [unState,   unAction,   unPending]   = useActionState(changeUsername,  undefined);
   const [flipType, setFlipType] = useState<"soft" | "hard">("soft");
 
   useEffect(() => {
@@ -78,6 +79,50 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ── Username change ── */}
+      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
+          <UserPen className="w-5 h-5 text-orange-500" />
+          เปลี่ยนชื่อผู้ใช้
+        </h2>
+
+        <form action={unAction} className="space-y-4">
+          <div>
+            <label className={labelCls}>ชื่อผู้ใช้ใหม่</label>
+            <input
+              name="new_username"
+              type="text"
+              required
+              minLength={3}
+              placeholder="a-z, A-Z, 0-9, _"
+              className={inputCls}
+            />
+            <p className="text-xs text-stone-400 mt-1.5">
+              อย่างน้อย 3 ตัวอักษร ใช้ได้เฉพาะ a-z, A-Z, 0-9 และ _
+            </p>
+          </div>
+
+          {unState && "error" in unState && (
+            <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
+              {unState.error}
+            </p>
+          )}
+          {unState && "success" in unState && (
+            <p className="text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2">
+              เปลี่ยนชื่อผู้ใช้สำเร็จ
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={unPending}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
+          >
+            {unPending ? "กำลังบันทึก…" : "บันทึกชื่อผู้ใช้ใหม่"}
+          </button>
+        </form>
+      </div>
+
       {/* ── Password change ── */}
       <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
         <h2 className="text-lg font-bold text-stone-800 mb-6 flex items-center gap-2">
@@ -85,7 +130,7 @@ export default function SettingsPage() {
           เปลี่ยนรหัสผ่าน
         </h2>
 
-        <form action={action} className="space-y-4">
+        <form action={pwAction} className="space-y-4">
           <div>
             <label className={labelCls}>รหัสผ่านปัจจุบัน</label>
             <input
@@ -116,12 +161,12 @@ export default function SettingsPage() {
             />
           </div>
 
-          {state && "error" in state && (
+          {pwState && "error" in pwState && (
             <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
-              {state.error}
+              {pwState.error}
             </p>
           )}
-          {state && "success" in state && (
+          {pwState && "success" in pwState && (
             <p className="text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2">
               เปลี่ยนรหัสผ่านสำเร็จ
             </p>
@@ -129,10 +174,10 @@ export default function SettingsPage() {
 
           <button
             type="submit"
-            disabled={pending}
+            disabled={pwPending}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm"
           >
-            {pending ? "กำลังบันทึก…" : "บันทึกรหัสผ่านใหม่"}
+            {pwPending ? "กำลังบันทึก…" : "บันทึกรหัสผ่านใหม่"}
           </button>
         </form>
       </div>
