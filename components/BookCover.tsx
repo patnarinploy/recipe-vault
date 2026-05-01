@@ -89,12 +89,6 @@ export default function BookCover({
             }}
           />
 
-          {/* Shared badge */}
-          {publicCount > 0 && (
-            <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm text-green-600 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
-              <Globe className="w-3 h-3" /> แชร์ {publicCount}
-            </div>
-          )}
 
           {/* Frame */}
           <div className={`border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3 ${DIMS.frame}`}
@@ -121,6 +115,29 @@ export default function BookCover({
           </div>
         </div>
       </div>
+
+      {/* Shared badge — outside overflow-hidden to avoid Safari clipping */}
+      {publicCount > 0 && (
+        <div
+          className="absolute z-10 pointer-events-none whitespace-nowrap"
+          style={{
+            bottom: 8,
+            right: 8,
+            background: "rgba(255,255,255,0.95)",
+            color: "#16a34a",
+            fontSize: size === "xs" ? 8 : 10,
+            padding: size === "xs" ? "2px 6px" : "2px 8px",
+            borderRadius: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            fontWeight: 600,
+          }}
+        >
+          <Globe style={{ width: size === "xs" ? 8 : 10, height: size === "xs" ? 8 : 10 }} />
+          แชร์ {publicCount}
+        </div>
+      )}
     </Wrapper>
   );
 }

@@ -219,7 +219,7 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number }>(({ book, publicCount }, ref) => {
   const C = book.cover_color;
   return (
-    <div ref={ref} data-density="hard">
+    <div ref={ref} data-density="hard" style={{ position: "relative" }}>
       <div className="w-full h-full flex overflow-hidden" style={{ boxShadow: COVER_BORDER, borderRadius: 2 }}>
         <div className="shrink-0 flex items-center justify-center relative overflow-hidden"
              style={{ width: "8.2%", background: `linear-gradient(to right,${darken(C, 28)},${C})` }}>
@@ -251,14 +251,16 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
               <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
             </>)}
           </div>
-          {publicCount > 0 && (
-            <div className="absolute bg-white/95 backdrop-blur-sm text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold pointer-events-none"
-                 style={{ bottom: 44, right: 5, color: C }}>
-              <Globe className="w-3.5 h-3.5" /> แชร์ {publicCount}
-            </div>
-          )}
         </div>
       </div>
+      {publicCount > 0 && (
+        <div className="absolute z-10 pointer-events-none whitespace-nowrap"
+             style={{ bottom: 44, right: 5, background: "rgba(255,255,255,0.95)", color: C,
+               fontSize: 11, padding: "4px 12px", borderRadius: 9999,
+               display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+          <Globe style={{ width: 14, height: 14 }} /> แชร์ {publicCount}
+        </div>
+      )}
     </div>
   );
 });
