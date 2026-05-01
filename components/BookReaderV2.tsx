@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, Globe } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe } from "lucide-react";
 import type { Book, Recipe } from "@/lib/types";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -604,8 +604,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   }, [fabOpen]);
 
   const firstTocIdx = slots.findIndex(s => s.kind === "toc");
-  const goToToC = () => bookRef.current?.pageFlip().turnToPage(Math.max(0, firstTocIdx));
-  const goToPage = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
+  const goToToC     = () => bookRef.current?.pageFlip().turnToPage(Math.max(0, firstTocIdx));
+  const goToPage    = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
+  const goToPrev    = useCallback(() => bookRef.current?.pageFlip().flipPrev(), []);
+  const goToNext    = useCallback(() => bookRef.current?.pageFlip().flipNext(), []);
 
   const currentSlot = slots[currentPage] ?? slots[0];
   type Ctx = "cover" | "toc" | "recipe" | "backcover";
@@ -715,13 +717,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           {pages}
         </HTMLFlipBook>
 
-        {/* ── FAB (owner only) — bottom-right of the right page ─── */}
-        {isOwner && (
-          <div className="absolute z-[10001] flex flex-col items-end gap-2"
-               style={{ bottom: 5, right: 5 }}>
-            {fabOpen && (
-              <div ref={fabRef} className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+        {/* ── FAB — bottom-right of the right page ─── */}
+        <div className="absolute z-[10001] flex flex-col items-end gap-2"
+             style={{ bottom: 5, right: 5 }}>
+          {fabOpen && (
+            <div ref={fabRef} className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
+              {/* owner-only actions */}
+              {isOwner && (<>
                 {/* เพิ่มสูตร — ทุก context */}
                 <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
@@ -754,13 +757,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
                 {/* เปิดสารบัญ — cover / backcover / recipe */}
                 {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
-                  <>
-                    <div className="border-t border-stone-100 my-0.5" />
-                    <button onClick={() => { setFabOpen(false); goToToC(); }}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                      <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
-                    </button>
-                  </>
+                  <button onClick={() => { setFabOpen(false); goToToC(); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
+                    <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
+                  </button>
                 )}
 
                 {/* ปิดหนังสือ — cover / backcover */}
@@ -770,21 +770,39 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                     <X className="w-4 h-4 text-red-400" /> ปิดหนังสือ
                   </button>
                 )}
-              </div>
-            )}
 
-            {/* FAB trigger */}
-            <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
-                    style={{ width: 30, height: 30 }}
-                    className={`rounded-full shadow-xl flex items-center justify-center transition-all ${
-                      fabOpen
-                        ? "bg-stone-700 text-white rotate-90"
-                        : "bg-orange-500 text-white hover:bg-orange-600 hover:scale-105"
-                    }`}>
-              {fabOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
-            </button>
-          </div>
-        )}
+                <div className="border-t border-stone-100 my-0.5" />
+              </>)}
+
+              {/* navigation — ทุก context ทุก role */}
+              <button
+                onClick={() => { setFabOpen(false); goToPrev(); }}
+                disabled={currentPage === 0}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl disabled:opacity-30"
+              >
+                <ChevronLeft className="w-4 h-4 text-stone-400" /> หน้าก่อนหน้า
+              </button>
+              <button
+                onClick={() => { setFabOpen(false); goToNext(); }}
+                disabled={currentPage >= slots.length - 1}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4 text-stone-400" /> หน้าถัดไป
+              </button>
+            </div>
+          )}
+
+          {/* FAB trigger */}
+          <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
+                  style={{ width: 30, height: 30 }}
+                  className={`rounded-full shadow-xl flex items-center justify-center transition-all ${
+                    fabOpen
+                      ? "bg-stone-700 text-white rotate-90"
+                      : "bg-orange-500 text-white hover:bg-orange-600 hover:scale-105"
+                  }`}>
+            {fabOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
