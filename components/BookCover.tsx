@@ -125,14 +125,19 @@ export default function BookCover({
               style={{ bottom: size === "xs" ? 6 : 10, left: size === "xs" ? 6 : 10 }}
             >
               {onAuthorClick ? (
-                <button
+                // Must NOT be <button> here — the outer Wrapper is already a <button>,
+                // and nested buttons are invalid HTML; the browser rewrites the DOM,
+                // causing React hydration error #418 on page refresh.
+                <span
+                  role="button"
+                  tabIndex={0}
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
-                  className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
+                  className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors cursor-pointer"
                   style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
                 >
                   by {author}
-                </button>
+                </span>
               ) : (
                 <p
                   className="text-white/50 italic tracking-widest"
