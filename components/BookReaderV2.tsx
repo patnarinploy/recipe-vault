@@ -737,7 +737,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         {authorName && currentSlot?.kind === "cover-front" && (
           <div
             className="absolute z-[10001] pointer-events-none"
-            style={{ bottom: 14, left: Math.round(pageW * 0.082) + 10 }}
+            style={{ bottom: 14, left: (portrait ? 0 : pageW) + Math.round(pageW * 0.082) + 10 }}
           >
             {writerInfo ? (
               <button

@@ -30,7 +30,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
   const [writerCard, setWriterCard] = useState<WriterInfo | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  const displayName = currentUser.display_name ?? currentUser.username;
+  const displayName = currentUser.display_name ?? "กระรอกสายลับ";
 
   useEffect(() => {
     if (!settingsBookId) return;
