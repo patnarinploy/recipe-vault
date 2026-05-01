@@ -5,6 +5,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { Settings, Users, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
+import { avatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 
 export default function UserMenu({ user }: { user: User }) {
@@ -27,10 +28,18 @@ export default function UserMenu({ user }: { user: User }) {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors text-sm font-medium text-stone-700"
       >
-        {/* Avatar circle */}
-        <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-          {user.username[0].toUpperCase()}
-        </span>
+        {/* Avatar */}
+        {user.avatar ? (
+          <img
+            src={avatarUrl(user.avatar, 56)}
+            alt={user.username}
+            className="w-7 h-7 rounded-full object-cover shrink-0 bg-amber-50"
+          />
+        ) : (
+          <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+            {user.username[0].toUpperCase()}
+          </span>
+        )}
         <span className="max-w-[120px] truncate">{user.username}</span>
         {user.role === "admin" && (
           <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">
