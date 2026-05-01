@@ -107,6 +107,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
                 book={book}
                 size="sm"
                 publicCount={book.public_count}
+                author={tab === "mine" ? username : undefined}
                 onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
               />
 
@@ -195,6 +196,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
         maxWidth="max-w-3xl"
       >
         <BookCoverEditor
+          author={username}
           inModal
           onSuccess={(id) => { setNewBookOpen(false); setOpenBook({ id, isOwner: true }); }}
           onCancel={() => setNewBookOpen(false)}
@@ -211,6 +213,7 @@ export default function Library({ myBooks, publicBooks, username }: Props) {
         {editCoverBook && (
           <BookCoverEditor
             book={editCoverBook}
+            author={username}
             inModal
             onSuccess={() => setEditCoverBook(null)}
             onCancel={() => setEditCoverBook(null)}

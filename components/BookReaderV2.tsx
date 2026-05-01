@@ -216,7 +216,7 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 }
 
 // ─── Page components ──────────────────────────────────────────────
-const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number }>(({ book, publicCount }, ref) => {
+const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string }>(({ book, publicCount, authorName }, ref) => {
   const C = book.cover_color;
   return (
     <div ref={ref} data-density="hard" style={{ position: "relative" }}>
@@ -249,6 +249,13 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             {book.subtitle && (<>
               <div className="w-12 h-px bg-white/20 mt-1" />
               <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
+            </>)}
+            {authorName && (<>
+              <div className="w-full h-px bg-white/12 mt-2" />
+              <p className="text-white/40 italic tracking-widest truncate w-full"
+                 style={{ fontSize: "clamp(7px,1.6vw,10px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                by {authorName}
+              </p>
             </>)}
           </div>
         </div>
@@ -545,10 +552,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const { pageW, pageH, portrait, ready } = usePageDimensions();
 
   const [book,    setBook]    = useState<Book | null>(null);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [recipes,    setRecipes]    = useState<Recipe[]>([]);
+  const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
-  const [flipType, setFlipType] = useState<"soft" | "hard">("soft");
+  const [flipType,   setFlipType]   = useState<"soft" | "hard">("soft");
+  const [authorName, setAuthorName] = useState("");
 
   useEffect(() => {
     const v = localStorage.getItem("rv_page_flip_type");
@@ -573,10 +581,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*").eq("id", bookId).single<Book>(),
+      sb.from("books").select("*, users(username)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
-    if (bk.data) setBook(bk.data);
+    if (bk.data) {
+      setBook(bk.data as Book);
+      setAuthorName((bk.data as any).users?.username ?? "");
+    }
     if (rc.data) setRecipes(rc.data);
     setLoading(false);
   }, [bookId]);
@@ -657,7 +668,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}

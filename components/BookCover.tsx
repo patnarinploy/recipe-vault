@@ -9,21 +9,23 @@ export default function BookCover({
   book,
   size = "md",
   publicCount = 0,
+  author,
   className = "",
   onClick,
 }: {
   book: Book;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   publicCount?: number;
+  author?: string;
   className?: string;
   onClick?: () => void;
 }) {
   const DIMS = {
-    xs: { w: 120, h: 168, title: "text-sm",  tag: "text-[7px]",  sub: "text-[8px]",  frame: "py-3 px-2", spine: 14 },
-    sm: { w: 160, h: 220, title: "text-base", tag: "text-[7.5px]", sub: "text-[8.5px]", frame: "py-4 px-2.5", spine: 18 },
-    md: { w: 240, h: 320, title: "text-2xl", tag: "text-[8.5px]", sub: "text-[9.5px]", frame: "py-7 px-3",   spine: 22 },
-    lg: { w: 300, h: 400, title: "text-3xl", tag: "text-[9.5px]", sub: "text-[10.5px]", frame: "py-9 px-4",  spine: 26 },
-    xl: { w: 390, h: 540, title: "text-4xl", tag: "text-[11px]",  sub: "text-[12px]",   frame: "py-12 px-5", spine: 32 },
+    xs: { w: 120, h: 168, title: "text-sm",  tag: "text-[7px]",  sub: "text-[8px]",  frame: "py-3 px-2",   spine: 14, by: 6 },
+    sm: { w: 160, h: 220, title: "text-base", tag: "text-[7.5px]", sub: "text-[8.5px]", frame: "py-4 px-2.5", spine: 18, by: 7 },
+    md: { w: 240, h: 320, title: "text-2xl", tag: "text-[8.5px]", sub: "text-[9.5px]", frame: "py-7 px-3",   spine: 22, by: 8.5 },
+    lg: { w: 300, h: 400, title: "text-3xl", tag: "text-[9.5px]", sub: "text-[10.5px]", frame: "py-9 px-4",  spine: 26, by: 9.5 },
+    xl: { w: 390, h: 540, title: "text-4xl", tag: "text-[11px]",  sub: "text-[12px]",   frame: "py-12 px-5", spine: 32, by: 11 },
   }[size];
 
   const Wrapper = onClick ? "button" : "div";
@@ -109,6 +111,17 @@ export default function BookCover({
                 <div className="w-7 h-px bg-white/20" />
                 <p className={`${DIMS.sub} text-white/55 line-clamp-2 break-words w-full px-1`}>
                   {book.subtitle}
+                </p>
+              </>
+            )}
+            {author && (
+              <>
+                <div className="w-full h-px bg-white/12 mt-1" />
+                <p
+                  className="text-white/40 italic tracking-widest truncate w-full"
+                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
+                  by {author}
                 </p>
               </>
             )}

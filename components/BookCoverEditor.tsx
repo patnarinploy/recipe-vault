@@ -10,12 +10,13 @@ import { Trash2 } from "lucide-react";
 
 interface Props {
   book?: Book;
+  author?: string;
   onSuccess?: (id: string) => void;
   onCancel?: () => void;
   inModal?: boolean;
 }
 
-export default function BookCoverEditor({ book, onSuccess, onCancel, inModal }: Props) {
+export default function BookCoverEditor({ book, author, onSuccess, onCancel, inModal }: Props) {
   const router = useRouter();
   const isEdit = !!book;
   const [isPending, startTransition] = useTransition();
@@ -90,7 +91,7 @@ export default function BookCoverEditor({ book, onSuccess, onCancel, inModal }: 
         {/* Preview + fields */}
         <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start mb-8">
           <div className="shrink-0">
-            <BookCover book={previewBook} size="md" />
+            <BookCover book={previewBook} size="md" author={author} />
           </div>
 
           <div className="flex-1 space-y-4 w-full">
