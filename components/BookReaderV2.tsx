@@ -216,8 +216,34 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
   );
 }
 
+// ─── Author button — uses native listener so pageflip never sees mousedown ───
+function AuthorClickButton({ label, onClick }: { label: string; onClick: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const stop = (e: Event) => { e.stopPropagation(); };
+    el.addEventListener("mousedown", stop);
+    el.addEventListener("touchstart", stop, { passive: true });
+    return () => {
+      el.removeEventListener("mousedown", stop);
+      el.removeEventListener("touchstart", stop);
+    };
+  }, []);
+  return (
+    <button
+      ref={ref}
+      onClick={onClick}
+      className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
+      style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}
+    >
+      by {label}
+    </button>
+  );
+}
+
 // ─── Page components ──────────────────────────────────────────────
-const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number }>(({ book, publicCount }, ref) => {
+const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string; onAuthorClick?: () => void }>(({ book, publicCount, authorName, onAuthorClick }, ref) => {
   const C = book.cover_color;
   return (
     <div ref={ref} data-density="hard" style={{ position: "relative" }}>
@@ -253,6 +279,18 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             </>)}
           </div>
 
+          {/* Author — inside the page so it animates with the cover flip */}
+          {authorName && (
+            <div className="absolute z-10" style={{ bottom: 14, left: "calc(8.2% + 10px)" }}>
+              {onAuthorClick
+                ? <AuthorClickButton label={authorName} onClick={onAuthorClick} />
+                : <p className="text-white/50 italic tracking-widest"
+                     style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                    by {authorName}
+                  </p>
+              }
+            </div>
+          )}
         </div>
       </div>
       {publicCount > 0 && (
@@ -667,7 +705,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const pages: React.ReactElement[] = slots.map((slot, si) => {
     const isRight = si % 2 === 0; // even index = right page in spread
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
@@ -732,29 +770,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         >
           {pages}
         </HTMLFlipBook>
-
-        {/* ── Author overlay — outside HTMLFlipBook so pageflip can't capture the click ─── */}
-        {authorName && currentSlot?.kind === "cover-front" && (
-          <div
-            className="absolute z-[10001] pointer-events-none"
-            style={{ bottom: 14, left: (portrait ? 0 : pageW) + Math.round(pageW * 0.082) + 10 }}
-          >
-            {writerInfo ? (
-              <button
-                className="pointer-events-auto text-white/55 hover:text-white/85 italic tracking-widest transition-colors text-left"
-                style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif", textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
-                onClick={() => setWriterCardOpen(true)}
-              >
-                by {authorName}
-              </button>
-            ) : (
-              <p className="text-white/55 italic tracking-widest"
-                 style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
-                by {authorName}
-              </p>
-            )}
-          </div>
-        )}
 
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
