@@ -15,7 +15,7 @@ export async function getSession(): Promise<User | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("users")
-    .select("id, username, display_name, role, avatar, created_at")
+    .select("id, username, display_name, bio, email, tel, role, avatar, created_at")
     .eq("id", userId)
     .single<User>();
 

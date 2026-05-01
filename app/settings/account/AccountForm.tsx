@@ -1,0 +1,96 @@
+"use client";
+
+import { useActionState } from "react";
+import { updatePrivateInfo } from "@/app/actions/auth";
+import Link from "next/link";
+import { ArrowLeft, Lock } from "lucide-react";
+
+export default function AccountForm({
+  currentUsername,
+  currentEmail,
+  currentTel,
+}: {
+  currentUsername: string;
+  currentEmail: string | null;
+  currentTel: string | null;
+}) {
+  const [state, action, pending] = useActionState(updatePrivateInfo, undefined);
+
+  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none";
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <Link
+        href="/settings"
+        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        ตั้งค่า
+      </Link>
+
+      <h1 className="text-2xl font-bold text-stone-800 mb-1">ข้อมูลส่วนตัว</h1>
+      <p className="text-sm text-stone-400 mb-6">ข้อมูลนี้เป็นส่วนตัว ไม่แสดงต่อสาธารณะ</p>
+
+      <form action={action} className="space-y-5">
+
+        {/* Username (read-only) */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
+          <div className="flex items-start justify-between mb-1">
+            <p className="text-sm font-semibold text-stone-700">ชื่อผู้ใช้ (Username)</p>
+            <span className="flex items-center gap-1 text-xs text-stone-400">
+              <Lock className="w-3 h-3" />
+              ใช้สำหรับ Login
+            </span>
+          </div>
+          <p className="text-xs text-stone-400 mb-3">ไม่สามารถเปลี่ยนได้ที่นี่</p>
+          <input
+            type="text"
+            value={currentUsername}
+            disabled
+            className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm bg-stone-50 text-stone-400 cursor-not-allowed"
+          />
+        </div>
+
+        {/* Email + Tel */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-stone-700 mb-1">อีเมล</label>
+            <input
+              name="email"
+              type="email"
+              defaultValue={currentEmail ?? ""}
+              placeholder="example@email.com"
+              className={inputCls}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-stone-700 mb-1">เบอร์โทรศัพท์</label>
+            <input
+              name="tel"
+              type="tel"
+              defaultValue={currentTel ?? ""}
+              placeholder="08x-xxx-xxxx"
+              className={inputCls}
+            />
+          </div>
+        </div>
+
+        {state && "error" in state && (
+          <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{state.error}</p>
+        )}
+        {state && "success" in state && (
+          <p className="text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3">บันทึกข้อมูลส่วนตัวสำเร็จ</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm"
+        >
+          {pending ? "กำลังบันทึก…" : "บันทึกข้อมูลส่วนตัว"}
+        </button>
+      </form>
+    </div>
+  );
+}

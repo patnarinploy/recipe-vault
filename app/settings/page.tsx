@@ -1,16 +1,22 @@
 import { requireSession } from "@/lib/session";
 import { isAvatarUrl, emojiAvatarBg } from "@/lib/avatar";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen } from "lucide-react";
+import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 
 export default async function SettingsPage() {
   const user = await requireSession();
 
   const navGroups = [
     {
-      label: "บัญชีและส่วนตัว",
+      label: "โปรไฟล์",
       items: [
-        { href: "/settings/profile",  icon: User,     label: "ข้อมูลส่วนตัว",       sub: "นามแฝงและ Avatar" },
+        { href: "/settings/profile",  icon: User,        label: "โปรไฟล์สาธารณะ",    sub: "นามแฝง, Avatar และคำอธิบายตัวตน" },
+        { href: "/settings/account",  icon: ShieldCheck, label: "ข้อมูลส่วนตัว",      sub: "อีเมลและเบอร์โทร (ไม่แสดงต่อสาธารณะ)" },
+      ],
+    },
+    {
+      label: "บัญชี",
+      items: [
         { href: "/settings/password", icon: KeyRound, label: "รหัสผ่าน",             sub: "เปลี่ยนรหัสผ่านเข้าสู่ระบบ" },
       ],
     },

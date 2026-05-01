@@ -180,7 +180,7 @@ export async function changeUsername(
   return { success: true };
 }
 
-export async function updateProfile(
+export async function updatePublicProfile(
   _: unknown,
   formData: FormData,
 ): Promise<{ error: string } | { success: true } | undefined> {
@@ -188,18 +188,53 @@ export async function updateProfile(
   if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
 
   const displayName = (formData.get("display_name") as string)?.trim() || null;
+  const bio         = (formData.get("bio") as string)?.trim() || null;
   const avatar      = formData.get("avatar") as string | null;
 
   if (displayName !== null && displayName.length < 2)
     return { error: "นามแฝงต้องมีอย่างน้อย 2 ตัวอักษร" };
+  if (bio !== null && bio.length > 200)
+    return { error: "คำอธิบายต้องไม่เกิน 200 ตัวอักษร" };
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("users")
-    .update({ display_name: displayName, avatar: avatar || null })
+    .update({ display_name: displayName, bio, avatar: avatar || null })
     .eq("id", currentUser.id);
 
   if (error) return { error: error.message };
   revalidatePath("/", "layout");
   return { success: true };
+}
+
+export async function updatePrivateInfo(
+  _: unknown,
+  formData: FormData,
+): Promise<{ error: string } | { success: true } | undefined> {
+  const currentUser = await getSession();
+  if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const email = (formData.get("email") as string)?.trim() || null;
+  const tel   = (formData.get("tel") as string)?.trim() || null;
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return { error: "รูปแบบ email ไม่ถูกต้อง" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ email, tel })
+    .eq("id", currentUser.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+// kept for backwards compat — redirects to updatePublicProfile
+export async function updateProfile(
+  _: unknown,
+  formData: FormData,
+): Promise<{ error: string } | { success: true } | undefined> {
+  return updatePublicProfile(_, formData);
 }

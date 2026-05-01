@@ -40,6 +40,9 @@ export type User = {
   id: string;
   username: string;
   display_name: string | null;
+  bio: string | null;
+  email: string | null;
+  tel: string | null;
   role: "admin" | "user";
   avatar: string | null;
   created_at: string;
