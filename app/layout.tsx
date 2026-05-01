@@ -3,6 +3,22 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
+import { Sarabun, Playfair_Display } from "next/font/google";
+
+const sarabun = Sarabun({
+  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["latin", "thai"],
+  variable: "--font-sarabun",
+  display: "swap",
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Recipe Vault",
@@ -13,12 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getSession();
 
   return (
-    <html lang="th" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="th" className={`${sarabun.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
       <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
         {user && <Navbar />}
         <main className={user ? "max-w-6xl mx-auto px-4 sm:px-6 py-10" : ""}>
