@@ -6,7 +6,29 @@ import toast from "react-hot-toast";
 import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
-import { Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
+
+const UNITS = [
+  "กรัม", "กิโลกรัม", "ขีด",
+  "มิลลิลิตร", "ลิตร",
+  "ช้อนชา", "ช้อนโต๊ะ", "ถ้วย",
+  "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
+];
+
+interface IngredientRow { name: string; amount: string; unit: string; }
+
+function parseIngredients(text: string): IngredientRow[] {
+  if (!text.trim()) return [{ name: "", amount: "", unit: "กรัม" }];
+  return text.split("\n").filter(l => l.trim()).map(line => {
+    const cleaned = line.trim().replace(/^[-•*\d+.]\s*/, "");
+    const parts = cleaned.split(/\s+/);
+    const knownUnit = UNITS.find(u => parts[parts.length - 1] === u);
+    if (knownUnit && parts.length >= 3) {
+      return { name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
+    }
+    return { name: cleaned, amount: "", unit: "กรัม" };
+  });
+}
 
 interface Props {
   recipe?: Recipe;
@@ -33,16 +55,29 @@ export default function RecipeForm({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
 
+  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(
+    () => parseIngredients(recipe?.ingredients ?? "")
+  );
+
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
     description: recipe?.description ?? "",
-    ingredients: recipe?.ingredients ?? "",
     instructions: recipe?.instructions ?? "",
     category: recipe?.category ?? "",
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
   });
+
+  function addRow() {
+    setIngredientRows(r => [...r, { name: "", amount: "", unit: "กรัม" }]);
+  }
+  function removeRow(i: number) {
+    setIngredientRows(r => r.filter((_, idx) => idx !== i));
+  }
+  function updateRow(i: number, field: keyof IngredientRow, value: string) {
+    setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+  }
 
   function set(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -51,7 +86,13 @@ export default function RecipeForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title.trim() || !form.ingredients.trim() || !form.instructions.trim()) {
+
+    const ingredientsText = ingredientRows
+      .filter(r => r.name.trim())
+      .map(r => [r.name.trim(), r.amount.trim(), r.unit].filter(Boolean).join(" "))
+      .join("\n");
+
+    if (!form.title.trim() || !ingredientsText || !form.instructions.trim()) {
       toast.error("กรุณากรอกชื่อ, ส่วนผสม และวิธีทำ");
       return;
     }
@@ -64,7 +105,7 @@ export default function RecipeForm({
     const basePayload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
-      ingredients: form.ingredients.trim(),
+      ingredients: ingredientsText,
       instructions: form.instructions.trim(),
       category: form.category || null,
       cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
@@ -157,7 +198,59 @@ export default function RecipeForm({
 
       <div>
         <label className={labelCls}>ส่วนผสม <span className="text-red-400">*</span></label>
-        <textarea value={form.ingredients} onChange={set("ingredients")} rows={5} placeholder={"- กุ้ง 300 กรัม\n- น้ำ 2 ถ้วย"} className={inputCls + " resize-y"} required />
+
+        {/* Column headers */}
+        <div className="grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1fr 5rem 8rem 2rem" }}>
+          <span className="text-xs text-stone-400">วัตถุดิบ</span>
+          <span className="text-xs text-stone-400">ปริมาณ</span>
+          <span className="text-xs text-stone-400">หน่วย</span>
+          <span />
+        </div>
+
+        {/* Rows */}
+        <div className="space-y-2">
+          {ingredientRows.map((row, i) => (
+            <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 5rem 8rem 2rem" }}>
+              <input
+                value={row.name}
+                onChange={e => updateRow(i, "name", e.target.value)}
+                placeholder="เช่น กุ้ง"
+                className={inputCls}
+              />
+              <input
+                value={row.amount}
+                onChange={e => updateRow(i, "amount", e.target.value)}
+                placeholder="300"
+                className={inputCls}
+              />
+              <select
+                value={row.unit}
+                onChange={e => updateRow(i, "unit", e.target.value)}
+                className={inputCls}
+              >
+                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+              <button
+                type="button"
+                onClick={() => removeRow(i)}
+                disabled={ingredientRows.length === 1}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add row button */}
+        <button
+          type="button"
+          onClick={addRow}
+          className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          เพิ่มส่วนผสม
+        </button>
       </div>
 
       <div>
