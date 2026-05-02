@@ -94,60 +94,58 @@ export default function BookCover({
           />
 
 
-          {/* Frame */}
-          <div className={`border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 mx-3 ${DIMS.frame}`}
-               style={{ width: `calc(100% - 1.5rem)` }}>
-            {book.tagline && (
-              <>
-                <p className={`${DIMS.tag} tracking-[.38em] text-white/48 uppercase truncate w-full`}>
-                  {book.tagline}
-                </p>
-                <div className="w-7 h-px bg-white/20" />
-              </>
-            )}
-            <h2 className={`${DIMS.title} font-bold leading-tight break-words w-full`}>
-              {book.title}
-            </h2>
-            {book.subtitle && (
-              <>
-                <div className="w-7 h-px bg-white/20" />
-                <p className={`${DIMS.sub} text-white/55 line-clamp-2 break-words w-full px-1`}>
-                  {book.subtitle}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Author — bottom-left outside frame */}
-          {author && (
-            <div
-              className="absolute z-10"
-              style={{ bottom: size === "xs" ? 6 : 10, left: size === "xs" ? 6 : 10 }}
-            >
-              {onAuthorClick ? (
-                // Must NOT be <button> here — the outer Wrapper is already a <button>,
-                // and nested buttons are invalid HTML; the browser rewrites the DOM,
-                // causing React hydration error #418 on page refresh.
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
-                  className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors cursor-pointer"
-                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  by {author}
-                </span>
-              ) : (
-                <p
-                  className="text-white/50 italic tracking-widest"
-                  style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
-                >
-                  by {author}
-                </p>
+          {/* Frame + author stacked — mirrors BookReaderV2 layout */}
+          <div className="mx-3" style={{ width: `calc(100% - 1.5rem)` }}>
+            <div className={`border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 w-full ${DIMS.frame}`}>
+              {book.tagline && (
+                <>
+                  <p className={`${DIMS.tag} tracking-[.38em] text-white/48 uppercase truncate w-full`}>
+                    {book.tagline}
+                  </p>
+                  <div className="w-7 h-px bg-white/20" />
+                </>
+              )}
+              <h2 className={`${DIMS.title} font-bold leading-tight break-words w-full`}>
+                {book.title}
+              </h2>
+              {book.subtitle && (
+                <>
+                  <div className="w-7 h-px bg-white/20" />
+                  <p className={`${DIMS.sub} text-white/55 line-clamp-2 break-words w-full px-1`}>
+                    {book.subtitle}
+                  </p>
+                </>
               )}
             </div>
-          )}
+
+            {/* Author — directly below the title frame, left-aligned */}
+            {author && (
+              <div className="mt-1 px-1">
+                {onAuthorClick ? (
+                  // Must NOT be <button> here — the outer Wrapper is already a <button>,
+                  // and nested buttons are invalid HTML; the browser rewrites the DOM,
+                  // causing React hydration error #418 on page refresh.
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
+                    className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors cursor-pointer"
+                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    by {author}
+                  </span>
+                ) : (
+                  <p
+                    className="text-white/50 italic tracking-widest"
+                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                  >
+                    by {author}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
