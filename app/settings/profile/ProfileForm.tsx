@@ -117,7 +117,7 @@ export default function ProfileForm({
                 className={`relative aspect-square rounded-full transition-all select-none focus:outline-none ${
                   selected === value
                     ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
-                    : "hover:ring-2 hover:ring-stone-300 hover:ring-offset-1"
+                    : "[@media(hover:hover)]:hover:ring-2 [@media(hover:hover)]:hover:ring-stone-300 [@media(hover:hover)]:hover:ring-offset-1"
                 }`}
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 title={name}
