@@ -200,7 +200,7 @@ export default function RecipeForm({
         <label className={labelCls}>ส่วนผสม <span className="text-red-400">*</span></label>
 
         {/* Column headers */}
-        <div className="grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1fr 5rem 8rem 2rem" }}>
+        <div className="grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1fr 3.5rem 6.5rem 2rem" }}>
           <span className="text-xs text-stone-400">วัตถุดิบ</span>
           <span className="text-xs text-stone-400">ปริมาณ</span>
           <span className="text-xs text-stone-400">หน่วย</span>
@@ -210,7 +210,7 @@ export default function RecipeForm({
         {/* Rows */}
         <div className="space-y-2">
           {ingredientRows.map((row, i) => (
-            <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 5rem 8rem 2rem" }}>
+            <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 3.5rem 6.5rem 2rem" }}>
               <input
                 value={row.name}
                 onChange={e => updateRow(i, "name", e.target.value)}
