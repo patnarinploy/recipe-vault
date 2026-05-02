@@ -94,7 +94,7 @@ export default function ProfileForm({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all"
+              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none select-none"
               title="อัปโหลดรูปของคุณ"
             >
               {uploading ? (
@@ -113,7 +113,7 @@ export default function ProfileForm({
                 key={value}
                 type="button"
                 onClick={() => setSelected(value)}
-                className={`relative aspect-square rounded-full transition-all ${
+                className={`relative aspect-square rounded-full transition-all select-none focus:outline-none ${
                   selected === value
                     ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
                     : "hover:ring-2 hover:ring-stone-300 hover:ring-offset-1"
@@ -121,7 +121,7 @@ export default function ProfileForm({
                 title={name}
               >
                 <div className="w-full h-full rounded-full overflow-hidden">
-                  <img src={value} alt={name} className="w-full h-full object-cover" />
+                  <img src={value} alt={name} draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
                 </div>
                 {selected === value && (
                   <div className="absolute -top-1 -right-1 z-20 w-[18px] h-[18px] bg-orange-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
