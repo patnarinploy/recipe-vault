@@ -5,7 +5,7 @@ import { updatePublicProfile } from "@/app/actions/auth";
 import { AVATAR_PRESETS, isAvatarUrl } from "@/lib/avatar";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { ArrowLeft, Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 const BUCKET = "recipe-images";
@@ -94,7 +94,7 @@ export default function ProfileForm({
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="relative aspect-square rounded-xl border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all overflow-hidden"
+              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all"
               title="อัปโหลดรูปของคุณ"
             >
               {uploading ? (
@@ -113,16 +113,20 @@ export default function ProfileForm({
                 key={value}
                 type="button"
                 onClick={() => setSelected(value)}
-                className={`relative aspect-square rounded-xl border-2 overflow-hidden transition-all ${
+                className={`relative aspect-square rounded-full transition-all ${
                   selected === value
-                    ? "border-orange-500 shadow-md scale-105"
-                    : "border-transparent hover:border-stone-200"
+                    ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
+                    : "hover:ring-2 hover:ring-stone-300 hover:ring-offset-1"
                 }`}
                 title={name}
               >
-                <img src={value} alt={name} className="w-full h-full object-cover" />
+                <div className="w-full h-full rounded-full overflow-hidden">
+                  <img src={value} alt={name} className="w-full h-full object-cover" />
+                </div>
                 {selected === value && (
-                  <CheckCircle2 className="absolute -top-1.5 -right-1.5 w-4 h-4 text-orange-500 bg-white rounded-full" />
+                  <div className="absolute -top-1 -right-1 z-20 w-[18px] h-[18px] bg-orange-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3.5} />
+                  </div>
                 )}
               </button>
             ))}
