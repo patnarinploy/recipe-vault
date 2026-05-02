@@ -33,7 +33,8 @@ export default function UserMenu({ user }: { user: User }) {
           <img
             src={user.avatar!}
             alt={user.username}
-            className="w-7 h-7 rounded-full object-cover shrink-0"
+            draggable={false}
+            className="w-7 h-7 rounded-full object-cover shrink-0 pointer-events-none select-none"
           />
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">

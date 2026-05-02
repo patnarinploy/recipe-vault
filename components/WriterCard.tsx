@@ -20,7 +20,7 @@ export default function WriterCard({ info }: { info: WriterInfo }) {
           style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
         >
           {isUrl ? (
-            <img src={info.avatar!} alt={initial} className="w-full h-full object-cover" />
+            <img src={info.avatar!} alt={initial} draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
           ) : (
             <span className="text-3xl font-bold text-white">{initial}</span>
           )}
