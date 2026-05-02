@@ -30,7 +30,3 @@ export function isAvatarUrl(avatar: string | null | undefined): boolean {
   return !!avatar && avatar.startsWith("http");
 }
 
-/** Background colour fallback for legacy emoji avatars */
-export function emojiAvatarBg(_emoji: string): string {
-  return "#fed7aa";
-}
