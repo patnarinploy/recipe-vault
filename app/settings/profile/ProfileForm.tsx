@@ -79,7 +79,7 @@ export default function ProfileForm({
               style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
             >
               {isUrl ? (
-                <img src={selected} alt="avatar" className="w-full h-full object-cover" />
+                <img src={selected} alt="avatar" draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
               ) : (
                 <span className="text-3xl font-bold text-white">
                   {(currentDisplayName ?? currentUsername)[0].toUpperCase()}
@@ -95,6 +95,7 @@ export default function ProfileForm({
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none select-none"
+              style={{ WebkitTapHighlightColor: "transparent" }}
               title="อัปโหลดรูปของคุณ"
             >
               {uploading ? (
@@ -118,6 +119,7 @@ export default function ProfileForm({
                     ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
                     : "hover:ring-2 hover:ring-stone-300 hover:ring-offset-1"
                 }`}
+                style={{ WebkitTapHighlightColor: "transparent" }}
                 title={name}
               >
                 <div className="w-full h-full rounded-full overflow-hidden">
