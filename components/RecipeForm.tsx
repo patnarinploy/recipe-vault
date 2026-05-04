@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Youtube } from "lucide-react";
 
 const UNITS = [
   "กรัม", "กิโลกรัม", "ขีด",
@@ -16,6 +16,7 @@ const UNITS = [
 ];
 
 interface IngredientRow { name: string; amount: string; unit: string; }
+interface InstructionStep { text: string; youtube: string; }
 
 function parseIngredients(text: string): IngredientRow[] {
   if (!text.trim()) return [{ name: "", amount: "", unit: "" }];
@@ -28,6 +29,20 @@ function parseIngredients(text: string): IngredientRow[] {
     }
     return { name: cleaned, amount: "", unit: "" };
   });
+}
+
+function parseInstructions(raw: string): InstructionStep[] {
+  if (!raw.trim()) return [{ text: "", youtube: "" }];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0 && "text" in parsed[0]) {
+      return parsed.map((s: { text?: string; youtube?: string }) => ({ text: s.text ?? "", youtube: s.youtube ?? "" }));
+    }
+  } catch {}
+  return raw.split("\n").filter(l => l.trim()).map(line => ({
+    text: line.replace(/^\d+\.\s*/, "").trim(),
+    youtube: "",
+  }));
 }
 
 interface Props {
@@ -58,11 +73,13 @@ export default function RecipeForm({
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(
     () => parseIngredients(recipe?.ingredients ?? "")
   );
+  const [instructionSteps, setInstructionSteps] = useState<InstructionStep[]>(
+    () => parseInstructions(recipe?.instructions ?? "")
+  );
 
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
     description: recipe?.description ?? "",
-    instructions: recipe?.instructions ?? "",
     category: recipe?.category ?? "",
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
@@ -79,6 +96,16 @@ export default function RecipeForm({
     setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
   }
 
+  function addStep() {
+    setInstructionSteps(s => [...s, { text: "", youtube: "" }]);
+  }
+  function removeStep(i: number) {
+    setInstructionSteps(s => s.filter((_, idx) => idx !== i));
+  }
+  function updateStep(i: number, field: keyof InstructionStep, value: string) {
+    setInstructionSteps(s => s.map((step, idx) => idx === i ? { ...step, [field]: value } : step));
+  }
+
   function set(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((p) => ({ ...p, [field]: e.target.value }));
@@ -92,7 +119,8 @@ export default function RecipeForm({
       .map(r => [r.name.trim(), r.amount.trim(), r.unit].filter(Boolean).join(" "))
       .join("\n");
 
-    if (!form.title.trim() || !ingredientsText || !form.instructions.trim()) {
+    const validSteps = instructionSteps.filter(s => s.text.trim());
+    if (!form.title.trim() || !ingredientsText || validSteps.length === 0) {
       toast.error("กรุณากรอกชื่อ, ส่วนผสม และวิธีทำ");
       return;
     }
@@ -102,11 +130,18 @@ export default function RecipeForm({
       return;
     }
 
+    const instructionsJson = JSON.stringify(
+      validSteps.map(s => ({
+        text: s.text.trim(),
+        ...(s.youtube.trim() ? { youtube: s.youtube.trim() } : {}),
+      }))
+    );
+
     const basePayload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
       ingredients: ingredientsText,
-      instructions: form.instructions.trim(),
+      instructions: instructionsJson,
       category: form.category || null,
       cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
       servings: form.servings ? parseInt(form.servings) : null,
@@ -256,7 +291,53 @@ export default function RecipeForm({
 
       <div>
         <label className={labelCls}>วิธีทำ <span className="text-red-400">*</span></label>
-        <textarea value={form.instructions} onChange={set("instructions")} rows={6} placeholder={"1. ต้มน้ำให้เดือด\n2. ใส่ส่วนผสม"} className={inputCls + " resize-y"} required />
+        <div className="space-y-2.5">
+          {instructionSteps.map((step, i) => (
+            <div key={i} className="border border-stone-200 rounded-xl overflow-hidden bg-white">
+              {/* Step header */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 border-b border-stone-100">
+                <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                <span className="text-xs text-stone-400 flex-1">ขั้นตอนที่ {i + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => removeStep(i)}
+                  disabled={instructionSteps.length === 1}
+                  className="w-6 h-6 flex items-center justify-center rounded text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {/* Step text */}
+              <textarea
+                value={step.text}
+                onChange={e => updateStep(i, "text", e.target.value)}
+                placeholder={`อธิบายขั้นตอนที่ ${i + 1}`}
+                rows={2}
+                className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-white border-0"
+              />
+              {/* YouTube URL */}
+              <div className="flex items-center gap-2 px-3 py-2 border-t border-stone-100 bg-stone-50/60">
+                <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                <input
+                  value={step.youtube}
+                  onChange={e => updateStep(i, "youtube", e.target.value)}
+                  placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
+                  className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addStep}
+          className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          เพิ่มขั้นตอน
+        </button>
       </div>
 
       {/* Public toggle */}

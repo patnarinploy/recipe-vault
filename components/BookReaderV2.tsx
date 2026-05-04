@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 
@@ -89,7 +89,7 @@ type PageSlot =
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
   | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string }
-  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string }
+  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[] }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
 
@@ -120,6 +120,33 @@ function toChunks(text: string, charsPerLine: number, firstMax: number, contMax:
     first = false;
   } while (rem);
   return chunks.length ? chunks : [""];
+}
+
+// Parse structured instructions JSON → plain numbered text for page chunking.
+function instPlainText(raw: string): string {
+  if (!raw?.trim()) return "";
+  try {
+    const steps = JSON.parse(raw);
+    if (Array.isArray(steps) && steps.length > 0 && "text" in steps[0]) {
+      return steps.filter((s: { text?: string }) => s.text?.trim())
+                  .map((s: { text: string }, i: number) => `${i + 1}. ${s.text.trim()}`)
+                  .join("\n");
+    }
+  } catch {}
+  return raw;
+}
+
+// Collect YouTube links from structured instructions JSON.
+function instYoutubeLinks(raw: string): { step: number; url: string }[] {
+  try {
+    const steps = JSON.parse(raw);
+    if (Array.isArray(steps)) {
+      return (steps as { text?: string; youtube?: string }[])
+        .map((s, i) => ({ step: i + 1, url: s.youtube ?? "" }))
+        .filter(s => s.url.trim());
+    }
+  } catch {}
+  return [];
 }
 
 // Builds the flat ordered array of page slots from the recipe list.
@@ -168,8 +195,9 @@ function buildSlots(
     const r = recipes[ri];
 
     const ingChunks = toChunks(r.ingredients || "", charsPerLine, ingLinesFirst, contLines);
-    const instChunks = toChunks(r.instructions || "", charsPerLine, contLines, contLines)
+    const instChunks = toChunks(instPlainText(r.instructions || ""), charsPerLine, contLines, contLines)
                          .filter(c => c.trim().length > 0);
+    const ytLinks = instYoutubeLinks(r.instructions || "");
     const ingContChunks = ingChunks.slice(1).filter(c => c.trim().length > 0);
 
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: ingChunks[0] ?? "" });
@@ -178,7 +206,8 @@ function buildSlots(
       slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci + 1, ingText: ingContChunks[ci] });
 
     for (let ci = 0; ci < instChunks.length; ci++)
-      slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci] });
+      slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
+                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}) });
 
     // Watermark for spread alignment — skip in portrait
     if (!portrait) {
@@ -421,8 +450,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // isRight is derived from the slot index (even = right, odd = left).
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard" }
->(({ recipe: r, label, text, lh, isRight, pn, density }, ref) => (
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[] }
+>(({ recipe: r, label, text, lh, isRight, pn, density, youtubeLinks }, ref) => (
   <div ref={ref} data-density={density}>
     <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
          style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
@@ -433,6 +462,24 @@ const PageRecipeCont = forwardRef<
       <div className="flex-1 overflow-hidden text-sm text-stone-600 whitespace-pre-line" style={{ lineHeight: lh }}>
         {text}
       </div>
+      {youtubeLinks && youtubeLinks.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2 mb-1">
+          {youtubeLinks.map(({ step, url }) => (
+            <a
+              key={step}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-[9px] font-medium text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-full transition-colors"
+            >
+              <Youtube className="w-2.5 h-2.5 shrink-0" />
+              วิดีโอขั้นตอน {step}
+            </a>
+          ))}
+        </div>
+      )}
       <Pn n={pn} right={isRight} />
     </div>
   </div>
@@ -733,7 +780,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         recipe={recipes[slot.recipeIdx]}
                         label={slot.chunkIdx === 0 ? "วิธีทำ:" : "วิธีทำ (ต่อ):"}
                         text={slot.instText} lh="1.95"
-                        isRight={isRight} pn={si} density={flipType} />
+                        isRight={isRight} pn={si} density={flipType}
+                        youtubeLinks={slot.youtubeLinks} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
