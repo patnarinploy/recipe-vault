@@ -18,7 +18,7 @@ const UNITS = [
 interface IngredientRow { name: string; amount: string; unit: string; }
 
 function parseIngredients(text: string): IngredientRow[] {
-  if (!text.trim()) return [{ name: "", amount: "", unit: "กรัม" }];
+  if (!text.trim()) return [{ name: "", amount: "", unit: "" }];
   return text.split("\n").filter(l => l.trim()).map(line => {
     const cleaned = line.trim().replace(/^[-•*\d+.]\s*/, "");
     const parts = cleaned.split(/\s+/);
@@ -26,7 +26,7 @@ function parseIngredients(text: string): IngredientRow[] {
     if (knownUnit && parts.length >= 3) {
       return { name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
     }
-    return { name: cleaned, amount: "", unit: "กรัม" };
+    return { name: cleaned, amount: "", unit: "" };
   });
 }
 
@@ -70,7 +70,7 @@ export default function RecipeForm({
   });
 
   function addRow() {
-    setIngredientRows(r => [...r, { name: "", amount: "", unit: "กรัม" }]);
+    setIngredientRows(r => [...r, { name: "", amount: "", unit: "" }]);
   }
   function removeRow(i: number) {
     setIngredientRows(r => r.filter((_, idx) => idx !== i));
@@ -220,7 +220,7 @@ export default function RecipeForm({
               <input
                 value={row.amount}
                 onChange={e => updateRow(i, "amount", e.target.value)}
-                placeholder="300"
+                placeholder="0"
                 className={inputCls}
               />
               <select
@@ -228,6 +228,7 @@ export default function RecipeForm({
                 onChange={e => updateRow(i, "unit", e.target.value)}
                 className={inputCls}
               >
+                <option value="">ตัวเลือก</option>
                 {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
               <button
