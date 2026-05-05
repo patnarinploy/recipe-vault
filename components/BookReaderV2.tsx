@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube, ExternalLink } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 
@@ -424,8 +424,19 @@ const PageRecipeFirst = forwardRef<
         {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
       </p>
       <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
+        <h2 className="text-xl font-bold text-stone-800 leading-tight flex-1">{r.title}</h2>
         {r.is_public && <ShareBadge coverColor={coverColor} />}
+        <a
+          href={`/recipes/${r.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          title="ดูแบบเต็มหน้า"
+          className="shrink-0 text-stone-300 hover:text-stone-500 transition-colors"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
       <div className="h-px bg-[#e8d5b7] mb-4" />
       {r.image_url
