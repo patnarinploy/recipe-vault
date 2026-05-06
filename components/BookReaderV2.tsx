@@ -88,7 +88,7 @@ type PageSlot =
   | { kind: "toc"; tocPage: number }
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
-  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
+  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string }
   | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
@@ -205,33 +205,20 @@ function buildSlots(
                          .filter(c => c.trim().length > 0);
     const ytLinks = instYoutubeLinks(r.instructions || "");
 
-    // Embed the first inst chunk on the ingredients page when ingredients fit on one page
-    const embedInstFirst = ingAllChunks.length === 1 && instChunks.length > 0;
-
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
 
-    for (let ci = 0; ci < ingAllChunks.length; ci++) {
-      if (ci === 0 && embedInstFirst) {
-        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci],
-                     instFirstChunk: instChunks[0],
-                     ...(ytLinks.length > 0 ? { instFirstYtLinks: ytLinks } : {}) });
-      } else {
-        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
-      }
-    }
+    for (let ci = 0; ci < ingAllChunks.length; ci++)
+      slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
 
-    const instStart = embedInstFirst ? 1 : 0;
-    for (let ci = instStart; ci < instChunks.length; ci++)
+    for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-                   ...(ci === instStart && !embedInstFirst && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
-                   // Show meta on first inst page only when there are no ingredient pages
-                   ...(ci === instStart && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
+                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
+                   ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
 
     // Watermark for spread alignment — skip in portrait.
-    // embedInstFirst reduces the actual pushed slot count by 1, so account for that.
     if (!portrait) {
-      const actualSlots = 1 + ingAllChunks.length + instChunks.length - (embedInstFirst ? 1 : 0);
-      if (actualSlots % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
+      const total = 1 + ingAllChunks.length + instChunks.length;
+      if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
     }
   }
 
@@ -581,7 +568,7 @@ const PageRecipeFirst = forwardRef<
                style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
 
           <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
-             style={{ fontSize: "clamp(6.5px,1vw,9px)" }}>
+             style={{ fontSize: "clamp(6.5px,1vw,9px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
             {String(pn).padStart(2, "0")}
           </p>
         </div>
@@ -594,8 +581,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -662,7 +649,7 @@ const PageRecipeCont = forwardRef<
 
         {/* ── Ingredients ─────────────────────────────────── */}
         {variant === "ing" && (
-          <div className={instFirstChunk ? "overflow-hidden shrink-0" : "flex-1 overflow-hidden"}>
+          <div className="flex-1 overflow-hidden">
             {use2Col ? (
               <div className="flex h-full" style={{ gap: "clamp(6px,1.2vw,12px)" }}>
                 <div className="flex-1 flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
@@ -678,21 +665,6 @@ const PageRecipeCont = forwardRef<
               </div>
             )}
           </div>
-        )}
-
-        {/* ── First inst chunk combined on ing page (2.4) ──── */}
-        {variant === "ing" && instFirstChunk && (
-          <>
-            <div className="my-[clamp(4px,0.8vw,8px)] shrink-0">
-              <PageSectionHead>Instructions</PageSectionHead>
-            </div>
-            <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
-              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => (
-                <InstructionStep key={i} line={line} fallbackNum={i + 1} />
-              ))}
-            </div>
-            <YoutubeLinks links={instFirstYtLinks} />
-          </>
         )}
 
         {/* ── Instructions ─────────────────────────────────── */}
@@ -1014,9 +986,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         label="" text={slot.ingText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         variant="ing" showMeta={slot.chunkIdx === 0}
-                        showRibbon={slot.chunkIdx === 0}
-                        instFirstChunk={slot.instFirstChunk}
-                        instFirstYtLinks={slot.instFirstYtLinks} />
+                        showRibbon={slot.chunkIdx === 0} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
