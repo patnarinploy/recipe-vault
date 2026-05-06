@@ -88,7 +88,7 @@ type PageSlot =
   | { kind: "toc"; tocPage: number }
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
-  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string }
+  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
   | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
@@ -201,16 +201,27 @@ function buildSlots(
                          .filter(c => c.trim().length > 0);
     const ytLinks = instYoutubeLinks(r.instructions || "");
 
+    // Embed the first inst chunk on the ingredients page when ingredients fit on one page
+    const embedInstFirst = ingAllChunks.length === 1 && instChunks.length > 0;
+
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
 
-    for (let ci = 0; ci < ingAllChunks.length; ci++)
-      slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
+    for (let ci = 0; ci < ingAllChunks.length; ci++) {
+      if (ci === 0 && embedInstFirst) {
+        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci],
+                     instFirstChunk: instChunks[0],
+                     ...(ytLinks.length > 0 ? { instFirstYtLinks: ytLinks } : {}) });
+      } else {
+        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
+      }
+    }
 
-    for (let ci = 0; ci < instChunks.length; ci++)
+    const instStart = embedInstFirst ? 1 : 0;
+    for (let ci = instStart; ci < instChunks.length; ci++)
       slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
+                   ...(ci === instStart && !embedInstFirst && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
                    // Show meta on first inst page only when there are no ingredient pages
-                   ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
+                   ...(ci === instStart && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
 
     // Watermark for spread alignment — skip in portrait
     if (!portrait) {
@@ -418,8 +429,8 @@ PageToC.displayName = "PageToC";
 function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
-      <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(3px,0.55vw,5px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(7px,1.25vw,10px)" }}>{text}</span>
+      <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>{text}</span>
     </div>
   );
 }
@@ -429,7 +440,7 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(10px,2vw,16px)" }}>
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(12px,2.4vw,19px)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -490,11 +501,8 @@ const PageRecipeFirst = forwardRef<
                className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
                style={{ filter: "sepia(10%) contrast(1.07) brightness(0.92)", willChange: "transform", transform: "scale(1.1)" }} />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center"
-               style={{ background: "linear-gradient(145deg,#1c1208 0%,#2e1e0a 100%)" }}>
-            <span className="text-amber-900/20 select-none pointer-events-none"
-                  style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1rem,5vw,3rem)" }}>✦</span>
-          </div>
+          <div className="absolute inset-0"
+               style={{ background: "linear-gradient(145deg,#1c1208 0%,#2e1e0a 100%)" }} />
         )}
 
         {/* Gradient overlays */}
@@ -503,23 +511,21 @@ const PageRecipeFirst = forwardRef<
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
              style={{ height: "55%", background: "linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 100%)" }} />
 
-        {/* Share badge */}
-        {r.is_public && (
-          <div className="absolute top-3 right-3 z-10"><ShareBadge coverColor={coverColor} /></div>
-        )}
-
         {/* Bottom text block */}
         <div className="absolute bottom-0 left-0 right-0 text-white"
              style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
 
-          <span className="block uppercase mb-[clamp(4px,0.8vw,8px)]"
-                style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.05vw,8.5px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
-            {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
-              .filter(Boolean).join("  ·  ") || "Recipe"}
-          </span>
+          <div className="flex items-center flex-wrap mb-[clamp(4px,0.8vw,8px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+            <span className="uppercase"
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7.5px,1.4vw,11px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
+                .filter(Boolean).join("  ·  ") || "Recipe"}
+            </span>
+            {r.is_public && <ShareBadge coverColor={coverColor} />}
+          </div>
 
           <h2 className="font-black leading-[0.88]"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.05rem,4.2vw,2.4rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.4rem,5.5vw,3.2rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
             {r.title}
           </h2>
 
@@ -547,8 +553,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -561,33 +567,35 @@ const PageRecipeCont = forwardRef<
       <div className="w-full h-full flex flex-col relative overflow-hidden"
            style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2.2vw,24px)" }}>
 
-        {/* Bookmark ribbon — outer edge */}
-        <div className="absolute top-0 z-10"
-             style={{
-               [isRight ? "right" : "left"]: "clamp(10px,2vw,18px)",
-               width: "clamp(15px,2.8vw,24px)",
-               height: "clamp(38px,7.5vw,64px)",
-               background: "linear-gradient(160deg,#c0392b 0%,#8e1c12 100%)",
-               clipPath: "polygon(0 0,100% 0,100% 100%,50% 87%,0 100%)",
-               boxShadow: "1px 2px 6px rgba(0,0,0,0.28)",
-             }} />
+        {/* Bookmark ribbon — first right page of recipe only */}
+        {showRibbon && (
+          <div className="absolute top-0 z-10"
+               style={{
+                 [isRight ? "right" : "left"]: "clamp(10px,2vw,18px)",
+                 width: "clamp(15px,2.8vw,24px)",
+                 height: "clamp(38px,7.5vw,64px)",
+                 background: "linear-gradient(160deg,#c0392b 0%,#8e1c12 100%)",
+                 clipPath: "polygon(0 0,100% 0,100% 100%,50% 87%,0 100%)",
+                 boxShadow: "1px 2px 6px rgba(0,0,0,0.28)",
+               }} />
+        )}
 
         {/* ── Meta grid (first page only) ─────────────────── */}
         {showMeta && (
           <>
             <div className="grid grid-cols-3 mt-7 mb-3 shrink-0" style={{ gap: "clamp(4px,1vw,10px)" }}>
               {([
-                { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
                 { lbl: "CATEGORY", val: r.category ?? "—" },
+                { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
                 { lbl: "SERVINGS", val: r.servings ? `${r.servings} ที่` : "—" },
               ] as const).map(({ lbl, val }) => (
-                <div key={lbl} className="flex flex-col" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
+                <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
                   <span className="uppercase text-stone-400"
-                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(5px,0.85vw,7px)", letterSpacing: "0.22em" }}>
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7px,1.1vw,9.5px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
                   <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(7px,1.3vw,11px)" }}>
+                        style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
                     {val}
                   </span>
                 </div>
@@ -613,7 +621,7 @@ const PageRecipeCont = forwardRef<
 
         {/* ── Ingredients ─────────────────────────────────── */}
         {variant === "ing" && (
-          <div className="flex-1 overflow-hidden">
+          <div className={instFirstChunk ? "overflow-hidden shrink-0" : "flex-1 overflow-hidden"}>
             {use2Col ? (
               <div className="flex h-full" style={{ gap: "clamp(6px,1.2vw,12px)" }}>
                 <div className="flex-1 flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
@@ -631,6 +639,49 @@ const PageRecipeCont = forwardRef<
           </div>
         )}
 
+        {/* ── First inst chunk combined on ing page (2.4) ──── */}
+        {variant === "ing" && instFirstChunk && (
+          <>
+            <div className="my-[clamp(4px,0.8vw,8px)] shrink-0">
+              <PageSectionHead>Instructions</PageSectionHead>
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => {
+                const m    = line.match(/^(\d+)\.\s*(.*)/);
+                const num  = m?.[1];
+                const body = m?.[2] ?? line;
+                return (
+                  <div key={i} className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
+                    {num && (
+                      <span className="shrink-0 select-none pointer-events-none"
+                            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
+                        {num}
+                      </span>
+                    )}
+                    <span className="text-[#2c1e14] flex-1 leading-relaxed"
+                          style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
+                      {body}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {instFirstYtLinks && instFirstYtLinks.length > 0 && (
+              <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
+                {instFirstYtLinks.map(({ step, url }) => (
+                  <a key={step} href={url} target="_blank" rel="noopener noreferrer"
+                     onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
+                     className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
+                     style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
+                    <Youtube className="w-2 h-2 shrink-0" />
+                    Step {step}
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
         {/* ── Instructions ─────────────────────────────────── */}
         {variant === "inst" && (
           <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(5px,1vw,10px)" }}>
@@ -639,15 +690,15 @@ const PageRecipeCont = forwardRef<
               const num  = m?.[1];
               const body = m?.[2] ?? line;
               return (
-                <div key={i} className="flex items-start min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
+                <div key={i} className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
                   {num && (
-                    <span className="shrink-0 select-none pointer-events-none leading-none"
-                          style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1, marginTop: "-1px" }}>
+                    <span className="shrink-0 select-none pointer-events-none"
+                          style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
                       {num}
                     </span>
                   )}
                   <span className="text-[#2c1e14] flex-1 leading-relaxed"
-                        style={{ fontSize: "clamp(7px,1.25vw,10px)" }}>
+                        style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
                     {body}
                   </span>
                 </div>
@@ -691,11 +742,6 @@ const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight
             {r.title}
           </p>
         </div>
-        {/* subtle gold ornament */}
-        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 select-none pointer-events-none"
-              style={{ color: "#d4af37", opacity: 0.18, fontSize: "clamp(1rem,3vw,2rem)" }}>
-          ✦
-        </span>
       </div>
     </div>
   )
@@ -973,7 +1019,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         recipe={recipes[slot.recipeIdx]}
                         label="" text={slot.ingText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
-                        variant="ing" showMeta={slot.chunkIdx === 0} />
+                        variant="ing" showMeta={slot.chunkIdx === 0}
+                        showRibbon={slot.chunkIdx === 0}
+                        instFirstChunk={slot.instFirstChunk}
+                        instFirstYtLinks={slot.instFirstYtLinks} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -981,7 +1030,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         label="" text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         youtubeLinks={slot.youtubeLinks}
-                        variant="inst" showMeta={slot.showMeta ?? false} />
+                        variant="inst" showMeta={slot.showMeta ?? false}
+                        showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
