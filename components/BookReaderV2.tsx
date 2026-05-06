@@ -89,7 +89,7 @@ type PageSlot =
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
   | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string }
-  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[] }
+  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
 
@@ -194,24 +194,27 @@ function buildSlots(
     recipeSlotMap.push(slots.length);
     const r = recipes[ri];
 
-    const ingChunks = toChunks(r.ingredients || "", charsPerLine, ingLinesFirst, contLines);
+    // All ingredients go to recipe-ing slots; recipe-first is image-only
+    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, contLines, contLines)
+                           .filter(c => c.trim().length > 0);
     const instChunks = toChunks(instPlainText(r.instructions || ""), charsPerLine, contLines, contLines)
                          .filter(c => c.trim().length > 0);
     const ytLinks = instYoutubeLinks(r.instructions || "");
-    const ingContChunks = ingChunks.slice(1).filter(c => c.trim().length > 0);
 
-    slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: ingChunks[0] ?? "" });
+    slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
 
-    for (let ci = 0; ci < ingContChunks.length; ci++)
-      slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci + 1, ingText: ingContChunks[ci] });
+    for (let ci = 0; ci < ingAllChunks.length; ci++)
+      slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
 
     for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}) });
+                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
+                   // Show meta on first inst page only when there are no ingredient pages
+                   ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
 
     // Watermark for spread alignment — skip in portrait
     if (!portrait) {
-      const total = 1 + ingContChunks.length + instChunks.length;
+      const total = 1 + ingAllChunks.length + instChunks.length;
       if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
     }
   }
@@ -411,165 +414,223 @@ const PageToC = forwardRef<
 });
 PageToC.displayName = "PageToC";
 
-// First page of a recipe — always a left page (odd slot index).
+// ─── Ingredient bullet item ───────────────────────────────────────
+function IngItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-1.5 min-w-0">
+      <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(3px,0.55vw,5px)" }} />
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(7px,1.25vw,10px)" }}>{text}</span>
+    </div>
+  );
+}
+
+// ─── Section heading with gold gradient rule ──────────────────────
+function PageSectionHead({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      <span className="shrink-0 font-bold text-[#2c1e14]"
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(10px,2vw,16px)" }}>
+        {children}
+      </span>
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
+    </div>
+  );
+}
+
+// ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
->(({ recipe: r, ingText, pn, coverColor, density }, ref) => {
-  const ingLines = ingText.split("\n").filter(l => l.trim());
-  return (
-    <div ref={ref} data-density={density}>
-      <div className="w-full h-full flex flex-col relative overflow-hidden"
-           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+>(({ recipe: r, pn, coverColor, density }, ref) => (
+  <div ref={ref} data-density={density}>
+    <div className="w-full h-full relative overflow-hidden" style={{ borderRadius: 2, boxShadow: PAGE_BORDER }}>
 
-        {/* ── Image panel (top ~45%) ───────────────────────────── */}
-        <div className="relative shrink-0 overflow-hidden" style={{ height: "45%" }}>
-          {r.image_url ? (
-            <img src={r.image_url} alt={r.title}
-                 className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-                 style={{ filter: "sepia(12%) contrast(1.06)" }} />
-          ) : (
-            <div className="absolute inset-0 bg-stone-700 flex items-center justify-center">
-              <span className="text-stone-500 italic" style={{ fontSize: "clamp(7px,1.4vw,10px)" }}>[ ภาพประกอบ ]</span>
-            </div>
-          )}
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 pointer-events-none"
-               style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.65) 100%)" }} />
-          {/* Title + meta overlaid at bottom of image */}
-          <div className="absolute bottom-0 left-0 right-0 text-white"
-               style={{ padding: "clamp(8px,1.8vw,16px)" }}>
-            <span className="block uppercase tracking-[2.5px] mb-1"
-                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.1vw,8px)", color: "#ffbf00" }}>
-              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ") || "Recipe"}
-            </span>
-            <h2 className="leading-[0.92] font-black"
-                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(0.95rem,3.5vw,1.5rem)", textShadow: "1px 2px 8px rgba(0,0,0,0.55)" }}>
-              {r.title}
-            </h2>
-          </div>
-          {/* Share badge */}
-          {r.is_public && (
-            <div className="absolute top-2 right-2"><ShareBadge coverColor={coverColor} /></div>
-          )}
+      {/* Full-bleed food image */}
+      {r.image_url ? (
+        <img src={r.image_url} alt={r.title}
+             className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+             style={{ filter: "sepia(10%) contrast(1.07) brightness(0.92)" }} />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center"
+             style={{ background: "linear-gradient(145deg,#1c1208 0%,#2e1e0a 100%)" }}>
+          <span className="text-amber-900/20 select-none pointer-events-none"
+                style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1rem,5vw,3rem)" }}>✦</span>
         </div>
+      )}
 
-        {/* ── Ingredient panel (bottom ~55%) ──────────────────── */}
-        <div className="flex-1 flex flex-col overflow-hidden"
-             style={{ padding: "clamp(8px,1.8vw,16px)", paddingTop: "clamp(6px,1.4vw,12px)" }}>
+      {/* Gradient: light amber at top-left, heavy dark at bottom-right */}
+      <div className="absolute inset-0 pointer-events-none"
+           style={{ background: "linear-gradient(155deg, rgba(255,191,0,0.07) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.9) 100%)" }} />
+      {/* Extra vignette at very bottom for legibility */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+           style={{ height: "55%", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)" }} />
 
-          {/* Section header */}
-          <div className="flex items-center gap-2 mb-2 shrink-0">
-            <span className="shrink-0 font-bold text-[#2c1e14]"
-                  style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(9px,1.8vw,13px)" }}>
-              Ingredients
-            </span>
-            <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37,transparent)" }} />
-          </div>
+      {/* Share badge — top right */}
+      {r.is_public && (
+        <div className="absolute top-3 right-3 z-10"><ShareBadge coverColor={coverColor} /></div>
+      )}
 
-          {/* Bullet list */}
-          <div className="flex-1 overflow-hidden flex flex-col gap-[2px]">
-            {ingLines.map((line, i) => (
-              <div key={i} className="flex items-start gap-1.5 min-w-0">
-                <span className="shrink-0 rounded-full mt-[4px]"
-                      style={{ width: 4, height: 4, background: "#e67e22", flexShrink: 0 }} />
-                <span className="text-[#2c1e14] leading-snug truncate"
-                      style={{ fontSize: "clamp(7px,1.3vw,10px)" }}>
-                  {line}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* Bottom text block */}
+      <div className="absolute bottom-0 left-0 right-0 text-white"
+           style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
 
-          <Pn n={pn} />
-        </div>
+        {/* Amber category / meta line */}
+        <span className="block uppercase mb-[clamp(4px,0.8vw,8px)]"
+              style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.05vw,8.5px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
+            .filter(Boolean).join("  ·  ") || "Recipe"}
+        </span>
+
+        {/* Bold display title */}
+        <h2 className="font-black leading-[0.88]"
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.05rem,4.2vw,2.4rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+          {r.title}
+        </h2>
+
+        {/* Description snippet */}
+        {r.description && (
+          <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
+             style={{ fontSize: "clamp(6.5px,1.2vw,10px)", maxWidth: "88%" }}>
+            {r.description.length > 110 ? r.description.slice(0, 110) + "…" : r.description}
+          </p>
+        )}
+
+        {/* Gold accent line */}
+        <div className="mt-[clamp(6px,1.2vw,12px)]" style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
+
+        {/* Page number */}
+        <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
+           style={{ fontFamily: "Georgia,serif", fontSize: "clamp(6.5px,1vw,9px)" }}>
+          {String(pn).padStart(2, "0")}
+        </p>
       </div>
     </div>
-  );
-});
+  </div>
+));
 PageRecipeFirst.displayName = "PageRecipeFirst";
 
-// Continuation page — handles ingredient overflow, instruction, and watermark.
-// isRight is derived from the slot index (even = right, odd = left).
+// ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst" }
->(({ recipe: r, label, text, lh, isRight, pn, density, youtubeLinks, variant = "ing" }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
+  const half      = Math.ceil(ingLines.length / 2);
+  const use2Col   = ingLines.length >= 5;
+  const colA      = use2Col ? ingLines.slice(0, half) : ingLines;
+  const colB      = use2Col ? ingLines.slice(half)    : [];
 
   return (
     <div ref={ref} data-density={density}>
       <div className="w-full h-full flex flex-col relative overflow-hidden"
-           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(10px,2vw,20px)" }}>
+           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2.2vw,24px)" }}>
 
-        {/* Bookmark ribbon on the outer edge */}
-        <div className="absolute top-0 z-10 w-5 h-16"
+        {/* Bookmark ribbon — outer edge */}
+        <div className="absolute top-0 z-10"
              style={{
-               [isRight ? "right" : "left"]: "clamp(8px,1.5vw,14px)",
-               background: "#b22222",
-               clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%)",
+               [isRight ? "right" : "left"]: "clamp(10px,2vw,18px)",
+               width: "clamp(15px,2.8vw,24px)",
+               height: "clamp(38px,7.5vw,64px)",
+               background: "linear-gradient(160deg,#c0392b 0%,#8e1c12 100%)",
+               clipPath: "polygon(0 0,100% 0,100% 100%,50% 87%,0 100%)",
+               boxShadow: "1px 2px 6px rgba(0,0,0,0.28)",
              }} />
 
-        {/* Recipe title (small mono) */}
-        <p className="text-[#2c1e14] uppercase tracking-[2px] truncate mt-5 mb-2 shrink-0"
-           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.1vw,8px)", opacity: 0.45 }}>
+        {/* ── Meta grid (first page only) ─────────────────── */}
+        {showMeta && (
+          <>
+            <div className="grid grid-cols-3 mt-7 mb-3 shrink-0" style={{ gap: "clamp(4px,1vw,10px)" }}>
+              {([
+                { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
+                { lbl: "CATEGORY", val: r.category ?? "—" },
+                { lbl: "SERVINGS", val: r.servings ? `${r.servings} ที่` : "—" },
+              ] as const).map(({ lbl, val }) => (
+                <div key={lbl} className="flex flex-col" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
+                  <span className="uppercase text-stone-400"
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(5px,0.85vw,7px)", letterSpacing: "0.22em" }}>
+                    {lbl}
+                  </span>
+                  <span className="font-bold text-[#2c1e14] leading-tight"
+                        style={{ fontSize: "clamp(7px,1.3vw,11px)" }}>
+                    {val}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="h-px bg-stone-200 mb-3 shrink-0" />
+          </>
+        )}
+
+        {/* Spacer when no meta */}
+        {!showMeta && <div className="shrink-0" style={{ height: "clamp(18px,3.5vw,32px)" }} />}
+
+        {/* Recipe name breadcrumb */}
+        <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(5px,0.85vw,7px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
           {r.title}
         </p>
 
-        {/* Section header with gold rule */}
-        <div className="flex items-center gap-2 mb-3 shrink-0">
-          <span className="shrink-0 font-bold text-[#2c1e14]"
-                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(9px,1.8vw,13px)" }}>
-            {label.replace(":", "").replace(" (ต่อ)", "")}
-          </span>
-          <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37,transparent)" }} />
+        {/* Section heading */}
+        <div className="mb-[clamp(5px,1vw,9px)] shrink-0">
+          <PageSectionHead>{variant === "ing" ? "Ingredients" : "Instructions"}</PageSectionHead>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col gap-[3px]">
-          {variant === "ing" && ingLines.map((line, i) => (
-            <div key={i} className="flex items-start gap-1.5 min-w-0">
-              <span className="shrink-0 rounded-full mt-[4px]"
-                    style={{ width: 4, height: 4, background: "#e67e22", flexShrink: 0 }} />
-              <span className="text-[#2c1e14] leading-snug"
-                    style={{ fontSize: "clamp(7px,1.3vw,10px)" }}>
-                {line}
-              </span>
-            </div>
-          ))}
-
-          {variant === "inst" && instLines.map((line, i) => {
-            const m = line.match(/^(\d+)\.\s*(.*)/);
-            const num = m?.[1];
-            const body = m?.[2] ?? line;
-            return (
-              <div key={i} className="flex gap-2 min-w-0">
-                {num && (
-                  <span className="shrink-0 select-none leading-none"
-                        style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(12px,2.4vw,18px)", color: "#d4af37", opacity: 0.6, lineHeight: 1, marginTop: "-1px" }}>
-                    {num}
-                  </span>
-                )}
-                <span className="text-[#2c1e14] leading-snug flex-1"
-                      style={{ fontSize: "clamp(7px,1.3vw,10px)", lineHeight: lh }}>
-                  {body}
-                </span>
+        {/* ── Ingredients ─────────────────────────────────── */}
+        {variant === "ing" && (
+          <div className="flex-1 overflow-hidden">
+            {use2Col ? (
+              <div className="flex h-full" style={{ gap: "clamp(6px,1.2vw,12px)" }}>
+                <div className="flex-1 flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
+                  {colA.map((t, i) => <IngItem key={i} text={t} />)}
+                </div>
+                <div className="flex-1 flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
+                  {colB.map((t, i) => <IngItem key={i} text={t} />)}
+                </div>
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              <div className="flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
+                {colA.map((t, i) => <IngItem key={i} text={t} />)}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* YouTube pill links */}
+        {/* ── Instructions ─────────────────────────────────── */}
+        {variant === "inst" && (
+          <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(5px,1vw,10px)" }}>
+            {instLines.map((line, i) => {
+              const m    = line.match(/^(\d+)\.\s*(.*)/);
+              const num  = m?.[1];
+              const body = m?.[2] ?? line;
+              return (
+                <div key={i} className="flex items-start min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
+                  {num && (
+                    <span className="shrink-0 select-none pointer-events-none leading-none"
+                          style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1, marginTop: "-1px" }}>
+                      {num}
+                    </span>
+                  )}
+                  <span className="text-[#2c1e14] flex-1 leading-relaxed"
+                        style={{ fontSize: "clamp(7px,1.25vw,10px)" }}>
+                    {body}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* YouTube links */}
         {youtubeLinks && youtubeLinks.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2 shrink-0">
+          <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
             {youtubeLinks.map(({ step, url }) => (
               <a key={step} href={url} target="_blank" rel="noopener noreferrer"
                  onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
-                 className="flex items-center gap-1 font-medium text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-full transition-colors"
-                 style={{ fontSize: "clamp(6px,1.1vw,9px)" }}>
+                 className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
+                 style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
                 <Youtube className="w-2 h-2 shrink-0" />
-                วิดีโอขั้นตอน {step}
+                Step {step}
               </a>
             ))}
           </div>
@@ -582,17 +643,24 @@ const PageRecipeCont = forwardRef<
 });
 PageRecipeCont.displayName = "PageRecipeCont";
 
-// Watermark page — shown when a recipe ends on an odd page count.
+// Watermark page — spread alignment filler; maintains cream theme.
 const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight: boolean; density: "soft" | "hard" }>(
-  ({ recipe: r, isRight, density }, ref) => (
+  ({ recipe: r, density }, ref) => (
     <div ref={ref} data-density={density}>
-      <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center relative"
-           style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-        <Tape right={isRight} />
-        <p className="text-[clamp(1.6rem,6vw,3rem)] font-bold text-stone-100 text-center leading-tight px-8 break-words pointer-events-none select-none"
-           style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif", transform: "rotate(-12deg)" }}>
-          {r.title}
-        </p>
+      <div className="w-full h-full flex items-center justify-center relative overflow-hidden"
+           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+        <div className="text-center select-none pointer-events-none px-8"
+             style={{ opacity: 0.07, transform: "rotate(-10deg)" }}>
+          <p className="font-black text-[#2c1e14] break-words leading-tight"
+             style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.4rem,5.5vw,3rem)" }}>
+            {r.title}
+          </p>
+        </div>
+        {/* subtle gold ornament */}
+        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 select-none pointer-events-none"
+              style={{ color: "#d4af37", opacity: 0.18, fontSize: "clamp(1rem,3vw,2rem)" }}>
+          ✦
+        </span>
       </div>
     </div>
   )
@@ -868,16 +936,17 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
-                        label="วัตถุดิบ (ต่อ):" text={slot.ingText} lh="1.6"
-                        isRight={isRight} pn={si} density={flipType} variant="ing" />
+                        label="" text={slot.ingText} lh="1.6"
+                        isRight={isRight} pn={si} density={flipType}
+                        variant="ing" showMeta={slot.chunkIdx === 0} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
-                        label={slot.chunkIdx === 0 ? "วิธีทำ:" : "วิธีทำ (ต่อ):"}
-                        text={slot.instText} lh="1.6"
+                        label="" text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
-                        youtubeLinks={slot.youtubeLinks} variant="inst" />
+                        youtubeLinks={slot.youtubeLinks}
+                        variant="inst" showMeta={slot.showMeta ?? false} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
