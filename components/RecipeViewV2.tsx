@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type { Recipe } from "@/lib/types";
 
-// ─── Data parsers ──────────────────────────────────────────────────────────────
+// ─── Parsers ───────────────────────────────────────────────────────────────────
 
 interface InstructionStep { text: string; youtube?: string; }
 
@@ -17,7 +17,6 @@ function parseInstructions(raw: string): InstructionStep[] {
         .map(s => ({ text: s.text!.trim(), youtube: s.youtube?.trim() || undefined }));
     }
   } catch {}
-  // Legacy plain-text fallback
   return raw.split("\n").filter(l => l.trim()).map(line => ({
     text: line.replace(/^\d+\.\s*/, "").trim(),
   }));
@@ -36,23 +35,6 @@ function youtubeEmbedUrl(url: string): string | null {
   return m ? `https://www.youtube.com/embed/${m[1]}?rel=0` : null;
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-function Divider() {
-  return <div className="w-10 h-px bg-stone-300 my-3" />;
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2
-      className="text-2xl font-bold italic text-stone-800"
-      style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)" }}
-    >
-      {children}
-    </h2>
-  );
-}
-
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function RecipeViewV2({
@@ -67,123 +49,201 @@ export default function RecipeViewV2({
   const steps       = useMemo(() => parseInstructions(recipe.instructions), [recipe.instructions]);
   const ingredients = useMemo(() => parseIngredients(recipe.ingredients),   [recipe.ingredients]);
 
-  const meta = [
-    bookTitle,
-    recipe.category,
-    recipe.cook_time_minutes ? `${recipe.cook_time_minutes} นาที` : null,
-    recipe.servings           ? `${recipe.servings} ที่`           : null,
-  ].filter(Boolean).join(" — ");
+  const cookTime = recipe.cook_time_minutes ? `${recipe.cook_time_minutes} นาที` : "—";
+  const servings = recipe.servings          ? `${recipe.servings} ที่`           : "—";
+  const category = recipe.category ?? "—";
 
   return (
-    <div className="min-h-screen bg-[#f7f4ef]">
-      {/* ── Wrapper: stacked on mobile, split on lg+ ── */}
-      <div className="max-w-5xl mx-auto lg:flex lg:h-screen lg:overflow-hidden">
+    /* Break out of the root layout's px / py */
+    <div
+      className="-mx-4 sm:-mx-6 -my-10 flex items-stretch"
+      style={{ minHeight: "calc(100vh - 4rem)", background: "#0a0500" }}
+    >
+      {/* ══ Spread wrapper ══════════════════════════════════════════════════════ */}
+      <div className="w-full flex flex-col lg:flex-row" style={{ minHeight: "calc(100vh - 4rem)" }}>
 
-        {/* ══ LEFT PANEL ══════════════════════════════════════════════════════ */}
-        <aside className="lg:w-[40%] lg:h-screen lg:flex lg:flex-col lg:overflow-hidden bg-[#eeebe3] shrink-0">
-
-          {/* Image — magazine rectangular crop */}
-          <div
-            className="relative overflow-hidden shrink-0"
-            style={{ height: "clamp(200px,38vh,340px)" }}
-          >
-            {recipe.image_url ? (
-              <img
-                src={recipe.image_url}
-                alt={recipe.title}
-                draggable={false}
-                className="w-full h-full object-cover pointer-events-none select-none"
-                style={{ objectPosition: "center 30%" }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-stone-200">
-                <span className="text-stone-400 text-sm italic tracking-wide">[ ภาพประกอบ ]</span>
-              </div>
-            )}
-          </div>
-
-          {/* Title block */}
-          <div className="flex-1 flex flex-col justify-between px-8 py-8 lg:px-10 lg:py-10">
-            <div>
-              <h1
-                className="text-4xl lg:text-[2.75rem] font-bold leading-[1.15] text-stone-800"
-                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)" }}
-              >
-                {recipe.title}
-              </h1>
-
-              {recipe.description && (
-                <p className="mt-4 text-sm text-stone-500 leading-relaxed max-w-xs">
-                  {recipe.description}
-                </p>
-              )}
+        {/* ══ LEFT PAGE — image + title overlay ══════════════════════════════ */}
+        <div
+          className="relative overflow-hidden flex flex-col justify-end lg:w-[42%] shrink-0"
+          style={{ minHeight: "50vh" }}
+        >
+          {/* Food image */}
+          {recipe.image_url ? (
+            <img
+              src={recipe.image_url}
+              alt={recipe.title}
+              draggable={false}
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+              style={{ filter: "sepia(15%) contrast(1.08)" }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-stone-800 flex items-center justify-center">
+              <span className="text-stone-600 italic text-sm">[ ภาพประกอบ ]</span>
             </div>
-
-            {/* Metadata footer */}
-            <div className="border-t border-stone-300/60 pt-4 mt-6">
-              {meta && (
-                <p className="text-[10px] tracking-[0.28em] uppercase text-stone-400 leading-relaxed">
-                  {meta}
-                </p>
-              )}
-              {author && (
-                <p className="text-[11px] italic text-stone-400 mt-1">by {author}</p>
-              )}
-            </div>
-          </div>
-        </aside>
-
-        {/* ══ RIGHT PANEL ═════════════════════════════════════════════════════ */}
-        <main className="lg:flex-1 lg:overflow-y-auto px-6 py-10 lg:px-14 lg:py-16">
-
-          {/* ── Ingredients ─────────────────────────────────────────────── */}
-          {ingredients.length > 0 && (
-            <section className="mb-14">
-              <SectionHeading>Ingredients</SectionHeading>
-              <Divider />
-
-              <div className="grid grid-cols-2 gap-x-10">
-                {ingredients.map((item, i) => (
-                  <div
-                    key={i}
-                    className="py-3 border-b border-dashed border-stone-200 last:border-0"
-                  >
-                    <p className="text-sm text-stone-700 leading-snug">{item}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
           )}
 
-          {/* ── Preparation ─────────────────────────────────────────────── */}
-          {steps.length > 0 && (
-            <section>
-              <SectionHeading>Preparation</SectionHeading>
-              <Divider />
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,191,0,0.08) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.82) 100%)",
+            }}
+          />
 
-              <div className="space-y-9">
-                {steps.map((step, i) => {
-                  const embed = step.youtube ? youtubeEmbedUrl(step.youtube) : null;
-                  return (
-                    <div key={i} className="flex gap-5">
+          {/* Text content overlaid at bottom */}
+          <div className="relative z-10 p-10 lg:p-14 pb-12 lg:pb-16 text-white">
+            <span
+              className="block text-[10px] tracking-[4px] uppercase mb-4"
+              style={{
+                fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)",
+                color: "#ffbf00",
+              }}
+            >
+              {[bookTitle, recipe.category].filter(Boolean).join(" · ") || "Recipe"}
+            </span>
 
-                      {/* Step number */}
+            <h1
+              className="leading-[0.88] mb-5 font-black"
+              style={{
+                fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)",
+                fontSize: "clamp(2.4rem, 5vw, 4.2rem)",
+                textShadow: "2px 4px 24px rgba(0,0,0,0.55)",
+              }}
+            >
+              {recipe.title}
+            </h1>
+
+            {recipe.description && (
+              <p
+                className="text-white/80 leading-relaxed font-light max-w-sm"
+                style={{ fontSize: "clamp(0.85rem, 1.5vw, 1rem)" }}
+              >
+                {recipe.description}
+              </p>
+            )}
+
+            {author && (
+              <p
+                className="mt-4 text-white/45 italic"
+                style={{
+                  fontFamily: "var(--font-playfair, Georgia, serif)",
+                  fontSize: "0.8rem",
+                }}
+              >
+                by {author}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ══ BOOK GUTTER ════════════════════════════════════════════════════ */}
+        <div
+          className="hidden lg:block w-10 shrink-0"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.18) 100%)",
+          }}
+        />
+
+        {/* ══ RIGHT PAGE — recipe details ════════════════════════════════════ */}
+        <div
+          className="flex-1 relative overflow-y-auto"
+          style={{
+            background: "#fffaf0",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#d4af37 transparent",
+          }}
+        >
+          {/* Bookmark ribbon */}
+          <div
+            className="absolute top-0 right-8 z-20 w-9 h-28 shadow-lg"
+            style={{
+              background: "#b22222",
+              clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%)",
+            }}
+          />
+
+          <div className="px-10 py-14 lg:px-16 lg:py-16 max-w-2xl">
+
+            {/* ── Meta grid ─────────────────────────────────────────────── */}
+            <div
+              className="grid grid-cols-3 gap-6 pb-8 mb-10"
+              style={{ borderBottom: "1px solid rgba(0,0,0,0.1)" }}
+            >
+              {[
+                { label: "Prep Time", value: cookTime },
+                { label: "Category",  value: category  },
+                { label: "Servings",  value: servings  },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex flex-col gap-1.5">
+                  <span
+                    className="text-[10px] uppercase tracking-[0.28em] text-stone-400"
+                    style={{ fontFamily: "var(--font-jetbrains, 'JetBrains Mono', monospace)" }}
+                  >
+                    {label}
+                  </span>
+                  <span className="font-bold text-[#2c1e14] text-sm leading-tight">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Ingredients ─────────────────────────────────────────── */}
+            {ingredients.length > 0 && (
+              <section className="mb-12">
+                <SectionHeader>Ingredients</SectionHeader>
+
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-3 mt-6">
+                  {ingredients.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-[#2c1e14]">
                       <span
-                        className="shrink-0 text-[11px] font-semibold tracking-wider text-stone-300 pt-0.5 w-6 text-right"
-                        style={{ fontFamily: "Georgia,serif" }}
-                        aria-hidden
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
+                        className="mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full"
+                        style={{ background: "#e67e22" }}
+                      />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-                      {/* Step body */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-stone-600 leading-[1.85]">{step.text}</p>
+            {/* ── Instructions ─────────────────────────────────────────── */}
+            {steps.length > 0 && (
+              <section className="mb-20">
+                <SectionHeader>Instructions</SectionHeader>
 
-                        {/* YouTube embed — only rendered when a valid URL exists */}
+                <div className="mt-6 space-y-8">
+                  {steps.map((step, i) => {
+                    const embed = step.youtube ? youtubeEmbedUrl(step.youtube) : null;
+                    return (
+                      <div key={i} className="relative pl-12">
+                        {/* Large italic gold step number */}
+                        <span
+                          className="absolute left-0 select-none"
+                          style={{
+                            fontFamily: "var(--font-playfair, Georgia, serif)",
+                            fontSize: "2.4rem",
+                            fontStyle: "italic",
+                            color: "#d4af37",
+                            opacity: 0.55,
+                            lineHeight: 1,
+                            top: "-6px",
+                          }}
+                          aria-hidden
+                        >
+                          {i + 1}
+                        </span>
+
+                        <p
+                          className="text-[#2c1e14]"
+                          style={{ fontSize: "0.95rem", lineHeight: "1.75" }}
+                        >
+                          {step.text}
+                        </p>
+
                         {embed && (
                           <div
-                            className="mt-4 rounded-xl overflow-hidden bg-stone-200 shadow-sm"
+                            className="mt-4 rounded-xl overflow-hidden shadow-md"
                             style={{ aspectRatio: "16/9" }}
                           >
                             <iframe
@@ -197,17 +257,50 @@ export default function RecipeViewV2({
                           </div>
                         )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
 
-          {/* Bottom breathing room */}
-          <div className="h-16" />
-        </main>
+          {/* Handwritten note — bottom-right corner */}
+          <div
+            className="absolute bottom-8 right-10 text-[#4a6fa5] pointer-events-none select-none"
+            style={{
+              fontFamily: "var(--font-belle-aurore, 'La Belle Aurore', cursive)",
+              fontSize: "1.35rem",
+              transform: "rotate(-4deg)",
+              opacity: 0.75,
+            }}
+          >
+            {bookTitle ? `— ${bookTitle}` : "Bon appétit…"}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Section header with gold rule ────────────────────────────────────────────
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-4">
+      <h2
+        className="shrink-0 text-[#2c1e14]"
+        style={{
+          fontFamily: "var(--font-playfair, Georgia, serif)",
+          fontSize: "1.75rem",
+          fontWeight: 700,
+        }}
+      >
+        {children}
+      </h2>
+      <div
+        className="flex-1 h-px"
+        style={{ background: "linear-gradient(to right, #d4af37, transparent)" }}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
-import { Sarabun, Playfair_Display } from "next/font/google";
+import { Sarabun, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
 
 const sarabun = Sarabun({
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -14,9 +14,23 @@ const sarabun = Sarabun({
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "700", "900"],
   style: ["normal", "italic"],
   variable: "--font-playfair",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const laBelleAurore = La_Belle_Aurore({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-belle-aurore",
   display: "swap",
 });
 
@@ -29,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getSession();
 
   return (
-    <html lang="th" className={`${sarabun.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
+    <html lang="th" className={`${sarabun.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
       <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
         {user && <Navbar />}
         <main className={user ? "max-w-6xl mx-auto px-4 sm:px-6 py-10" : ""}>
