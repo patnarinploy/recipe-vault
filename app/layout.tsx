@@ -3,7 +3,14 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
-import { IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
+import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
+
+const sarabun = Sarabun({
+  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["latin", "thai"],
+  variable: "--font-sarabun",
+  display: "swap",
+});
 
 const ibmPlexSansThai = IBM_Plex_Sans_Thai({
   weight: ["300", "400", "500", "600", "700"],
@@ -43,7 +50,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await getSession();
 
   return (
-    <html lang="th" className={`${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
+    <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
       <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
         {user && <Navbar />}
         <main className={user ? "max-w-6xl mx-auto px-4 sm:px-6 py-10" : ""}>

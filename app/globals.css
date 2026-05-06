@@ -19,6 +19,13 @@
   font-family: var(--font-apple);
 }
 
+/* ─── Book modal isolated typography ────────────────────────── */
+/* Scoped to the book reader container; does not affect app UI. */
+/* Change --font-ibm-plex in layout.tsx to restyle the whole modal. */
+.book-modal-font {
+  font-family: var(--font-ibm-plex), "IBM Plex Sans Thai", Thonburi, sans-serif;
+}
+
 /* ─── Page / component animations ─────────────────────────── */
 @keyframes slide-right {
   from { opacity: 0; transform: translateX(28px); }

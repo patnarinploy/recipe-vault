@@ -223,10 +223,11 @@ function buildSlots(
                    // Show meta on first inst page only when there are no ingredient pages
                    ...(ci === instStart && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
 
-    // Watermark for spread alignment — skip in portrait
+    // Watermark for spread alignment — skip in portrait.
+    // embedInstFirst reduces the actual pushed slot count by 1, so account for that.
     if (!portrait) {
-      const total = 1 + ingAllChunks.length + instChunks.length;
-      if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
+      const actualSlots = 1 + ingAllChunks.length + instChunks.length - (embedInstFirst ? 1 : 0);
+      if (actualSlots % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
     }
   }
 
@@ -1027,7 +1028,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     <>
       {/* Book container — relative so the FAB can be absolutely positioned
           at the bottom-right of the right page without overlapping content */}
-      <div className="relative font-apple" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
+      <div className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}
