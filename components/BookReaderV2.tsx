@@ -53,10 +53,10 @@ function usePageDimensions() {
 const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
-// ─── Pagination — fixed pixel measurements (14 px text, fixed font) ─
-const LINE_H_PX     = 26;  // ~14px × 1.85 line-height
+// ─── Pagination — fixed pixel measurements (calibrated for 14px text) ─
+const LINE_H_PX     = 34;  // 14px × 1.625 leading-relaxed + 10px flex gap (inst steps)
 const TOC_ITEM_H_PX = 36;  // height of one TOC row
-const CHAR_W_PX     = 9;   // avg Thai char width at 14 px
+const CHAR_W_PX     = 10;  // avg Thai char width at ~14px
 
 // Derive per-page limits from the real rendered page size so that content
 // never overflows when the user resizes the window.
@@ -257,7 +257,7 @@ function Tape({ right }: { right?: boolean }) {
 
 function Pn({ n, right }: { n: number; right?: boolean }) {
   return (
-    <p className={`mt-auto pt-3 text-[11px] text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}>
+    <p className={`mt-auto pt-3 text-[11px] font-mono text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}>
       {String(n).padStart(2, "0")}
     </p>
   );
@@ -566,7 +566,7 @@ const PageRecipeFirst = forwardRef<
           </div>
 
           <h2 className="font-black leading-[0.88]"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.6rem,6vw,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+              style={{ fontSize: "clamp(1.6rem,6vw,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
             {r.title}
           </h2>
 
