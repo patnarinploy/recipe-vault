@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, BookOpen, Settings, Palette, User } from "lucide-react";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
-import BookReaderModalV2 from "./BookReaderModalV2";
 import WriterCard from "./WriterCard";
 import type { Book, WriterInfo } from "@/lib/types";
 
@@ -22,9 +22,9 @@ interface Props {
 }
 
 export default function Library({ myBooks, publicBooks, currentUser }: Props) {
+  const router = useRouter();
   const [tab, setTab] = useState<"mine" | "public">("mine");
   const [newBookOpen, setNewBookOpen] = useState(false);
-  const [openBook, setOpenBook] = useState<{ id: string; isOwner: boolean; autoNewRecipe?: boolean } | null>(null);
   const [settingsBookId, setSettingsBookId] = useState<string | null>(null);
   const [editCoverBook, setEditCoverBook] = useState<BookWithCounts | null>(null);
   const [writerCard, setWriterCard] = useState<WriterInfo | null>(null);
@@ -118,7 +118,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
                   publicCount={book.public_count}
                   author={authorLabel}
                   onAuthorClick={authorLabel ? () => setWriterCard(bookWriter) : undefined}
-                  onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
+                  onClick={() => router.push(`/books/${book.id}`)}
                 />
 
                 <div className="mt-4 flex items-start justify-between gap-1 w-full max-w-[160px]">
@@ -155,7 +155,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
                           <button
                             onClick={() => {
                               setSettingsBookId(null);
-                              setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true });
+                              router.push(`/books/${book.id}?add=1`);
                             }}
                             className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl w-full text-left"
                           >
@@ -213,7 +213,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
         <BookCoverEditor
           author={displayName}
           inModal
-          onSuccess={(id) => { setNewBookOpen(false); setOpenBook({ id, isOwner: true }); }}
+          onSuccess={(id) => { setNewBookOpen(false); router.push(`/books/${id}`); }}
           onCancel={() => setNewBookOpen(false)}
         />
       </Modal>
@@ -230,14 +230,6 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
           />
         )}
       </Modal>
-
-      {/* Book reader modal */}
-      <BookReaderModalV2
-        bookId={openBook?.id ?? null}
-        isOwner={openBook?.isOwner ?? false}
-        autoNewRecipe={openBook?.autoNewRecipe}
-        onClose={() => setOpenBook(null)}
-      />
 
       {/* Writer card modal */}
       <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-sm">
