@@ -441,72 +441,107 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
->(({ recipe: r, pn, coverColor, density }, ref) => (
-  <div ref={ref} data-density={density}>
-    <div className="w-full h-full relative overflow-hidden" style={{ borderRadius: 2, boxShadow: PAGE_BORDER }}>
+>(({ recipe: r, pn, coverColor, density }, ref) => {
+  const imgRef       = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef       = useRef<number>(0);
+  const target       = useRef({ x: 0, y: 0 });
+  const current      = useRef({ x: 0, y: 0 });
 
-      {/* Full-bleed food image */}
-      {r.image_url ? (
-        <img src={r.image_url} alt={r.title}
-             className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-             style={{ filter: "sepia(10%) contrast(1.07) brightness(0.92)" }} />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center"
-             style={{ background: "linear-gradient(145deg,#1c1208 0%,#2e1e0a 100%)" }}>
-          <span className="text-amber-900/20 select-none pointer-events-none"
-                style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1rem,5vw,3rem)" }}>✦</span>
-        </div>
-      )}
+  // Parallax RAF loop — runs only while component is mounted
+  useEffect(() => {
+    const MAX_PX = 14;
+    function tick() {
+      current.current.x += (target.current.x - current.current.x) * 0.07;
+      current.current.y += (target.current.y - current.current.y) * 0.07;
+      if (imgRef.current) {
+        const tx = current.current.x * MAX_PX;
+        const ty = current.current.y * MAX_PX;
+        imgRef.current.style.transform = `scale(1.1) translate(${tx}px,${ty}px)`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
-      {/* Gradient: light amber at top-left, heavy dark at bottom-right */}
-      <div className="absolute inset-0 pointer-events-none"
-           style={{ background: "linear-gradient(155deg, rgba(255,191,0,0.07) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.9) 100%)" }} />
-      {/* Extra vignette at very bottom for legibility */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
-           style={{ height: "55%", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)" }} />
+  function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    target.current = {
+      x: (e.clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2),
+      y: (e.clientY - (rect.top  + rect.height / 2)) / (rect.height / 2),
+    };
+  }
 
-      {/* Share badge — top right */}
-      {r.is_public && (
-        <div className="absolute top-3 right-3 z-10"><ShareBadge coverColor={coverColor} /></div>
-      )}
+  function onMouseLeave() { target.current = { x: 0, y: 0 }; }
 
-      {/* Bottom text block */}
-      <div className="absolute bottom-0 left-0 right-0 text-white"
-           style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
+  return (
+    <div ref={ref} data-density={density}>
+      <div ref={containerRef}
+           className="w-full h-full relative overflow-hidden"
+           style={{ borderRadius: 2, boxShadow: PAGE_BORDER }}
+           onMouseMove={onMouseMove}
+           onMouseLeave={onMouseLeave}>
 
-        {/* Amber category / meta line */}
-        <span className="block uppercase mb-[clamp(4px,0.8vw,8px)]"
-              style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.05vw,8.5px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
-          {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
-            .filter(Boolean).join("  ·  ") || "Recipe"}
-        </span>
-
-        {/* Bold display title */}
-        <h2 className="font-black leading-[0.88]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.05rem,4.2vw,2.4rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
-          {r.title}
-        </h2>
-
-        {/* Description snippet */}
-        {r.description && (
-          <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
-             style={{ fontSize: "clamp(6.5px,1.2vw,10px)", maxWidth: "88%" }}>
-            {r.description.length > 110 ? r.description.slice(0, 110) + "…" : r.description}
-          </p>
+        {/* Full-bleed food image — parallax target */}
+        {r.image_url ? (
+          <img ref={imgRef} src={r.image_url} alt={r.title}
+               className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+               style={{ filter: "sepia(10%) contrast(1.07) brightness(0.92)", willChange: "transform", transform: "scale(1.1)" }} />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center"
+               style={{ background: "linear-gradient(145deg,#1c1208 0%,#2e1e0a 100%)" }}>
+            <span className="text-amber-900/20 select-none pointer-events-none"
+                  style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1rem,5vw,3rem)" }}>✦</span>
+          </div>
         )}
 
-        {/* Gold accent line */}
-        <div className="mt-[clamp(6px,1.2vw,12px)]" style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 pointer-events-none"
+             style={{ background: "linear-gradient(155deg,rgba(255,191,0,0.07) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0.9) 100%)" }} />
+        <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
+             style={{ height: "55%", background: "linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 100%)" }} />
 
-        {/* Page number */}
-        <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
-           style={{ fontFamily: "Georgia,serif", fontSize: "clamp(6.5px,1vw,9px)" }}>
-          {String(pn).padStart(2, "0")}
-        </p>
+        {/* Share badge */}
+        {r.is_public && (
+          <div className="absolute top-3 right-3 z-10"><ShareBadge coverColor={coverColor} /></div>
+        )}
+
+        {/* Bottom text block */}
+        <div className="absolute bottom-0 left-0 right-0 text-white"
+             style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
+
+          <span className="block uppercase mb-[clamp(4px,0.8vw,8px)]"
+                style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.05vw,8.5px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+            {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
+              .filter(Boolean).join("  ·  ") || "Recipe"}
+          </span>
+
+          <h2 className="font-black leading-[0.88]"
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.05rem,4.2vw,2.4rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+            {r.title}
+          </h2>
+
+          {r.description && (
+            <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
+               style={{ fontSize: "clamp(6.5px,1.2vw,10px)", maxWidth: "88%" }}>
+              {r.description.length > 110 ? r.description.slice(0, 110) + "…" : r.description}
+            </p>
+          )}
+
+          <div className="mt-[clamp(6px,1.2vw,12px)]"
+               style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
+
+          <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
+             style={{ fontFamily: "Georgia,serif", fontSize: "clamp(6.5px,1vw,9px)" }}>
+            {String(pn).padStart(2, "0")}
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 PageRecipeFirst.displayName = "PageRecipeFirst";
 
 // ─── Right recipe detail page — cream editorial layout ────────────
