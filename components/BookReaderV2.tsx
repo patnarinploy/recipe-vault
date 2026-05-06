@@ -448,6 +448,44 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Instruction step row (shared by inst page + combined ing/inst page) ─────
+function InstructionStep({ line }: { line: string }) {
+  const m    = line.match(/^(\d+)\.\s*(.*)/);
+  const num  = m?.[1];
+  const body = m?.[2] ?? line;
+  return (
+    <div className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
+      {num && (
+        <span className="shrink-0 select-none pointer-events-none"
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
+          {num}
+        </span>
+      )}
+      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
+        {body}
+      </span>
+    </div>
+  );
+}
+
+// ─── YouTube step links (shared by inst page + combined ing/inst page) ────────
+function YoutubeLinks({ links }: { links?: { step: number; url: string }[] }) {
+  if (!links?.length) return null;
+  return (
+    <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
+      {links.map(({ step, url }) => (
+        <a key={step} href={url} target="_blank" rel="noopener noreferrer"
+           onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
+           className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
+           style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
+          <Youtube className="w-2 h-2 shrink-0" />
+          Step {step}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 // ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
@@ -646,81 +684,22 @@ const PageRecipeCont = forwardRef<
               <PageSectionHead>Instructions</PageSectionHead>
             </div>
             <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
-              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => {
-                const m    = line.match(/^(\d+)\.\s*(.*)/);
-                const num  = m?.[1];
-                const body = m?.[2] ?? line;
-                return (
-                  <div key={i} className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
-                    {num && (
-                      <span className="shrink-0 select-none pointer-events-none"
-                            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
-                        {num}
-                      </span>
-                    )}
-                    <span className="text-[#2c1e14] flex-1 leading-relaxed"
-                          style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
-                      {body}
-                    </span>
-                  </div>
-                );
-              })}
+              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => (
+                <InstructionStep key={i} line={line} />
+              ))}
             </div>
-            {instFirstYtLinks && instFirstYtLinks.length > 0 && (
-              <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
-                {instFirstYtLinks.map(({ step, url }) => (
-                  <a key={step} href={url} target="_blank" rel="noopener noreferrer"
-                     onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
-                     className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
-                     style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
-                    <Youtube className="w-2 h-2 shrink-0" />
-                    Step {step}
-                  </a>
-                ))}
-              </div>
-            )}
+            <YoutubeLinks links={instFirstYtLinks} />
           </>
         )}
 
         {/* ── Instructions ─────────────────────────────────── */}
         {variant === "inst" && (
           <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(5px,1vw,10px)" }}>
-            {instLines.map((line, i) => {
-              const m    = line.match(/^(\d+)\.\s*(.*)/);
-              const num  = m?.[1];
-              const body = m?.[2] ?? line;
-              return (
-                <div key={i} className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
-                  {num && (
-                    <span className="shrink-0 select-none pointer-events-none"
-                          style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
-                      {num}
-                    </span>
-                  )}
-                  <span className="text-[#2c1e14] flex-1 leading-relaxed"
-                        style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
-                    {body}
-                  </span>
-                </div>
-              );
-            })}
+            {instLines.map((line, i) => <InstructionStep key={i} line={line} />)}
           </div>
         )}
 
-        {/* YouTube links */}
-        {youtubeLinks && youtubeLinks.length > 0 && (
-          <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
-            {youtubeLinks.map(({ step, url }) => (
-              <a key={step} href={url} target="_blank" rel="noopener noreferrer"
-                 onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
-                 className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
-                 style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
-                <Youtube className="w-2 h-2 shrink-0" />
-                Step {step}
-              </a>
-            ))}
-          </div>
-        )}
+        <YoutubeLinks links={youtubeLinks} />
 
         <Pn n={pn} right={isRight} />
       </div>
