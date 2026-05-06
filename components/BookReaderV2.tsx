@@ -88,7 +88,7 @@ type PageSlot =
   | { kind: "toc"; tocPage: number }
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
-  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string }
+  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
   | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
@@ -153,6 +153,14 @@ function instYoutubeLinks(raw: string): { step: number; url: string }[] {
   return [];
 }
 
+// Counts how many display rows a block of text occupies given charsPerLine.
+function lineCount(text: string, charsPerLine: number): number {
+  if (!text?.trim()) return 0;
+  return text.split("\n").reduce((sum, line) => {
+    return sum + Math.max(1, Math.ceil((line.length || 0.1) / charsPerLine));
+  }, 0);
+}
+
 // Builds the flat ordered array of page slots from the recipe list.
 // Content flows sequentially: all ingredients pages first, then instructions.
 // In spread mode each recipe takes an even number of slots so the next
@@ -201,19 +209,55 @@ function buildSlots(
     // All ingredients go to recipe-ing slots; recipe-first is image-only
     const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, contLines, contLines)
                            .filter(c => c.trim().length > 0);
-    const instChunks = toChunks(instPlainText(r.instructions || ""), charsPerLine, contLines, contLines)
-                         .filter(c => c.trim().length > 0);
-    const ytLinks = instYoutubeLinks(r.instructions || "");
+    const fullInstText = instPlainText(r.instructions || "");
+    const ytLinks      = instYoutubeLinks(r.instructions || "");
 
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
 
-    for (let ci = 0; ci < ingAllChunks.length; ci++)
-      slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
+    // Track what instructions still need their own pages after embedding.
+    let instOverflowText = fullInstText;
+    let ytLinksOnIng    = false;
+
+    // Embed the first portion of instructions on the ingredient page when:
+    //   • ingredients fit on exactly one page (so there IS remaining vertical space)
+    //   • there are instructions to show
+    // Key difference from the old approach: we measure the actual remaining rows
+    // using splitText(instAvail) so the embedded chunk NEVER overflows.
+    if (ingAllChunks.length === 1 && fullInstText.trim()) {
+      const ingItems  = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
+      // 2-column layout kicks in at ≥5 items; each row holds 2 items
+      const ingRows   = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
+      // Reserve 2 rows: 1 for "Instructions" heading, 1 safety buffer
+      const instAvail = contLines - ingRows - 2;
+
+      if (instAvail >= 2) {
+        const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
+        slots.push({
+          kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
+          instFirstChunk: instEmbed,
+          ...(ytLinks.length > 0 ? { instFirstYtLinks: ytLinks } : {}),
+        });
+        instOverflowText = instRest;
+        ytLinksOnIng    = ytLinks.length > 0;
+      } else {
+        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0] });
+      }
+    } else {
+      for (let ci = 0; ci < ingAllChunks.length; ci++)
+        slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: ci, ingText: ingAllChunks[ci] });
+    }
+
+    // Paginate instructions that didn't fit on the ingredient page
+    const instChunks = instOverflowText.trim()
+      ? toChunks(instOverflowText, charsPerLine, contLines, contLines).filter(c => c.trim().length > 0)
+      : [];
 
     for (let ci = 0; ci < instChunks.length; ci++)
-      slots.push({ kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-                   ...(ci === 0 && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
-                   ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}) });
+      slots.push({
+        kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
+        ...(ci === 0 && !ytLinksOnIng && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
+        ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
+      });
 
     // Watermark for spread alignment — skip in portrait.
     if (!portrait) {
@@ -581,8 +625,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -649,7 +693,7 @@ const PageRecipeCont = forwardRef<
 
         {/* ── Ingredients ─────────────────────────────────── */}
         {variant === "ing" && (
-          <div className="flex-1 overflow-hidden">
+          <div className={instFirstChunk ? "overflow-hidden shrink-0" : "flex-1 overflow-hidden"}>
             {use2Col ? (
               <div className="flex h-full" style={{ gap: "clamp(6px,1.2vw,12px)" }}>
                 <div className="flex-1 flex flex-col" style={{ gap: "clamp(2px,0.4vw,4px)" }}>
@@ -665,6 +709,21 @@ const PageRecipeCont = forwardRef<
               </div>
             )}
           </div>
+        )}
+
+        {/* ── Instructions embedded on the ingredient page ── */}
+        {variant === "ing" && instFirstChunk && (
+          <>
+            <div className="my-[clamp(4px,0.8vw,8px)] shrink-0">
+              <PageSectionHead>Instructions</PageSectionHead>
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => (
+                <InstructionStep key={i} line={line} fallbackNum={i + 1} />
+              ))}
+            </div>
+            <YoutubeLinks links={instFirstYtLinks} />
+          </>
         )}
 
         {/* ── Instructions ─────────────────────────────────── */}
@@ -986,7 +1045,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         label="" text={slot.ingText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         variant="ing" showMeta={slot.chunkIdx === 0}
-                        showRibbon={slot.chunkIdx === 0} />
+                        showRibbon={slot.chunkIdx === 0}
+                        instFirstChunk={slot.instFirstChunk}
+                        instFirstYtLinks={slot.instFirstYtLinks} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
