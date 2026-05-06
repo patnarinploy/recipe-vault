@@ -133,7 +133,11 @@ function instPlainText(raw: string): string {
                   .join("\n");
     }
   } catch {}
-  return raw;
+  // Plain-text fallback: auto-number each line so step numbers always render.
+  return raw.split("\n")
+    .map(l => l.trim()).filter(Boolean)
+    .map((l, i) => /^\d+\./.test(l) ? l : `${i + 1}. ${l}`)
+    .join("\n");
 }
 
 // Collect YouTube links from structured instructions JSON.
@@ -253,8 +257,7 @@ function Tape({ right }: { right?: boolean }) {
 
 function Pn({ n, right }: { n: number; right?: boolean }) {
   return (
-    <p className={`mt-auto pt-3 text-[11px] text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}
-       style={{ fontFamily: "Georgia, serif" }}>
+    <p className={`mt-auto pt-3 text-[11px] text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}>
       {String(n).padStart(2, "0")}
     </p>
   );
@@ -279,7 +282,7 @@ function AuthorClickButton({ label, onClick }: { label: string; onClick: () => v
       ref={ref}
       onClick={onClick}
       className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
-      style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}
+      style={{ fontSize: "clamp(8px,1.8vw,11px)" }}
     >
       by {label}
     </button>
@@ -393,8 +396,7 @@ const PageToC = forwardRef<
         <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-5">
           {isCont ? "Table of Contents (cont.)" : "Table of Contents"}
         </p>
-        <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight"
-            style={{ fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
+        <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight">
           {isCont ? "สารบัญ (ต่อ)" : "สารบัญ"}
         </h2>
         <nav ref={navRef} className="flex-1 space-y-0.5 overflow-hidden">
@@ -431,7 +433,7 @@ function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
       <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>{text}</span>
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>{text}</span>
     </div>
   );
 }
@@ -441,7 +443,7 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(12px,2.4vw,19px)" }}>
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(13px,2.5vw,20px)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -450,19 +452,19 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Instruction step row (shared by inst page + combined ing/inst page) ─────
-function InstructionStep({ line }: { line: string }) {
-  const m    = line.match(/^(\d+)\.\s*(.*)/);
-  const num  = m?.[1];
-  const body = m?.[2] ?? line;
+function InstructionStep({ line, fallbackNum }: { line: string; fallbackNum?: number }) {
+  const m    = line.trim().match(/^(\d+)\.\s*(.*)/);
+  const num  = m?.[1] ?? (fallbackNum != null ? String(fallbackNum) : undefined);
+  const body = m?.[2] ?? line.trim();
   return (
     <div className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
       {num && (
         <span className="shrink-0 select-none pointer-events-none"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(13px,2.6vw,22px)", color: "#d4af37", opacity: 0.5, lineHeight: 1 }}>
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(14px,2.7vw,23px)", color: "#d4af37", opacity: 0.55, lineHeight: 1 }}>
           {num}
         </span>
       )}
-      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
+      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>
         {body}
       </span>
     </div>
@@ -556,7 +558,7 @@ const PageRecipeFirst = forwardRef<
 
           <div className="flex items-center flex-wrap mb-[clamp(4px,0.8vw,8px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
-                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7.5px,1.4vw,11px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8.5px,1.5vw,12px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
               {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
@@ -564,13 +566,13 @@ const PageRecipeFirst = forwardRef<
           </div>
 
           <h2 className="font-black leading-[0.88]"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.4rem,5.5vw,3.2rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.6rem,6vw,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
             {r.title}
           </h2>
 
           {r.description && (
             <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
-               style={{ fontSize: "clamp(6.5px,1.2vw,10px)", maxWidth: "88%" }}>
+               style={{ fontSize: "clamp(8px,1.4vw,11.5px)", maxWidth: "88%" }}>
               {r.description.length > 110 ? r.description.slice(0, 110) + "…" : r.description}
             </p>
           )}
@@ -579,7 +581,7 @@ const PageRecipeFirst = forwardRef<
                style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
 
           <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
-             style={{ fontFamily: "Georgia,serif", fontSize: "clamp(6.5px,1vw,9px)" }}>
+             style={{ fontSize: "clamp(6.5px,1vw,9px)" }}>
             {String(pn).padStart(2, "0")}
           </p>
         </div>
@@ -630,11 +632,11 @@ const PageRecipeCont = forwardRef<
               ] as const).map(({ lbl, val }) => (
                 <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
                   <span className="uppercase text-stone-400"
-                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7px,1.1vw,9.5px)", letterSpacing: "0.22em" }}>
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7.5px,1.15vw,10px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
                   <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(9px,1.6vw,13px)" }}>
+                        style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>
                     {val}
                   </span>
                 </div>
@@ -686,7 +688,7 @@ const PageRecipeCont = forwardRef<
             </div>
             <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
               {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => (
-                <InstructionStep key={i} line={line} />
+                <InstructionStep key={i} line={line} fallbackNum={i + 1} />
               ))}
             </div>
             <YoutubeLinks links={instFirstYtLinks} />
@@ -696,7 +698,7 @@ const PageRecipeCont = forwardRef<
         {/* ── Instructions ─────────────────────────────────── */}
         {variant === "inst" && (
           <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(5px,1vw,10px)" }}>
-            {instLines.map((line, i) => <InstructionStep key={i} line={line} />)}
+            {instLines.map((line, i) => <InstructionStep key={i} line={line} fallbackNum={i + 1} />)}
           </div>
         )}
 
@@ -938,6 +940,18 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const goToPage    = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
   const goToPrev    = useCallback(() => bookRef.current?.pageFlip().flipPrev(), []);
   const goToNext    = useCallback(() => bookRef.current?.pageFlip().flipNext(), []);
+
+  // Keyboard arrow navigation
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+      if (e.key === "ArrowLeft")  { e.preventDefault(); goToPrev(); }
+      if (e.key === "ArrowRight") { e.preventDefault(); goToNext(); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [goToPrev, goToNext]);
 
   const currentSlot = slots[currentPage] ?? slots[0];
   type Ctx = "cover" | "toc" | "recipe" | "backcover";
