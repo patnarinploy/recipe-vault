@@ -415,75 +415,171 @@ PageToC.displayName = "PageToC";
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
->(({ recipe: r, ingText, pn, coverColor, density }, ref) => (
-  <div ref={ref} data-density={density}>
-    <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-      <Tape />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1.5 mt-5">
-        {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ")}
-      </p>
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-xl font-bold text-stone-800 leading-tight">{r.title}</h2>
-        {r.is_public && <ShareBadge coverColor={coverColor} />}
-      </div>
-      <div className="h-px bg-[#e8d5b7] mb-4" />
-      {r.image_url
-        ? <img src={r.image_url} alt={r.title} className="rounded-md object-cover shrink-0 mb-4 w-full"
-               style={{ height: "clamp(90px,20vh,190px)" }} />
-        : <div className="rounded-md bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mb-4"
-               style={{ height: "clamp(90px,20vh,190px)" }}>
-            <span className="text-stone-300 text-xs italic">[ ภาพประกอบ ]</span>
+>(({ recipe: r, ingText, pn, coverColor, density }, ref) => {
+  const ingLines = ingText.split("\n").filter(l => l.trim());
+  return (
+    <div ref={ref} data-density={density}>
+      <div className="w-full h-full flex flex-col relative overflow-hidden"
+           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+
+        {/* ── Image panel (top ~45%) ───────────────────────────── */}
+        <div className="relative shrink-0 overflow-hidden" style={{ height: "45%" }}>
+          {r.image_url ? (
+            <img src={r.image_url} alt={r.title}
+                 className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                 style={{ filter: "sepia(12%) contrast(1.06)" }} />
+          ) : (
+            <div className="absolute inset-0 bg-stone-700 flex items-center justify-center">
+              <span className="text-stone-500 italic" style={{ fontSize: "clamp(7px,1.4vw,10px)" }}>[ ภาพประกอบ ]</span>
+            </div>
+          )}
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 pointer-events-none"
+               style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.65) 100%)" }} />
+          {/* Title + meta overlaid at bottom of image */}
+          <div className="absolute bottom-0 left-0 right-0 text-white"
+               style={{ padding: "clamp(8px,1.8vw,16px)" }}>
+            <span className="block uppercase tracking-[2.5px] mb-1"
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.1vw,8px)", color: "#ffbf00" }}>
+              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null].filter(Boolean).join(" · ") || "Recipe"}
+            </span>
+            <h2 className="leading-[0.92] font-black"
+                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(0.95rem,3.5vw,1.5rem)", textShadow: "1px 2px 8px rgba(0,0,0,0.55)" }}>
+              {r.title}
+            </h2>
           </div>
-      }
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">วัตถุดิบ:</p>
-      <div className="flex-1 overflow-hidden text-sm text-stone-600 leading-[1.85] whitespace-pre-line">
-        {ingText}
+          {/* Share badge */}
+          {r.is_public && (
+            <div className="absolute top-2 right-2"><ShareBadge coverColor={coverColor} /></div>
+          )}
+        </div>
+
+        {/* ── Ingredient panel (bottom ~55%) ──────────────────── */}
+        <div className="flex-1 flex flex-col overflow-hidden"
+             style={{ padding: "clamp(8px,1.8vw,16px)", paddingTop: "clamp(6px,1.4vw,12px)" }}>
+
+          {/* Section header */}
+          <div className="flex items-center gap-2 mb-2 shrink-0">
+            <span className="shrink-0 font-bold text-[#2c1e14]"
+                  style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(9px,1.8vw,13px)" }}>
+              Ingredients
+            </span>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37,transparent)" }} />
+          </div>
+
+          {/* Bullet list */}
+          <div className="flex-1 overflow-hidden flex flex-col gap-[2px]">
+            {ingLines.map((line, i) => (
+              <div key={i} className="flex items-start gap-1.5 min-w-0">
+                <span className="shrink-0 rounded-full mt-[4px]"
+                      style={{ width: 4, height: 4, background: "#e67e22", flexShrink: 0 }} />
+                <span className="text-[#2c1e14] leading-snug truncate"
+                      style={{ fontSize: "clamp(7px,1.3vw,10px)" }}>
+                  {line}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <Pn n={pn} />
+        </div>
       </div>
-      <Pn n={pn} />
     </div>
-  </div>
-));
+  );
+});
 PageRecipeFirst.displayName = "PageRecipeFirst";
 
 // Continuation page — handles ingredient overflow, instruction, and watermark.
 // isRight is derived from the slot index (even = right, odd = left).
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[] }
->(({ recipe: r, label, text, lh, isRight, pn, density, youtubeLinks }, ref) => (
-  <div ref={ref} data-density={density}>
-    <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-         style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-      <Tape right={isRight} />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-1 mt-5 truncate">{r.title}</p>
-      <div className="h-px bg-[#e8d5b7] mb-3" />
-      <p className="text-[9px] tracking-[.32em] text-[#8a7354] uppercase font-semibold mb-2">{label}</p>
-      <div className="flex-1 overflow-hidden text-sm text-stone-600 whitespace-pre-line" style={{ lineHeight: lh }}>
-        {text}
-      </div>
-      {youtubeLinks && youtubeLinks.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2 mb-1">
-          {youtubeLinks.map(({ step, url }) => (
-            <a
-              key={step}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-[9px] font-medium text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-full transition-colors"
-            >
-              <Youtube className="w-2.5 h-2.5 shrink-0" />
-              วิดีโอขั้นตอน {step}
-            </a>
-          ))}
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst" }
+>(({ recipe: r, label, text, lh, isRight, pn, density, youtubeLinks, variant = "ing" }, ref) => {
+  const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
+  const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
+
+  return (
+    <div ref={ref} data-density={density}>
+      <div className="w-full h-full flex flex-col relative overflow-hidden"
+           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(10px,2vw,20px)" }}>
+
+        {/* Bookmark ribbon on the outer edge */}
+        <div className="absolute top-0 z-10 w-5 h-16"
+             style={{
+               [isRight ? "right" : "left"]: "clamp(8px,1.5vw,14px)",
+               background: "#b22222",
+               clipPath: "polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%)",
+             }} />
+
+        {/* Recipe title (small mono) */}
+        <p className="text-[#2c1e14] uppercase tracking-[2px] truncate mt-5 mb-2 shrink-0"
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1.1vw,8px)", opacity: 0.45 }}>
+          {r.title}
+        </p>
+
+        {/* Section header with gold rule */}
+        <div className="flex items-center gap-2 mb-3 shrink-0">
+          <span className="shrink-0 font-bold text-[#2c1e14]"
+                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(9px,1.8vw,13px)" }}>
+            {label.replace(":", "").replace(" (ต่อ)", "")}
+          </span>
+          <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37,transparent)" }} />
         </div>
-      )}
-      <Pn n={pn} right={isRight} />
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden flex flex-col gap-[3px]">
+          {variant === "ing" && ingLines.map((line, i) => (
+            <div key={i} className="flex items-start gap-1.5 min-w-0">
+              <span className="shrink-0 rounded-full mt-[4px]"
+                    style={{ width: 4, height: 4, background: "#e67e22", flexShrink: 0 }} />
+              <span className="text-[#2c1e14] leading-snug"
+                    style={{ fontSize: "clamp(7px,1.3vw,10px)" }}>
+                {line}
+              </span>
+            </div>
+          ))}
+
+          {variant === "inst" && instLines.map((line, i) => {
+            const m = line.match(/^(\d+)\.\s*(.*)/);
+            const num = m?.[1];
+            const body = m?.[2] ?? line;
+            return (
+              <div key={i} className="flex gap-2 min-w-0">
+                {num && (
+                  <span className="shrink-0 select-none leading-none"
+                        style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(12px,2.4vw,18px)", color: "#d4af37", opacity: 0.6, lineHeight: 1, marginTop: "-1px" }}>
+                    {num}
+                  </span>
+                )}
+                <span className="text-[#2c1e14] leading-snug flex-1"
+                      style={{ fontSize: "clamp(7px,1.3vw,10px)", lineHeight: lh }}>
+                  {body}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* YouTube pill links */}
+        {youtubeLinks && youtubeLinks.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2 shrink-0">
+            {youtubeLinks.map(({ step, url }) => (
+              <a key={step} href={url} target="_blank" rel="noopener noreferrer"
+                 onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
+                 className="flex items-center gap-1 font-medium text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-full transition-colors"
+                 style={{ fontSize: "clamp(6px,1.1vw,9px)" }}>
+                <Youtube className="w-2 h-2 shrink-0" />
+                วิดีโอขั้นตอน {step}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <Pn n={pn} right={isRight} />
+      </div>
     </div>
-  </div>
-));
+  );
+});
 PageRecipeCont.displayName = "PageRecipeCont";
 
 // Watermark page — shown when a recipe ends on an odd page count.
@@ -772,16 +868,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
-                        label="วัตถุดิบ (ต่อ):" text={slot.ingText} lh="1.85"
-                        isRight={isRight} pn={si} density={flipType} />
+                        label="วัตถุดิบ (ต่อ):" text={slot.ingText} lh="1.6"
+                        isRight={isRight} pn={si} density={flipType} variant="ing" />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
                         recipe={recipes[slot.recipeIdx]}
                         label={slot.chunkIdx === 0 ? "วิธีทำ:" : "วิธีทำ (ต่อ):"}
-                        text={slot.instText} lh="1.95"
+                        text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
-                        youtubeLinks={slot.youtubeLinks} />
+                        youtubeLinks={slot.youtubeLinks} variant="inst" />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
