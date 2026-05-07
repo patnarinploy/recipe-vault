@@ -168,7 +168,7 @@ export default function BookCover({
           }}
         >
           <Globe style={{ width: size === "xs" ? 8 : 10, height: size === "xs" ? 8 : 10 }} />
-          แชร์ {publicCount}
+          Shared {publicCount}
         </div>
       )}
     </Wrapper>
