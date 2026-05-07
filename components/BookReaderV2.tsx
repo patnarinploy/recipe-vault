@@ -127,19 +127,19 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const innerW       = Math.max(180, pageW - 2 * Math.round(padPx));
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
 
-  // -1 safety margin on instructions: if the budget is even 1px over, the last
-  // step overflows the container and is silently dropped from subsequent pages.
-  // One step of headroom is cheaper than lost recipe data.
-  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInstPure) - 1);
-  const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta)  / lhIng));
-  const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont)  / lhIng));
+  // N items use N×itemH + (N-1)×gap = N×slotH - gap px. Adding the saved
+  // trailing gap back into the numerator recovers one extra slot at tight budgets
+  // (e.g. 1440×500 gains +1 embedded step) without reducing safety headroom.
+  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont + instGapPure) / lhInstPure) - 1);
+  const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta  + ingGapPx)   / lhIng));
+  const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont  + ingGapPx)   / lhIng));
 
   // TOC: -1 safety margin so last row is never clipped
   const overheadToc  = 40 + 26 + 48;
   const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-           ohMeta, lhIng, lhInstEmbed, ihEmbed, itemsPerPage };
+           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -253,7 +253,7 @@ function buildSlots(
   vhPx: number,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-          ohMeta, lhIng, lhInstEmbed, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW, vwPx, vhPx);
+          ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -307,7 +307,7 @@ function buildSlots(
       // container height by a few px (sub-pixel rendering / clamp rounding),
       // rendering it invisible while simultaneously removing it from instRest —
       // the step vanishes entirely from the book.
-      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInstEmbed) - 1);
+      const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
