@@ -29,7 +29,7 @@ const BASE_H = 540;
 const CORNER_PAD = 20;
 
 function usePageDimensions() {
-  const [dims, setDims] = useState({ pageW: BASE_W, pageH: BASE_H, portrait: false, ready: false });
+  const [dims, setDims] = useState({ pageW: BASE_W, pageH: BASE_H, portrait: false, ready: false, vwPx: 1440, vhPx: 900 });
   useEffect(() => {
     function calc() {
       const vw = window.innerWidth;
@@ -38,7 +38,7 @@ function usePageDimensions() {
       const availH = vh - CORNER_PAD * 2;
       const availW = portrait ? vw - 16 : (vw - 16) / 2;
       const scale = Math.max(0.3, Math.min(availH / BASE_H, availW / BASE_W, 2.0));
-      setDims({ pageW: Math.round(BASE_W * scale), pageH: Math.round(BASE_H * scale), portrait, ready: true });
+      setDims({ pageW: Math.round(BASE_W * scale), pageH: Math.round(BASE_H * scale), portrait, ready: true, vwPx: vw, vhPx: vh });
     }
     calc();
     let t: ReturnType<typeof setTimeout>;
@@ -57,44 +57,81 @@ const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 const TOC_ITEM_H_PX = 36;  // height of one TOC row
 const CHAR_W_PX     = 10;  // avg Thai char width at ~14px
 
-// Derive per-page limits from the real rendered page size so that content
-// never overflows when the user resizes the window.
-//
-// All element heights use vmin-based CSS clamp() so they scale with the
-// viewport. Since the page itself scales with the viewport, heights are
-// roughly linear in s = pageH/BASE_H.
-// Each quantity is modelled as clamp(lo, a + b×s, hi) where (a,b) are
-// empirically derived from CSS at s=1.0 (small phone) and s=1.5 (laptop).
-function pageLimits(pageH: number, pageW: number) {
-  const s  = pageH / BASE_H;
-  const lh = (a: number, b: number, lo: number, hi: number) =>
-    Math.min(hi, Math.max(lo, Math.round(a + b * s)));
+// Compute per-page content limits from actual viewport px values so each
+// limit exactly matches the CSS clamp() values the renderer uses.
+// cv(lo,factor,hi) mirrors clamp(lo px, factor*vmin, hi px).
+// cw(lo,factor,hi) mirrors clamp(lo px, factor*vw,   hi px).
+function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
+  const vmin = Math.min(vwPx, vhPx);
+  const cv = (lo: number, factor: number, hi: number) =>
+    Math.min(hi, Math.max(lo, factor * vmin));
+  const cw = (lo: number, factor: number, hi: number) =>
+    Math.min(hi, Math.max(lo, factor * vwPx));
 
-  // Per-item render heights (leading + flex gap)
-  const lhInst  = lh(1,   22,  16, 34);   // 23px at s=1.0 → 34px at s=1.5
-  const lhIng   = lh(-1,  18,  12, 26);   // 17px at s=1.0 → 26px at s=1.5
-  // Chrome overhead (padding + fixed chrome elements)
-  const ohCont  = lh(-28, 122, 60, 155);  // 94px at s=1.0 → 155px at s=1.5
-  const ohMeta  = lh(35,  110, 80, 200);  // 145px at s=1.0 → 200px at s=1.5
-  // "Instructions" section heading + my-8 margins on combined ing+inst page
-  const ihEmbed = lh(14,  20,  24, 44);   // 34px at s=1.0 → 44px at s=1.5
+  // Page padding: clamp(12px, 2vmin, 22px)
+  const padPx = cv(12, 0.02, 22);
 
-  const innerW       = Math.max(180, pageW - 40);
+  // No-meta spacer (replaces meta grid): clamp(12px, 3vmin, 28px)
+  const spacerPx = cv(12, 0.03, 28);
+
+  // Breadcrumb row: font clamp(8px,1.4vmin,12px) × 1.5lh + mb clamp(3px,0.7vw,6px)
+  const crumbMbPx = cw(3, 0.007, 6);
+  const crumbPx   = cv(8, 0.014, 12) * 1.5 + crumbMbPx;
+
+  // Section heading: font clamp(15px,3vmin,28px) × 1.2lh + mb clamp(5px,1vw,9px)
+  const headFontPx = cv(15, 0.03, 28);
+  const headMbPx   = cw(5, 0.01, 9);
+  const headPx     = headFontPx * 1.2 + headMbPx;
+
+  // Page number footer: pt-3(12px) + 11px text × 1.5lh
+  const pnPx = 12 + 11 * 1.5;
+
+  // Chrome overhead — no-meta page (spacer instead of meta grid)
+  const ohCont = 2 * padPx + spacerPx + crumbPx + headPx + pnPx;
+
+  // Meta grid overhead: label clamp(10px,2vmin,18px) + gap clamp(1px,0.3vw,3px) + value clamp(9px,1.8vmin,16px)
+  const metaLabelPx = cv(10, 0.02, 18);
+  const metaValPx   = cv(9, 0.018, 16);
+  const metaGapPx   = cw(1, 0.003, 3);
+  const metaCellPx  = metaLabelPx * 1.2 + metaGapPx + metaValPx * 1.25;
+  const metaGridPx  = 12 + metaCellPx + 12;   // py-3 top + cell + py-3 bottom
+  const dividerPx   = 1 + 12;                  // border + mb
+
+  // Chrome overhead — first ingredient page (has meta grid instead of spacer)
+  const ohMeta = 2 * padPx + metaGridPx + dividerPx + crumbPx + headPx + pnPx;
+
+  // Embedded instructions section heading height (on the combined ing+inst page):
+  // my clamp(4px,0.8vw,8px) × 2 sides + headFontPx × 1.2lh
+  const instMyPx = cw(4, 0.008, 8);
+  const ihEmbed  = 2 * instMyPx + headFontPx * 1.2;
+
+  // Ingredient item height: font clamp(11px,1.8vmin,16px) × 1.375lh + gap clamp(2px,0.4vw,4px)
+  const ingFontPx = cv(11, 0.018, 16);
+  const ingGapPx  = cw(2, 0.004, 4);
+  const lhIng     = ingFontPx * 1.375 + ingGapPx;
+
+  // Instruction step height: font clamp(11px,1.8vmin,16px) × 1.625lh + gap
+  // Two gap variants: embedded-page gap clamp(4px,0.8vw,8px), pure-inst-page gap clamp(5px,1vw,10px)
+  const instFontPx   = cv(11, 0.018, 16);
+  const instGapEmbed = cw(4, 0.008, 8);
+  const instGapPure  = cw(5, 0.01, 10);
+  const lhInstEmbed  = instFontPx * 1.625 + instGapEmbed;
+  const lhInstPure   = instFontPx * 1.625 + instGapPure;
+
+  const innerW       = Math.max(180, pageW - 2 * Math.round(padPx));
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
 
-  // Instruction steps per page (no-meta chrome)
-  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInst));
-  // Ingredient items per page — tighter per-item height than instructions.
-  // First ing page always has meta grid (ohMeta); continuations use ohCont.
-  const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta) / lhIng));
-  const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont) / lhIng));
+  // Items per page: subtract chrome, divide by item height, -1 safety margin
+  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInstPure));
+  const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta)  / lhIng));
+  const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont)  / lhIng));
 
   // TOC: -1 safety margin so last row is never clipped
   const overheadToc  = 40 + 26 + 48;
   const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-           ohMeta, lhIng, lhInst, ihEmbed, itemsPerPage };
+           ohMeta, lhIng, lhInstEmbed, ihEmbed, itemsPerPage };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -204,9 +241,11 @@ function buildSlots(
   pageH: number,
   pageW: number,
   portrait: boolean,
+  vwPx: number,
+  vhPx: number,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-          ohMeta, lhIng, lhInst, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW);
+          ohMeta, lhIng, lhInstEmbed, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -256,7 +295,7 @@ function buildSlots(
       // subtract meta chrome, ingredient rows, and the embedded inst section heading.
       // ohMeta/lhIng/lhInst/ihEmbed are all scaled to the current page height.
       const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
-      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInst));
+      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInstEmbed));
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
@@ -921,7 +960,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const router = useRouter();
   const bookRef = useRef<any>(null);
   const fabRef  = useRef<HTMLDivElement>(null);
-  const { pageW, pageH, portrait, ready } = usePageDimensions();
+  const { pageW, pageH, portrait, ready, vwPx, vhPx } = usePageDimensions();
 
   const [book,    setBook]    = useState<Book | null>(null);
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
@@ -972,8 +1011,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
   // ── Slot-based page layout ────────────────────────────────────────
   const { slots, recipeSlotMap, itemsPerPage } = useMemo(
-    () => buildSlots(recipes, pageH, pageW, portrait),
-    [recipes, pageH, pageW, portrait],
+    () => buildSlots(recipes, pageH, pageW, portrait, vwPx, vhPx),
+    [recipes, pageH, pageW, portrait, vwPx, vhPx],
   );
 
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
