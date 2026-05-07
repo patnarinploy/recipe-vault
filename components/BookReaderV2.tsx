@@ -70,7 +70,7 @@ function pageLimits(pageH: number, pageW: number) {
   const ingLinesFirst = Math.max(2, Math.floor((pageH - overheadFirst) / LINE_H_PX));
 
   // Continuation / instruction pages: subtract mini-header + pn
-  const overheadCont = 40 + 18 + 13 + 22 + 25;            // ≈118 px
+  const overheadCont = 155;  // max-scale clamp values: pad(24)×2 + spacer(32) + crumb(13) + head(29) + pn(23) = 145 + 10 buffer
   const contLines    = Math.max(4, Math.floor((pageH - overheadCont) / LINE_H_PX));
 
   // TOC: subtract label + title area, then -1 as a safety margin so the last
@@ -227,8 +227,8 @@ function buildSlots(
       const ingItems  = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
       // 2-column layout kicks in at ≥5 items; each row holds 2 items
       const ingRows   = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
-      // Reserve 2 rows: 1 for "Instructions" heading, 1 safety buffer
-      const instAvail = contLines - ingRows - 2;
+      // Reserve 5 rows: meta grid adds ~3 rows overhead vs plain page, + heading + safety buffer
+      const instAvail = contLines - ingRows - 5;
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
@@ -288,7 +288,7 @@ function Tape({ right }: { right?: boolean }) {
 
 function Pn({ n, right }: { n: number; right?: boolean }) {
   return (
-    <p className={`mt-auto pt-3 text-[11px] font-mono text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}>
+    <p className={`shrink-0 mt-auto pt-3 text-[11px] font-mono text-[#c4ad8e] tracking-widest ${right ? "text-right" : ""}`}>
       {String(n).padStart(2, "0")}
     </p>
   );
@@ -587,7 +587,7 @@ const PageRecipeFirst = forwardRef<
         <div className="absolute bottom-0 left-0 right-0 text-white"
              style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
 
-          <div className="flex items-center flex-wrap mb-[clamp(4px,0.8vw,8px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+          <div className="flex items-center flex-wrap mb-[clamp(10px,2vw,20px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
                   style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8.5px,1.5vw,12px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
               {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
@@ -603,8 +603,10 @@ const PageRecipeFirst = forwardRef<
 
           {r.description && (
             <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
-               style={{ fontSize: "clamp(8px,1.4vw,11.5px)", maxWidth: "88%" }}>
-              {r.description.length > 110 ? r.description.slice(0, 110) + "…" : r.description}
+               style={{ fontSize: "clamp(8px,1.4vw,11.5px)", maxWidth: "92%",
+                        display: "-webkit-box", WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+              {r.description}
             </p>
           )}
 
