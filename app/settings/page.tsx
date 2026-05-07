@@ -10,6 +10,7 @@ export default async function SettingsPage() {
   const buildDate    = new Date(BUILD_TIMESTAMP).toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
+    timeZone: "Asia/Bangkok",
   }).replace(", ", " · ");
   const buildLabel   = `Build #${BUILD_NUMBER} · ${buildDate}`;
   const tooltipDetail = BUILD_TOOLTIP.trim().length >= 4 ? BUILD_TOOLTIP.slice(0, 72) : "Production Build";
