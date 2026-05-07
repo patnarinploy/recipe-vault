@@ -587,9 +587,9 @@ const PageRecipeFirst = forwardRef<
         <div className="absolute bottom-0 left-0 right-0 text-white"
              style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
 
-          <div className="flex items-center flex-wrap mb-[clamp(10px,2vw,20px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+          <div className="flex items-center flex-wrap mb-[clamp(16px,3vw,28px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
-                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8.5px,1.5vw,12px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(10px,1.8vw,14px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
               {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
@@ -602,8 +602,8 @@ const PageRecipeFirst = forwardRef<
           </h2>
 
           {r.description && (
-            <p className="mt-[clamp(4px,0.9vw,8px)] leading-snug text-white/65 font-light"
-               style={{ fontSize: "clamp(8px,1.4vw,11.5px)", maxWidth: "92%",
+            <p className="mt-[clamp(10px,1.8vw,16px)] leading-snug text-white/65 font-light"
+               style={{ fontSize: "clamp(9.5px,1.7vw,13px)", maxWidth: "92%",
                         display: "-webkit-box", WebkitLineClamp: 3,
                         WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {r.description}
