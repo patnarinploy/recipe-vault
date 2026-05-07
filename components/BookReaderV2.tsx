@@ -466,7 +466,7 @@ function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
       <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>{text}</span>
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>{text}</span>
     </div>
   );
 }
@@ -476,7 +476,7 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(14px,2.7vw,22px)" }}>
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(18px,2.8vw,30px)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -497,7 +497,7 @@ function InstructionStep({ line, fallbackNum }: { line: string; fallbackNum?: nu
           {num}
         </span>
       )}
-      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>
+      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>
         {body}
       </span>
     </div>
@@ -659,7 +659,7 @@ const PageRecipeCont = forwardRef<
         {/* ── Meta grid (first page only) ─────────────────── */}
         {showMeta && (
           <>
-            <div className="grid grid-cols-3 mt-7 mb-3 shrink-0" style={{ gap: "clamp(4px,1vw,10px)" }}>
+            <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1vw,10px)" }}>
               {([
                 { lbl: "CATEGORY", val: r.category ?? "—" },
                 { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
@@ -667,11 +667,11 @@ const PageRecipeCont = forwardRef<
               ] as const).map(({ lbl, val }) => (
                 <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
                   <span className="uppercase text-stone-400"
-                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8.5px,1.3vw,11px)", letterSpacing: "0.22em" }}>
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(12px,1.8vw,20px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
                   <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>
+                        style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>
                     {val}
                   </span>
                 </div>
@@ -686,7 +686,7 @@ const PageRecipeCont = forwardRef<
 
         {/* Recipe name breadcrumb */}
         <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
-           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1vw,8px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(9px,1.2vw,13px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
           {r.title}
         </p>
 
