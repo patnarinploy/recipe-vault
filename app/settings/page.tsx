@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/session";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
+import { PAGINATION_BUILD } from "@/lib/pagination-version";
 
 export default async function SettingsPage() {
   const user = await requireSession();
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
       {/* Nav groups */}
       <div className="space-y-6">
         {navGroups.map((group) => (
+
           <div key={group.label}>
             <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest px-1 mb-2">
               {group.label}
@@ -78,6 +80,13 @@ export default async function SettingsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Pagination engine build identifier */}
+      <div className="mt-10 pt-6 border-t border-stone-100 text-center">
+        <p className="text-[11px] font-mono text-stone-300 tracking-wide select-all">
+          Pagination Engine {PAGINATION_BUILD}
+        </p>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
+import { PAGINATION_BUILD } from "@/lib/pagination-version";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
@@ -295,8 +296,28 @@ function buildSlots(
   // Build canvas-based measure closures once fonts are loaded.
   // 2-col ingredient rows are item-count based so we skip canvas there.
   const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
-  const measureIng  = fontsReady ? makeMeasure(`400 ${Math.round(ingFontPx)}px ${fontBase}`,  innerW) : undefined;
-  const measureInst = fontsReady ? makeMeasure(`400 ${Math.round(instFontPx)}px ${fontBase}`, innerW) : undefined;
+  const ingFontSpec  = `400 ${Math.round(ingFontPx)}px ${fontBase}`;
+  const instFontSpec = `400 ${Math.round(instFontPx)}px ${fontBase}`;
+  const measureIng  = fontsReady ? makeMeasure(ingFontSpec,  innerW) : undefined;
+  const measureInst = fontsReady ? makeMeasure(instFontSpec, innerW) : undefined;
+
+  // ── Debug trace (visible in browser DevTools > Console) ──────────
+  // Confirms canvas status, measurement values, and slot decisions.
+  if (typeof window !== "undefined") {
+    console.group(`%c📖 buildSlots  ${PAGINATION_BUILD}`, "color:#c07834;font-weight:bold");
+    console.log("canvas active:", fontsReady,
+      "| viewport:", vwPx + "×" + vhPx,
+      "| page:", pageW + "×" + pageH);
+    console.log("fonts:", ingFontSpec);
+    console.log("innerW:", innerW,
+      "| charsPerLine(SSR fallback):", charsPerLine,
+      "| ohMeta:", ohMeta.toFixed(1),
+      "| lhIng:", lhIng.toFixed(2),
+      "| lhInstEmbed:", lhInstEmbed.toFixed(2),
+      "| ihEmbed:", ihEmbed.toFixed(1),
+      "| contLinesInst:", contLinesInst);
+    console.groupEnd();
+  }
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -344,18 +365,33 @@ function buildSlots(
       const ingItems = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
       // 2-column layout kicks in at ≥5 items; each row holds 2 items
       const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine, measureIng);
-      // Pixel budget remaining for embedded instruction steps: start from pageH,
-      // subtract meta chrome, ingredient rows, and the embedded inst section heading.
-      // ohMeta/lhIng/lhInst/ihEmbed are all scaled to the current page height.
       const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
-      // -1 safety margin: without it, the last embedded step can exceed the
-      // container height by a few px (sub-pixel rendering / clamp rounding),
-      // rendering it invisible while simultaneously removing it from instRest —
-      // the step vanishes entirely from the book.
       const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
+
+      // Per-step row trace — shows exact canvas vs formula measurement per step
+      if (typeof window !== "undefined") {
+        const stepLines = fullInstText.split("\n").filter(l => l.trim());
+        const stepRows  = stepLines.map(l => ({
+          step: l.slice(0, 40),
+          len:  l.length,
+          rows: measureInst ? measureInst(l) : Math.max(1, Math.ceil(l.length / charsPerLine)),
+          pxW:  fontsReady ? (() => { const c = canvasCtx(instFontSpec); return c ? Math.round(c.measureText(l).width) : "?" })() : "font-not-ready",
+        }));
+        console.group(`%c  📄 ${r.title || "recipe " + ri}`, "color:#555");
+        console.log("ingItems:", ingItems, "| will2Col:", will2Col, "| ingRows:", ingRows,
+          "| instAvailPx:", instAvailPx.toFixed(1), "| instAvail:", instAvail,
+          "| contLinesInst:", contLinesInst);
+        console.table(stepRows);
+        console.groupEnd();
+      }
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail, measureInst);
+        if (typeof window !== "undefined") {
+          const embeddedCount = instEmbed.split("\n").filter(l => l.trim()).length;
+          const restCount     = instRest.split("\n").filter(l => l.trim()).length;
+          console.log(`  ↳ embed ${embeddedCount} steps, overflow ${restCount} steps → ${Math.ceil(restCount / contLinesInst)} inst page(s)`);
+        }
         slots.push({
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
@@ -364,6 +400,8 @@ function buildSlots(
         instOverflowText = instRest;
         ytLinksOnIng    = ytLinks.length > 0;
       } else {
+        if (typeof window !== "undefined")
+          console.log(`  ↳ instAvail=${instAvail} < 2 → no embed, all ${fullInstText.split("\n").filter(l=>l.trim()).length} steps go to pure pages`);
         slots.push({ kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0] });
       }
     } else {
@@ -1035,7 +1073,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   }, []);
 
   useEffect(() => {
-    document.fonts.ready.then(() => setFontsReady(true));
+    // document.fonts.load() guarantees this specific font is rendered — not just
+    // "font loading is done" (ready can resolve with fallback still active).
+    Promise.all([
+      document.fonts.load("400 11px 'IBM Plex Sans Thai'"),
+      document.fonts.load("400 16px 'IBM Plex Sans Thai'"),
+    ]).then(() => setFontsReady(true)).catch(() => setFontsReady(true));
   }, []);
 
   // Page tracking
