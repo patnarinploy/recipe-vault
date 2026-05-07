@@ -596,15 +596,15 @@ const PageRecipeFirst = forwardRef<
             {r.is_public && <ShareBadge coverColor={coverColor} />}
           </div>
 
-          <h2 className="font-black leading-[1.15]"
+          <h2 className="font-black leading-[1.28]"
               style={{ fontSize: "clamp(1.6rem,6vw,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
             {r.title}
           </h2>
 
           {r.description && (
             <p className="mt-[clamp(14px,2.8vw,28px)] leading-snug text-white/65 font-light"
-               style={{ fontSize: "clamp(11px,2vw,15px)", maxWidth: "92%",
-                        display: "-webkit-box", WebkitLineClamp: 3,
+               style={{ fontSize: "clamp(11px,2.2vw,18px)", maxWidth: "92%",
+                        display: "-webkit-box", WebkitLineClamp: 10,
                         WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {r.description}
             </p>
