@@ -11,9 +11,9 @@ export default async function SettingsPage() {
   const paginationDate = new Date(PAGINATION_TIMESTAMP).toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
-  }).replace(", ", " at ");
-  const paginationLabel   = `${PAGINATION_VERSION} • ${paginationDate}`;
-  const paginationTooltip = `${PAGINATION_VERSION} • Pagination Engine`;
+  }).replace(", ", " · ");
+  const paginationLabel   = `${PAGINATION_VERSION} · ${paginationDate}`;
+  const paginationTooltip = `${PAGINATION_VERSION} · Pagination Engine`;
 
   const navGroups = [
     {
