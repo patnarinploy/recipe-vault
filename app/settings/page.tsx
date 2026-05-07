@@ -2,10 +2,18 @@ import { requireSession } from "@/lib/session";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
-import { PAGINATION_BUILD } from "@/lib/pagination-version";
+import { PAGINATION_VERSION, PAGINATION_TIMESTAMP } from "@/lib/pagination-version";
 
 export default async function SettingsPage() {
   const user = await requireSession();
+
+  // Format matches DbStatus exactly: en-GB toLocaleString with ", " → " at "
+  const paginationDate = new Date(PAGINATION_TIMESTAMP).toLocaleString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).replace(", ", " at ");
+  const paginationLabel   = `${PAGINATION_VERSION} • ${paginationDate}`;
+  const paginationTooltip = `${PAGINATION_VERSION} • Pagination Engine`;
 
   const navGroups = [
     {
@@ -55,7 +63,6 @@ export default async function SettingsPage() {
       {/* Nav groups */}
       <div className="space-y-6">
         {navGroups.map((group) => (
-
           <div key={group.label}>
             <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest px-1 mb-2">
               {group.label}
@@ -82,11 +89,18 @@ export default async function SettingsPage() {
         ))}
       </div>
 
-      {/* Pagination engine build identifier */}
-      <div className="mt-10 pt-6 border-t border-stone-100 text-center">
-        <p className="text-[11px] font-mono text-stone-300 tracking-wide select-all">
-          Pagination Engine {PAGINATION_BUILD}
-        </p>
+      {/* Pagination engine build identifier — tooltip matches DbStatus pattern */}
+      <div className="mt-10 pt-6 border-t border-stone-100 flex justify-center">
+        <div className="group relative inline-flex cursor-default select-none">
+          <p className="text-[11px] font-mono text-stone-300 tracking-wide">
+            {paginationLabel}
+          </p>
+          {/* Tooltip — CSS-only, same structure as DbStatus */}
+          <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-stone-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            {paginationTooltip}
+            <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800" />
+          </div>
+        </div>
       </div>
     </div>
   );
