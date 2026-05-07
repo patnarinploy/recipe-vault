@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import toast from "react-hot-toast";
-import { PAGINATION_VERSION } from "@/lib/pagination-version";
+import { BUILD_NUMBER } from "@/lib/build-version";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
@@ -304,7 +304,7 @@ function buildSlots(
   // ── Debug trace (visible in browser DevTools > Console) ──────────
   // Confirms canvas status, measurement values, and slot decisions.
   if (typeof window !== "undefined") {
-    console.group(`%c📖 buildSlots  ${PAGINATION_VERSION}`, "color:#c07834;font-weight:bold");
+    console.group(`%c📖 buildSlots  Build #${BUILD_NUMBER}`, "color:#c07834;font-weight:bold");
     console.log("canvas active:", fontsReady,
       "| viewport:", vwPx + "×" + vhPx,
       "| page:", pageW + "×" + pageH);
