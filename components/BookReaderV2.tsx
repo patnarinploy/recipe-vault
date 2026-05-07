@@ -55,7 +55,7 @@ const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
 // ─── Pagination helpers ───────────────────────────────────────────
 const TOC_ITEM_H_PX = 36;  // height of one TOC row
-const CHAR_W_PX     = 10;  // avg Thai char width at ~14px
+const CHAR_W_PX     = 7;   // avg Thai char width (combining chars don't add px)
 
 // Compute per-page content limits from actual viewport px values so each
 // limit exactly matches the CSS clamp() values the renderer uses.
