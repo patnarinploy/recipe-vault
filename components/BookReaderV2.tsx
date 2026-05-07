@@ -121,8 +121,10 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const innerW       = Math.max(180, pageW - 2 * Math.round(padPx));
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
 
-  // Items per page: subtract chrome, divide by item height, -1 safety margin
-  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInstPure));
+  // -1 safety margin on instructions: if the budget is even 1px over, the last
+  // step overflows the container and is silently dropped from subsequent pages.
+  // One step of headroom is cheaper than lost recipe data.
+  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInstPure) - 1);
   const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta)  / lhIng));
   const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont)  / lhIng));
 
@@ -295,7 +297,11 @@ function buildSlots(
       // subtract meta chrome, ingredient rows, and the embedded inst section heading.
       // ohMeta/lhIng/lhInst/ihEmbed are all scaled to the current page height.
       const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
-      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInstEmbed));
+      // -1 safety margin: without it, the last embedded step can exceed the
+      // container height by a few px (sub-pixel rendering / clamp rounding),
+      // rendering it invisible while simultaneously removing it from instRest —
+      // the step vanishes entirely from the book.
+      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInstEmbed) - 1);
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
