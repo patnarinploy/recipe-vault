@@ -466,7 +466,7 @@ function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
       <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>{text}</span>
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>{text}</span>
     </div>
   );
 }
@@ -476,7 +476,7 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(18px,2.8vw,30px)" }}>
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(15px,3vmin,28px)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -497,7 +497,7 @@ function InstructionStep({ line, fallbackNum }: { line: string; fallbackNum?: nu
           {num}
         </span>
       )}
-      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>
+      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>
         {body}
       </span>
     </div>
@@ -587,11 +587,11 @@ const PageRecipeFirst = forwardRef<
 
         {/* Bottom text block */}
         <div className="absolute bottom-0 left-0 right-0 text-white"
-             style={{ padding: "clamp(12px,2.5vw,28px)", paddingBottom: "clamp(14px,2.8vw,30px)" }}>
+             style={{ padding: "clamp(12px,2.5vmin,26px)", paddingBottom: "clamp(14px,2.8vmin,28px)" }}>
 
-          <div className="flex items-center flex-wrap mb-[clamp(22px,4.5vw,44px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
+          <div className="flex items-center flex-wrap mb-[clamp(10px,3.5vmin,40px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
-                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.2vw,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.5vmin,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
               {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
@@ -599,13 +599,13 @@ const PageRecipeFirst = forwardRef<
           </div>
 
           <h2 className="font-black leading-[1.28]"
-              style={{ fontSize: "clamp(1.6rem,6vw,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
+              style={{ fontSize: "clamp(1.6rem,6.5vmin,3.6rem)", textShadow: "1px 3px 14px rgba(0,0,0,0.65)", letterSpacing: "-0.01em" }}>
             {r.title}
           </h2>
 
           {r.description && (
-            <p className="mt-[clamp(14px,2.8vw,28px)] leading-snug text-white/65 font-light"
-               style={{ fontSize: "clamp(11px,2.2vw,18px)", maxWidth: "92%",
+            <p className="mt-[clamp(8px,2.2vmin,24px)] leading-snug text-white/65 font-light"
+               style={{ fontSize: "clamp(11px,2.2vmin,18px)", maxWidth: "92%",
                         display: "-webkit-box", WebkitLineClamp: 10,
                         WebkitBoxOrient: "vertical", overflow: "hidden" }}>
               {r.description}
@@ -641,7 +641,7 @@ const PageRecipeCont = forwardRef<
   return (
     <div ref={ref} data-density={density}>
       <div className="w-full h-full flex flex-col relative overflow-hidden"
-           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2.2vw,24px)" }}>
+           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
 
         {/* Bookmark ribbon — first right page of recipe only */}
         {showRibbon && (
@@ -659,7 +659,7 @@ const PageRecipeCont = forwardRef<
         {/* ── Meta grid (first page only) ─────────────────── */}
         {showMeta && (
           <>
-            <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1vw,10px)" }}>
+            <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1.2vmin,10px)" }}>
               {([
                 { lbl: "CATEGORY", val: r.category ?? "—" },
                 { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
@@ -667,11 +667,11 @@ const PageRecipeCont = forwardRef<
               ] as const).map(({ lbl, val }) => (
                 <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
                   <span className="uppercase text-stone-400"
-                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(12px,1.8vw,20px)", letterSpacing: "0.22em" }}>
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(10px,2vmin,18px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
                   <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(11px,1.6vw,18px)" }}>
+                        style={{ fontSize: "clamp(9px,1.8vmin,16px)" }}>
                     {val}
                   </span>
                 </div>
@@ -682,11 +682,11 @@ const PageRecipeCont = forwardRef<
         )}
 
         {/* Spacer when no meta */}
-        {!showMeta && <div className="shrink-0" style={{ height: "clamp(18px,3.5vw,32px)" }} />}
+        {!showMeta && <div className="shrink-0" style={{ height: "clamp(12px,3vmin,28px)" }} />}
 
         {/* Recipe name breadcrumb */}
         <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
-           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(9px,1.2vw,13px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8px,1.4vmin,12px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
           {r.title}
         </p>
 
