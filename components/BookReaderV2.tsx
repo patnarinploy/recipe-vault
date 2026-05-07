@@ -172,11 +172,13 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 0xff},${(n >> 8) & 0xff},${n & 0xff},${alpha})`;
 }
 
-function ShareBadge({ coverColor }: { coverColor: string }) {
+function ShareBadge({ coverColor, solid }: { coverColor: string; solid?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap"
-          style={{ background: hexToRgba(coverColor, 0.18), color: coverColor }}>
-      <Globe className="w-2.5 h-2.5" /> แชร์แล้ว
+    <span className="inline-flex items-center leading-none gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap"
+          style={solid
+            ? { background: coverColor, color: "white" }
+            : { background: hexToRgba(coverColor, 0.18), color: coverColor }}>
+      <Globe className="w-2.5 h-2.5 shrink-0" /> Shared
     </span>
   );
 }
@@ -380,7 +382,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
              style={{ bottom: 44, right: 5, background: "rgba(255,255,255,0.95)", color: C,
                fontSize: 11, padding: "4px 12px", borderRadius: 9999,
                display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-          <Globe style={{ width: 14, height: 14 }} /> แชร์ {publicCount}
+          <Globe style={{ width: 14, height: 14 }} /> Shared {publicCount}
         </div>
       )}
     </div>
@@ -464,7 +466,7 @@ function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
       <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>{text}</span>
+      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>{text}</span>
     </div>
   );
 }
@@ -474,7 +476,7 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
       <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(13px,2.5vw,20px)" }}>
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(14px,2.7vw,22px)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -491,11 +493,11 @@ function InstructionStep({ line, fallbackNum }: { line: string; fallbackNum?: nu
     <div className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
       {num && (
         <span className="shrink-0 select-none pointer-events-none"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(14px,2.7vw,23px)", color: "#d4af37", opacity: 0.55, lineHeight: 1 }}>
+              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(15px,2.9vw,25px)", color: "#d4af37", opacity: 0.55, lineHeight: 1 }}>
           {num}
         </span>
       )}
-      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>
+      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>
         {body}
       </span>
     </div>
@@ -589,11 +591,11 @@ const PageRecipeFirst = forwardRef<
 
           <div className="flex items-center flex-wrap mb-[clamp(22px,4.5vw,44px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
-                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.2vw,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9 }}>
+                  style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.2vw,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
               {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
-            {r.is_public && <ShareBadge coverColor={coverColor} />}
+            {r.is_public && <ShareBadge coverColor={coverColor} solid />}
           </div>
 
           <h2 className="font-black leading-[1.28]"
@@ -665,11 +667,11 @@ const PageRecipeCont = forwardRef<
               ] as const).map(({ lbl, val }) => (
                 <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
                   <span className="uppercase text-stone-400"
-                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(7.5px,1.15vw,10px)", letterSpacing: "0.22em" }}>
+                        style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8.5px,1.3vw,11px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
                   <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(10px,1.7vw,14px)" }}>
+                        style={{ fontSize: "clamp(11px,1.9vw,15px)" }}>
                     {val}
                   </span>
                 </div>
@@ -684,7 +686,7 @@ const PageRecipeCont = forwardRef<
 
         {/* Recipe name breadcrumb */}
         <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
-           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(5px,0.85vw,7px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(6px,1vw,8px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
           {r.title}
         </p>
 
