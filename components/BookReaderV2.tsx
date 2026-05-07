@@ -53,34 +53,48 @@ function usePageDimensions() {
 const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
-// ─── Pagination — fixed pixel measurements (calibrated for max clamp font sizes) ─
-const LINE_H_INST    = 34;  // instruction step: ~14px × 1.625 leading-relaxed + 10px gap
-const LINE_H_ING     = 26;  // ingredient item:  ~16px × 1.375 leading-snug  + 4px gap
-const TOC_ITEM_H_PX  = 36;  // height of one TOC row
-const CHAR_W_PX      = 10;  // avg Thai char width at ~14px
-// Chrome overhead constants (px, max-scale vmin clamp values)
-const OVERHEAD_CONT      = 155;  // no-meta continuation page: pad×2 + spacer + crumb + head + pn
-const OVERHEAD_CONT_META = 200;  // first ingredient page: OVERHEAD_CONT - spacer(28) + meta+divider(73)
-const INST_EMBED_HEAD_PX =  44;  // "Instructions" section heading + my-8 margins on combined page
+// ─── Pagination helpers ───────────────────────────────────────────
+const TOC_ITEM_H_PX = 36;  // height of one TOC row
+const CHAR_W_PX     = 10;  // avg Thai char width at ~14px
 
 // Derive per-page limits from the real rendered page size so that content
 // never overflows when the user resizes the window.
+//
+// All element heights use vmin-based CSS clamp() so they scale with the
+// viewport. Since the page itself scales with the viewport, heights are
+// roughly linear in s = pageH/BASE_H.
+// Each quantity is modelled as clamp(lo, a + b×s, hi) where (a,b) are
+// empirically derived from CSS at s=1.0 (small phone) and s=1.5 (laptop).
 function pageLimits(pageH: number, pageW: number) {
+  const s  = pageH / BASE_H;
+  const lh = (a: number, b: number, lo: number, hi: number) =>
+    Math.min(hi, Math.max(lo, Math.round(a + b * s)));
+
+  // Per-item render heights (leading + flex gap)
+  const lhInst  = lh(1,   22,  16, 34);   // 23px at s=1.0 → 34px at s=1.5
+  const lhIng   = lh(-1,  18,  12, 26);   // 17px at s=1.0 → 26px at s=1.5
+  // Chrome overhead (padding + fixed chrome elements)
+  const ohCont  = lh(-28, 122, 60, 155);  // 94px at s=1.0 → 155px at s=1.5
+  const ohMeta  = lh(35,  110, 80, 200);  // 145px at s=1.0 → 200px at s=1.5
+  // "Instructions" section heading + my-8 margins on combined ing+inst page
+  const ihEmbed = lh(14,  20,  24, 44);   // 34px at s=1.0 → 44px at s=1.5
+
   const innerW       = Math.max(180, pageW - 40);
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
 
   // Instruction steps per page (no-meta chrome)
-  const contLinesInst     = Math.max(4, Math.floor((pageH - OVERHEAD_CONT)      / LINE_H_INST));
-  // Ingredient items per page — tighter per-item height than instructions
-  // First ing page always has meta grid (OVERHEAD_CONT_META); continuations don't
-  const contLinesIngFirst = Math.max(4, Math.floor((pageH - OVERHEAD_CONT_META) / LINE_H_ING));
-  const contLinesIngCont  = Math.max(4, Math.floor((pageH - OVERHEAD_CONT)      / LINE_H_ING));
+  const contLinesInst     = Math.max(4, Math.floor((pageH - ohCont) / lhInst));
+  // Ingredient items per page — tighter per-item height than instructions.
+  // First ing page always has meta grid (ohMeta); continuations use ohCont.
+  const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta) / lhIng));
+  const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont) / lhIng));
 
-  // TOC: subtract label + title area, then -1 safety margin
+  // TOC: -1 safety margin so last row is never clipped
   const overheadToc  = 40 + 26 + 48;
   const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
-  return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont, itemsPerPage };
+  return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
+           ohMeta, lhIng, lhInst, ihEmbed, itemsPerPage };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -191,7 +205,8 @@ function buildSlots(
   pageW: number,
   portrait: boolean,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
-  const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont, itemsPerPage } = pageLimits(pageH, pageW);
+  const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
+          ohMeta, lhIng, lhInst, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW);
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -237,10 +252,11 @@ function buildSlots(
       const ingItems = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
       // 2-column layout kicks in at ≥5 items; each row holds 2 items
       const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
-      // Pixel budget remaining after meta chrome, ingredient rows, and the embedded
-      // "Instructions" section heading (INST_EMBED_HEAD_PX).
-      const instAvailPx = pageH - OVERHEAD_CONT_META - ingRows * LINE_H_ING - INST_EMBED_HEAD_PX;
-      const instAvail   = Math.max(0, Math.floor(instAvailPx / LINE_H_INST));
+      // Pixel budget remaining for embedded instruction steps: start from pageH,
+      // subtract meta chrome, ingredient rows, and the embedded inst section heading.
+      // ohMeta/lhIng/lhInst/ihEmbed are all scaled to the current page height.
+      const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
+      const instAvail   = Math.max(0, Math.floor(instAvailPx / lhInst));
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
