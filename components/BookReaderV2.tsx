@@ -110,13 +110,19 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const ingGapPx  = cw(2, 0.004, 4);
   const lhIng     = ingFontPx * 1.375 + ingGapPx;
 
-  // Instruction step height: font clamp(11px,1.8vmin,16px) × 1.625lh + gap
-  // Two gap variants: embedded-page gap clamp(4px,0.8vw,8px), pure-inst-page gap clamp(5px,1vw,10px)
+  // Instruction step height: the step row uses items-baseline, so height is
+  // driven by whichever is taller — the Playfair Display italic number span
+  // (clamp(15px,2.9vw,25px), lineHeight:1) or the body text span
+  // (clamp(11px,1.8vmin,16px), leading-relaxed=1.625). Because of baseline
+  // geometry the number's effective row contribution is ≈ fontSize×1.2
+  // (empirically confirmed: 25px Playfair → 29.88px measured step height).
   const instFontPx   = cv(11, 0.018, 16);
+  const numFontPx    = cw(15, 0.029, 25);   // clamp(15px,2.9vw,25px)
+  const stepH        = Math.max(numFontPx * 1.2, instFontPx * 1.625);
   const instGapEmbed = cw(4, 0.008, 8);
   const instGapPure  = cw(5, 0.01, 10);
-  const lhInstEmbed  = instFontPx * 1.625 + instGapEmbed;
-  const lhInstPure   = instFontPx * 1.625 + instGapPure;
+  const lhInstEmbed  = stepH + instGapEmbed;
+  const lhInstPure   = stepH + instGapPure;
 
   const innerW       = Math.max(180, pageW - 2 * Math.round(padPx));
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
