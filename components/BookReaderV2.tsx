@@ -174,7 +174,7 @@ function hexToRgba(hex: string, alpha: number): string {
 
 function ShareBadge({ coverColor, solid }: { coverColor: string; solid?: boolean }) {
   return (
-    <span className="inline-flex items-center leading-none gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap"
+    <span className="inline-flex items-center leading-none gap-1 text-[10px] font-semibold px-1.5 py-[3px] rounded-full shrink-0 whitespace-nowrap"
           style={solid
             ? { background: coverColor, color: "white" }
             : { background: hexToRgba(coverColor, 0.18), color: coverColor }}>
