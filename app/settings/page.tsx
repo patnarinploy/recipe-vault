@@ -2,18 +2,18 @@ import { requireSession } from "@/lib/session";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
-import { PAGINATION_VERSION, PAGINATION_TIMESTAMP } from "@/lib/pagination-version";
+import { PAGINATION_VERSION, PAGINATION_TIMESTAMP, PAGINATION_TOOLTIP } from "@/lib/pagination-version";
 
 export default async function SettingsPage() {
   const user = await requireSession();
 
-  // Format matches DbStatus exactly: en-GB toLocaleString with ", " → " at "
   const paginationDate = new Date(PAGINATION_TIMESTAMP).toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
   }).replace(", ", " · ");
   const paginationLabel   = `${PAGINATION_VERSION} · ${paginationDate}`;
-  const paginationTooltip = `${PAGINATION_VERSION} · Pagination Engine`;
+  const tooltipDetail     = PAGINATION_TOOLTIP.trim().length >= 4 ? PAGINATION_TOOLTIP.slice(0, 72) : "Pagination Engine";
+  const paginationTooltip = `${PAGINATION_VERSION} · ${tooltipDetail}`;
 
   const navGroups = [
     {
