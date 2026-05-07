@@ -55,7 +55,33 @@ const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
 // ─── Pagination helpers ───────────────────────────────────────────
 const TOC_ITEM_H_PX = 36;  // height of one TOC row
-const CHAR_W_PX     = 7;   // avg Thai char width (combining chars don't add px)
+
+// canvas.measureText() is the primary measurement path (handles Thai combining
+// chars correctly). charsPerLine computed below is an SSR-only fallback.
+
+const _ctxCache = new Map<string, CanvasRenderingContext2D>();
+function canvasCtx(fontSpec: string): CanvasRenderingContext2D | null {
+  if (typeof window === "undefined") return null;
+  let ctx = _ctxCache.get(fontSpec);
+  if (!ctx) {
+    const c = document.createElement("canvas").getContext("2d");
+    if (!c) return null;
+    c.font = fontSpec;
+    _ctxCache.set(fontSpec, c);
+    ctx = c;
+  }
+  return ctx;
+}
+
+type MeasureFn = (line: string) => number;
+function makeMeasure(fontSpec: string, innerW: number): MeasureFn {
+  return (line: string) => {
+    if (!line) return 1;
+    const ctx = canvasCtx(fontSpec);
+    if (!ctx) return 1;
+    return Math.max(1, Math.ceil(ctx.measureText(line).width / innerW));
+  };
+}
 
 // Compute per-page content limits from actual viewport px values so each
 // limit exactly matches the CSS clamp() values the renderer uses.
@@ -125,7 +151,9 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const lhInstPure   = stepH + instGapPure;
 
   const innerW       = Math.max(180, pageW - 2 * Math.round(padPx));
-  const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
+  // SSR fallback: 8px/char conservative estimate. canvas.measureText() used in buildSlots
+  // when fonts are ready — this value is only hit during server render or before font load.
+  const charsPerLine = Math.max(18, Math.round(innerW / 8));
 
   // N items use N×itemH + (N-1)×gap = N×slotH - gap px. Adding the saved
   // trailing gap back into the numerator recovers one extra slot at tight budgets
@@ -139,7 +167,8 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage };
+           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
+           innerW, ingFontPx, instFontPx };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -156,11 +185,15 @@ type PageSlot =
 
 // Splits text so the first returned value fits within maxLines display rows.
 // Always takes at least one raw line to prevent infinite loops.
-function splitText(text: string, charsPerLine: number, maxLines: number): [string, string] {
+// measure() — when provided — returns accurate pixel-based row count per line (canvas path).
+// Falls back to charsPerLine estimation during SSR or before fonts load.
+function splitText(text: string, charsPerLine: number, maxLines: number, measure?: MeasureFn): [string, string] {
   const lines = (text || "").split("\n");
   let count = 0;
   for (let i = 0; i < lines.length; i++) {
-    const w = Math.max(1, Math.ceil((lines[i].length || 0.1) / charsPerLine));
+    const w = measure
+      ? measure(lines[i])
+      : Math.max(1, Math.ceil((lines[i].length || 0.1) / charsPerLine));
     if (count + w > maxLines) {
       const cut = Math.max(1, i);
       return [lines.slice(0, cut).join("\n"), lines.slice(cut).join("\n")];
@@ -170,12 +203,12 @@ function splitText(text: string, charsPerLine: number, maxLines: number): [strin
   return [text || "", ""];
 }
 
-function toChunks(text: string, charsPerLine: number, firstMax: number, contMax: number): string[] {
+function toChunks(text: string, charsPerLine: number, firstMax: number, contMax: number, measure?: MeasureFn): string[] {
   const chunks: string[] = [];
   let rem = text || "";
   let first = true;
   do {
-    const [chunk, rest] = splitText(rem, charsPerLine, first ? firstMax : contMax);
+    const [chunk, rest] = splitText(rem, charsPerLine, first ? firstMax : contMax, measure);
     chunks.push(chunk);
     rem = rest;
     first = false;
@@ -214,11 +247,13 @@ function instYoutubeLinks(raw: string): { step: number; url: string }[] {
   return [];
 }
 
-// Counts how many display rows a block of text occupies given charsPerLine.
-function lineCount(text: string, charsPerLine: number): number {
+// Counts how many display rows a block of text occupies.
+function lineCount(text: string, charsPerLine: number, measure?: MeasureFn): number {
   if (!text?.trim()) return 0;
   return text.split("\n").reduce((sum, line) => {
-    return sum + Math.max(1, Math.ceil((line.length || 0.1) / charsPerLine));
+    return sum + (measure
+      ? measure(line)
+      : Math.max(1, Math.ceil((line.length || 0.1) / charsPerLine)));
   }, 0);
 }
 
@@ -251,9 +286,17 @@ function buildSlots(
   portrait: boolean,
   vwPx: number,
   vhPx: number,
+  fontsReady: boolean,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
-          ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage } = pageLimits(pageH, pageW, vwPx, vhPx);
+          ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
+          innerW, ingFontPx, instFontPx } = pageLimits(pageH, pageW, vwPx, vhPx);
+
+  // Build canvas-based measure closures once fonts are loaded.
+  // 2-col ingredient rows are item-count based so we skip canvas there.
+  const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
+  const measureIng  = fontsReady ? makeMeasure(`400 ${Math.round(ingFontPx)}px ${fontBase}`,  innerW) : undefined;
+  const measureInst = fontsReady ? makeMeasure(`400 ${Math.round(instFontPx)}px ${fontBase}`, innerW) : undefined;
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -279,7 +322,9 @@ function buildSlots(
     const will2Col     = ingItemCount >= 5;
     const maxIngFirst  = will2Col ? contLinesIngFirst * 2 : contLinesIngFirst;
     const maxIngCont   = will2Col ? contLinesIngCont  * 2 : contLinesIngCont;
-    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont)
+    // 2-col chunks are item-count based; canvas measure uses full innerW which
+    // would be wrong for half-width columns, so skip canvas for 2-col ingredients.
+    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont, will2Col ? undefined : measureIng)
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
     const ytLinks      = instYoutubeLinks(r.instructions || "");
@@ -298,7 +343,7 @@ function buildSlots(
     if (ingAllChunks.length === 1 && fullInstText.trim()) {
       const ingItems = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
       // 2-column layout kicks in at ≥5 items; each row holds 2 items
-      const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
+      const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine, measureIng);
       // Pixel budget remaining for embedded instruction steps: start from pageH,
       // subtract meta chrome, ingredient rows, and the embedded inst section heading.
       // ohMeta/lhIng/lhInst/ihEmbed are all scaled to the current page height.
@@ -310,7 +355,7 @@ function buildSlots(
       const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
 
       if (instAvail >= 2) {
-        const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
+        const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail, measureInst);
         slots.push({
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
@@ -328,7 +373,7 @@ function buildSlots(
 
     // Paginate instructions that didn't fit on the ingredient page
     const instChunks = instOverflowText.trim()
-      ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst).filter(c => c.trim().length > 0)
+      ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInst).filter(c => c.trim().length > 0)
       : [];
 
     for (let ci = 0; ci < instChunks.length; ci++)
@@ -982,10 +1027,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [authorName,  setAuthorName]  = useState("");
   const [writerInfo,  setWriterInfo]  = useState<WriterInfo | null>(null);
   const [writerCardOpen, setWriterCardOpen] = useState(false);
+  const [fontsReady,    setFontsReady]    = useState(false);
 
   useEffect(() => {
     const v = localStorage.getItem("rv_page_flip_type");
     if (v === "hard" || v === "soft") setFlipType(v);
+  }, []);
+
+  useEffect(() => {
+    document.fonts.ready.then(() => setFontsReady(true));
   }, []);
 
   // Page tracking
@@ -1023,8 +1073,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
   // ── Slot-based page layout ────────────────────────────────────────
   const { slots, recipeSlotMap, itemsPerPage } = useMemo(
-    () => buildSlots(recipes, pageH, pageW, portrait, vwPx, vhPx),
-    [recipes, pageH, pageW, portrait, vwPx, vhPx],
+    () => buildSlots(recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady),
+    [recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady],
   );
 
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
