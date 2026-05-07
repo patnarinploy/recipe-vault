@@ -53,32 +53,34 @@ function usePageDimensions() {
 const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
-// ─── Pagination — fixed pixel measurements (calibrated for 14px text) ─
-const LINE_H_PX     = 34;  // 14px × 1.625 leading-relaxed + 10px flex gap (inst steps)
-const TOC_ITEM_H_PX = 36;  // height of one TOC row
-const CHAR_W_PX     = 10;  // avg Thai char width at ~14px
+// ─── Pagination — fixed pixel measurements (calibrated for max clamp font sizes) ─
+const LINE_H_INST    = 34;  // instruction step: ~14px × 1.625 leading-relaxed + 10px gap
+const LINE_H_ING     = 26;  // ingredient item:  ~16px × 1.375 leading-snug  + 4px gap
+const TOC_ITEM_H_PX  = 36;  // height of one TOC row
+const CHAR_W_PX      = 10;  // avg Thai char width at ~14px
+// Chrome overhead constants (px, max-scale vmin clamp values)
+const OVERHEAD_CONT      = 155;  // no-meta continuation page: pad×2 + spacer + crumb + head + pn
+const OVERHEAD_CONT_META = 200;  // first ingredient page: OVERHEAD_CONT - spacer(28) + meta+divider(73)
+const INST_EMBED_HEAD_PX =  44;  // "Instructions" section heading + my-8 margins on combined page
 
 // Derive per-page limits from the real rendered page size so that content
 // never overflows when the user resizes the window.
 function pageLimits(pageH: number, pageW: number) {
-  const innerW      = Math.max(180, pageW - 40);           // subtract h-padding
+  const innerW       = Math.max(180, pageW - 40);
   const charsPerLine = Math.max(18, Math.round(innerW / CHAR_W_PX));
 
-  // First recipe page: subtract fixed chrome (title, divider, image, label, pn)
-  const imgH         = Math.min(190, Math.max(90, Math.round(pageH * 0.35)));
-  const overheadFirst = 40 + 20 + 36 + 17 + imgH + 16 + 22 + 25; // ≈366 at base
-  const ingLinesFirst = Math.max(2, Math.floor((pageH - overheadFirst) / LINE_H_PX));
+  // Instruction steps per page (no-meta chrome)
+  const contLinesInst     = Math.max(4, Math.floor((pageH - OVERHEAD_CONT)      / LINE_H_INST));
+  // Ingredient items per page — tighter per-item height than instructions
+  // First ing page always has meta grid (OVERHEAD_CONT_META); continuations don't
+  const contLinesIngFirst = Math.max(4, Math.floor((pageH - OVERHEAD_CONT_META) / LINE_H_ING));
+  const contLinesIngCont  = Math.max(4, Math.floor((pageH - OVERHEAD_CONT)      / LINE_H_ING));
 
-  // Continuation / instruction pages: subtract mini-header + pn
-  const overheadCont = 155;  // max-scale clamp values: pad(24)×2 + spacer(32) + crumb(13) + head(29) + pn(23) = 145 + 10 buffer
-  const contLines    = Math.max(4, Math.floor((pageH - overheadCont) / LINE_H_PX));
-
-  // TOC: subtract label + title area, then -1 as a safety margin so the last
-  // row is never half-clipped by overflow-hidden.
-  const overheadToc  = 40 + 26 + 48;                       // ≈114 px
+  // TOC: subtract label + title area, then -1 safety margin
+  const overheadToc  = 40 + 26 + 48;
   const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
 
-  return { charsPerLine, ingLinesFirst, contLines, itemsPerPage };
+  return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont, itemsPerPage };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -189,7 +191,7 @@ function buildSlots(
   pageW: number,
   portrait: boolean,
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
-  const { charsPerLine, ingLinesFirst, contLines, itemsPerPage } = pageLimits(pageH, pageW);
+  const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont, itemsPerPage } = pageLimits(pageH, pageW);
 
   const slots: PageSlot[] = [{ kind: "cover-front" }];
 
@@ -208,8 +210,14 @@ function buildSlots(
     recipeSlotMap.push(slots.length);
     const r = recipes[ri];
 
-    // All ingredients go to recipe-ing slots; recipe-first is image-only
-    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, contLines, contLines)
+    // All ingredients go to recipe-ing slots; recipe-first is image-only.
+    // When ≥5 items the renderer uses 2-col layout (2 items per row), so double
+    // the row-count limits to get the correct item-count limits.
+    const ingItemCount = (r.ingredients || "").split("\n").filter(l => l.trim()).length;
+    const will2Col     = ingItemCount >= 5;
+    const maxIngFirst  = will2Col ? contLinesIngFirst * 2 : contLinesIngFirst;
+    const maxIngCont   = will2Col ? contLinesIngCont  * 2 : contLinesIngCont;
+    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont)
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
     const ytLinks      = instYoutubeLinks(r.instructions || "");
@@ -226,11 +234,13 @@ function buildSlots(
     // Key difference from the old approach: we measure the actual remaining rows
     // using splitText(instAvail) so the embedded chunk NEVER overflows.
     if (ingAllChunks.length === 1 && fullInstText.trim()) {
-      const ingItems  = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
+      const ingItems = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
       // 2-column layout kicks in at ≥5 items; each row holds 2 items
-      const ingRows   = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
-      // Reserve 5 rows: meta grid adds ~3 rows overhead vs plain page, + heading + safety buffer
-      const instAvail = contLines - ingRows - 5;
+      const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine);
+      // Pixel budget remaining after meta chrome, ingredient rows, and the embedded
+      // "Instructions" section heading (INST_EMBED_HEAD_PX).
+      const instAvailPx = pageH - OVERHEAD_CONT_META - ingRows * LINE_H_ING - INST_EMBED_HEAD_PX;
+      const instAvail   = Math.max(0, Math.floor(instAvailPx / LINE_H_INST));
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail);
@@ -251,7 +261,7 @@ function buildSlots(
 
     // Paginate instructions that didn't fit on the ingredient page
     const instChunks = instOverflowText.trim()
-      ? toChunks(instOverflowText, charsPerLine, contLines, contLines).filter(c => c.trim().length > 0)
+      ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst).filter(c => c.trim().length > 0)
       : [];
 
     for (let ci = 0; ci < instChunks.length; ci++)
