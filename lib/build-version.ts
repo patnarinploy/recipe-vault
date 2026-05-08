@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 5;
-export const BUILD_TIMESTAMP = "2026-05-08T17:59:03.000Z";
-export const BUILD_TOOLTIP   = "feat(toc): responsive typography matching recipe-page scaling";
+export const BUILD_NUMBER    = 6;
+export const BUILD_TIMESTAMP = "2026-05-08T18:14:42.000Z";
+export const BUILD_TOOLTIP   = "feat(cover): responsive typography for PageCoverFront + BookCover";
