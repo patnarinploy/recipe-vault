@@ -55,7 +55,6 @@ const PAGE_BORDER  = "inset 0 0 0 1px rgba(0,0,0,0.10)";
 const COVER_BORDER = "inset 0 0 0 1px rgba(0,0,0,0.08)";
 
 // ─── Pagination helpers ───────────────────────────────────────────
-const TOC_ITEM_H_PX = 36;  // height of one TOC row
 
 // canvas.measureText() is the primary measurement path (handles Thai combining
 // chars correctly). charsPerLine computed below is an SSR-only fallback.
@@ -163,9 +162,23 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const contLinesIngFirst = Math.max(4, Math.floor((pageH - ohMeta  + ingGapPx)   / lhIng));
   const contLinesIngCont  = Math.max(4, Math.floor((pageH - ohCont  + ingGapPx)   / lhIng));
 
-  // TOC: -1 safety margin so last row is never clipped
-  const overheadToc  = 40 + 26 + 48;
-  const itemsPerPage = Math.max(3, Math.floor((pageH - overheadToc) / TOC_ITEM_H_PX) - 1);
+  // TOC typography — mirrors recipe-page vmin-based scaling philosophy.
+  // Every cv()/cw() value here MUST match the CSS clamp() string in PageToC JSX.
+  const tocPadPx      = cw(20, 0.025, 40);   // page padding: clamp(20px,2.5vw,40px)
+  const tocMetaMtPx   = cv(8,  0.018, 20);   // meta mt:      clamp(8px,1.8vmin,20px)
+  const tocMetaPx     = cv(8,  0.014, 11);   // meta font:    clamp(8px,1.4vmin,11px)
+  const tocMetaMbPx   = cv(3,  0.005,  7);   // meta mb:      clamp(3px,0.5vmin,7px)
+  const tocTitlePx    = cv(16, 0.035, 28);   // h2 font:      clamp(16px,3.5vmin,28px)
+  const tocTitleMbPx  = cv(8,  0.018, 20);   // h2 mb:        clamp(8px,1.8vmin,20px)
+  const tocItemFontPx = cv(11, 0.022, 15);   // row font:     clamp(11px,2.2vmin,15px)
+  const tocItemPyPx   = cv(4,  0.009,  7);   // row py:       clamp(4px,0.9vmin,7px)
+  const tocItemGapPx  = cv(1,  0.002,  3);   // row gap:      clamp(1px,0.2vmin,3px)
+  const tocRowH       = Math.round(tocItemFontPx * 1.5 + 2 * tocItemPyPx);
+  // Overhead = 2× page-padding + meta strip (mt + font×lh + mb) + title strip (font×lh + mb)
+  const tocOverhead   = 2 * tocPadPx
+    + tocMetaMtPx + tocMetaPx * 1.5 + tocMetaMbPx
+    + tocTitlePx  * 1.25 + tocTitleMbPx;
+  const itemsPerPage  = Math.max(3, Math.floor((pageH - tocOverhead + tocItemGapPx) / (tocRowH + tocItemGapPx)));
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
            ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
@@ -588,15 +601,18 @@ const PageToC = forwardRef<
   return (
     <div ref={ref} data-density={density}>
       <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
-           style={{ padding: "clamp(1.25rem,2.5vw,2.5rem)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+           style={{ padding: "clamp(20px,2.5vw,40px)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape />
-        <p className="text-[9px] tracking-[.38em] text-[#8a7354] uppercase font-semibold mb-2 mt-5">
+        <p className="tracking-[.38em] text-[#8a7354] uppercase font-semibold"
+           style={{ fontSize: "clamp(8px,1.4vmin,11px)", marginTop: "clamp(8px,1.8vmin,20px)", marginBottom: "clamp(3px,0.5vmin,7px)" }}>
           {isCont ? "Table of Contents (cont.)" : "Table of Contents"}
         </p>
-        <h2 className="text-2xl font-bold text-stone-700 mb-5 leading-tight">
+        <h2 className="font-bold text-stone-700 leading-tight"
+            style={{ fontSize: "clamp(16px,3.5vmin,28px)", marginBottom: "clamp(8px,1.8vmin,20px)" }}>
           {isCont ? "สารบัญ (ต่อ)" : "สารบัญ"}
         </h2>
-        <nav ref={navRef} className="flex-1 space-y-0.5 overflow-hidden">
+        <nav ref={navRef} className="flex-1 flex flex-col overflow-hidden"
+             style={{ gap: "clamp(1px,0.2vmin,3px)" }}>
           {recipes.length === 0
             ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
             : pageRecipes.map((r, localIdx) => {
@@ -606,12 +622,14 @@ const PageToC = forwardRef<
                   <button
                     key={r.id}
                     onClick={() => onNavigate(slotIdx)}
-                    className="w-full flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+                    className="w-full flex items-center gap-1 px-2 rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+                    style={{ fontSize: "clamp(11px,2.2vmin,15px)", paddingTop: "clamp(4px,0.9vmin,7px)", paddingBottom: "clamp(4px,0.9vmin,7px)" }}
                   >
                     <span className="shrink-0 text-stone-700 truncate max-w-[55%]">{r.title}</span>
                     {r.is_public && <ShareBadge coverColor={coverColor} />}
                     <span className="border-b border-dotted border-stone-300 flex-1 mx-2" />
-                    <span className="shrink-0 text-[11px] font-mono text-stone-400">
+                    <span className="shrink-0 font-mono text-stone-400"
+                          style={{ fontSize: "clamp(9px,1.3vmin,11px)" }}>
                       {String(slotIdx).padStart(2, "0")}
                     </span>
                   </button>
