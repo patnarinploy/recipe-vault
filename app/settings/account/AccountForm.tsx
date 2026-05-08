@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { updatePrivateInfo } from "@/app/actions/auth";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
+import { toast } from "sonner";
+import LoadingButton from "@/components/ui/LoadingButton";
 
 export default function AccountForm({
   currentUsername,
@@ -17,6 +19,12 @@ export default function AccountForm({
   currentTel: string | null;
 }) {
   const [state, action, pending] = useActionState(updatePrivateInfo, undefined);
+
+  useEffect(() => {
+    if (!state) return;
+    if ("success" in state) toast.success("บันทึกข้อมูลส่วนตัวสำเร็จ");
+    else if ("error" in state) toast.error(state.error);
+  }, [state]);
 
   const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none";
 
@@ -93,20 +101,14 @@ export default function AccountForm({
           </div>
         </div>
 
-        {state && "error" in state && (
-          <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{state.error}</p>
-        )}
-        {state && "success" in state && (
-          <p className="text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3">บันทึกข้อมูลส่วนตัวสำเร็จ</p>
-        )}
-
-        <button
+        <LoadingButton
           type="submit"
-          disabled={pending}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm"
+          pending={pending}
+          pendingLabel="กำลังบันทึก…"
+          className="w-full py-3 text-sm font-semibold"
         >
-          {pending ? "กำลังบันทึก…" : "บันทึกข้อมูลส่วนตัว"}
-        </button>
+          บันทึกข้อมูลส่วนตัว
+        </LoadingButton>
       </form>
     </div>
   );

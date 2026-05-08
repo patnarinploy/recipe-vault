@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
 import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
@@ -56,7 +56,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main className={user ? "max-w-6xl mx-auto px-4 sm:px-6 py-10" : ""}>
           {children}
         </main>
-        <Toaster position="top-right" toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }} />
+        <Toaster
+          position="top-right"
+          toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }}
+          richColors
+          closeButton
+        />
       </body>
     </html>
   );

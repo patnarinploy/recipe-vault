@@ -9,7 +9,7 @@ import { SkeletonOpenBook } from "./Skeleton";
 import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";

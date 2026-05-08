@@ -1,12 +1,20 @@
 "use client";
 
 import { changePassword } from "@/app/actions/auth";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import LoadingButton from "@/components/ui/LoadingButton";
 
 export default function PasswordPage() {
   const [state, action, pending] = useActionState(changePassword, undefined);
+
+  useEffect(() => {
+    if (!state) return;
+    if ("success" in state) toast.success("เปลี่ยนรหัสผ่านสำเร็จ");
+    else if ("error" in state) toast.error(state.error);
+  }, [state]);
 
   const inputCls =
     "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400";
@@ -50,22 +58,14 @@ export default function PasswordPage() {
             <input name="confirm_password" type="password" required minLength={4} className={inputCls} />
           </div>
 
-          {state && "error" in state && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{state.error}</p>
-          )}
-          {state && "success" in state && (
-            <p className="text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3">
-              เปลี่ยนรหัสผ่านสำเร็จ
-            </p>
-          )}
-
-          <button
+          <LoadingButton
             type="submit"
-            disabled={pending}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm mt-2"
+            pending={pending}
+            pendingLabel="กำลังบันทึก…"
+            className="w-full py-3 text-sm font-semibold mt-2"
           >
-            {pending ? "กำลังบันทึก…" : "บันทึกรหัสผ่านใหม่"}
-          </button>
+            บันทึกรหัสผ่านใหม่
+          </LoadingButton>
         </form>
       </div>
     </div>

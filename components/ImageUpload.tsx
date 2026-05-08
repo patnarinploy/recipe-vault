@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { Upload, X, ImageIcon } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 type Props = {
   value: string | null;

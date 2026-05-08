@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { updatePublicProfile } from "@/app/actions/auth";
 import { AVATAR_PRESETS, isAvatarUrl } from "@/lib/avatar";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { ArrowLeft, Camera, Check, Loader2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import LoadingButton from "@/components/ui/LoadingButton";
 
 const BUCKET = "recipe-images";
 const MAX_MB = 5;
@@ -26,6 +27,12 @@ export default function ProfileForm({
   const [selected, setSelected] = useState<string>(currentAvatar ?? "");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!state) return;
+    if ("success" in state) toast.success("บันทึกโปรไฟล์สำเร็จ");
+    else if ("error" in state) toast.error(state.error);
+  }, [state]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -175,20 +182,15 @@ export default function ProfileForm({
           </div>
         </div>
 
-        {state && "error" in state && (
-          <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{state.error}</p>
-        )}
-        {state && "success" in state && (
-          <p className="text-sm text-green-600 bg-green-50 rounded-xl px-4 py-3">บันทึกโปรไฟล์สำเร็จ</p>
-        )}
-
-        <button
+        <LoadingButton
           type="submit"
-          disabled={pending || uploading}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 text-sm"
+          pending={pending}
+          pendingLabel="กำลังบันทึก…"
+          disabled={uploading}
+          className="w-full py-3 text-sm font-semibold"
         >
-          {pending ? "กำลังบันทึก…" : "บันทึกโปรไฟล์นักเขียน"}
-        </button>
+          บันทึกโปรไฟล์นักเขียน
+        </LoadingButton>
       </form>
     </div>
   );

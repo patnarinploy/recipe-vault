@@ -8,6 +8,50 @@ export function Skeleton({
   return <div className={`skeleton ${className}`} style={style} />;
 }
 
+// Generic field row: label bar + input bar
+function SkeletonField({ wide = false }: { wide?: boolean }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className={`skeleton h-3 rounded ${wide ? "w-28" : "w-20"}`} />
+      <div className="skeleton h-10 rounded-xl w-full" />
+    </div>
+  );
+}
+
+// Skeleton for any create/edit form — 3 fields + submit button
+export function SkeletonForm() {
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 p-6 space-y-5">
+      <div className="skeleton h-5 w-36 rounded mb-2" />
+      <SkeletonField wide />
+      <SkeletonField />
+      <SkeletonField wide />
+      <div className="flex justify-end gap-2 pt-2">
+        <div className="skeleton h-10 w-20 rounded-xl" />
+        <div className="skeleton h-10 w-24 rounded-xl" style={{ opacity: 0.7 }} />
+      </div>
+    </div>
+  );
+}
+
+// Skeleton for settings nav rows
+export function SkeletonSettingsRows({ count = 3 }: { count?: number }) {
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100 overflow-hidden">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3.5 px-5 py-4">
+          <div className="skeleton w-8 h-8 rounded-xl shrink-0" />
+          <div className="flex-1 flex flex-col gap-1.5">
+            <div className="skeleton h-3.5 w-28 rounded" />
+            <div className="skeleton h-3 w-44 rounded" />
+          </div>
+          <div className="skeleton w-4 h-4 rounded shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SkeletonBookTile() {
   return (
     <div className="flex flex-col items-center">

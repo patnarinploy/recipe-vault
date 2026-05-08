@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
 import { Plus, Trash2, X, Youtube } from "lucide-react";
+import LoadingButton from "./ui/LoadingButton";
 
 const UNITS = [
   "กรัม", "กิโลกรัม", "ขีด",
@@ -358,10 +359,9 @@ export default function RecipeForm({
       <div className="flex gap-3 pt-2">
         {showDelete && isEdit && (
           confirmDelete ? (
-            <button type="button" onClick={handleDelete} disabled={isPending}
-              className="border border-red-300 bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2.5 text-sm disabled:opacity-60">
-              {isPending ? "กำลังลบ…" : "ยืนยันลบ"}
-            </button>
+            <LoadingButton type="button" onClick={handleDelete} pending={isPending} pendingLabel="กำลังลบ…" variant="danger">
+              ยืนยันลบ
+            </LoadingButton>
           ) : (
             <button type="button" onClick={() => setConfirmDelete(true)}
               className="border border-red-200 text-red-500 rounded-xl px-3.5 py-2.5 text-sm hover:bg-red-50 flex items-center"
@@ -374,9 +374,9 @@ export default function RecipeForm({
           {confirmDelete ? "ไม่ลบ" : "ยกเลิก"}
         </button>
         {!confirmDelete && (
-          <button type="submit" disabled={isPending} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60">
-            {isPending ? "กำลังบันทึก…" : isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
-          </button>
+          <LoadingButton type="submit" pending={isPending} pendingLabel="กำลังบันทึก…" className="flex-1">
+            {isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
+          </LoadingButton>
         )}
       </div>
       </div>

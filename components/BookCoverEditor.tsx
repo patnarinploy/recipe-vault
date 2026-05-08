@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { createBook, updateBook, deleteBook } from "@/app/actions/books";
 import { BOOK_COLORS, type Book } from "@/lib/types";
 import BookCover from "./BookCover";
 import { Trash2 } from "lucide-react";
+import LoadingButton from "./ui/LoadingButton";
 
 interface Props {
   book?: Book;
@@ -164,14 +165,16 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
                 >
                   ยกเลิกลบ
                 </button>
-                <button
+                <LoadingButton
                   type="button"
                   onClick={handleDelete}
-                  disabled={isPending}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl py-2.5 text-sm disabled:opacity-60"
+                  pending={isPending}
+                  pendingLabel="กำลังลบ…"
+                  variant="danger"
+                  className="flex-1"
                 >
-                  {isPending ? "กำลังลบ…" : "ยืนยันลบ"}
-                </button>
+                  ยืนยันลบ
+                </LoadingButton>
               </div>
             ) : (
               <button
@@ -191,13 +194,15 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
           >
             ยกเลิก
           </button>
-          <button
+          <LoadingButton
             type="submit"
-            disabled={isPending || confirmDelete}
-            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60"
+            pending={isPending}
+            pendingLabel="กำลังบันทึก…"
+            disabled={confirmDelete}
+            className="flex-1"
           >
-            {isPending ? "กำลังบันทึก…" : isEdit ? "บันทึก" : "สร้างหนังสือ"}
-          </button>
+            {isEdit ? "บันทึก" : "สร้างหนังสือ"}
+          </LoadingButton>
         </div>
       </div>
     </form>

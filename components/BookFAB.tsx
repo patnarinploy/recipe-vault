@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import {
   Plus, Edit2, List, Palette, Globe, Lock, MoreHorizontal, X,
 } from "lucide-react";
