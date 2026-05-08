@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 7;
-export const BUILD_TIMESTAMP = "2026-05-08T18:40:21.000Z";
-export const BUILD_TOOLTIP   = "fix(ribbon): portrait side bug + vmin-based proportional sizing";
+export const BUILD_NUMBER    = 8;
+export const BUILD_TIMESTAMP = "2026-05-08T20:12:14.000Z";
+export const BUILD_TOOLTIP   = "feat(ux): modern loading architecture — Sonner, Framer Motion, Suspens";
