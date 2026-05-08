@@ -294,12 +294,16 @@ function buildSlots(
           innerW, ingFontPx, instFontPx } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   // Build canvas-based measure closures once fonts are loaded.
-  // 2-col ingredient rows are item-count based so we skip canvas there.
   const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
   const ingFontSpec  = `400 ${Math.round(ingFontPx)}px ${fontBase}`;
   const instFontSpec = `400 ${Math.round(instFontPx)}px ${fontBase}`;
   const measureIng  = fontsReady ? makeMeasure(ingFontSpec,  innerW) : undefined;
   const measureInst = fontsReady ? makeMeasure(instFontSpec, innerW) : undefined;
+  // 2-col column width mirrors renderer: flex gap = clamp(6px,1.2vw,12px), two flex-1 children.
+  const colGapPx       = Math.max(6, Math.min(12, vwPx * 0.012));
+  const measureIng2Col = fontsReady
+    ? makeMeasure(ingFontSpec, Math.floor((innerW - colGapPx) / 2))
+    : undefined;
 
   // ── Debug trace (visible in browser DevTools > Console) ──────────
   // Confirms canvas status, measurement values, and slot decisions.
@@ -343,9 +347,7 @@ function buildSlots(
     const will2Col     = ingItemCount >= 5;
     const maxIngFirst  = will2Col ? contLinesIngFirst * 2 : contLinesIngFirst;
     const maxIngCont   = will2Col ? contLinesIngCont  * 2 : contLinesIngCont;
-    // 2-col chunks are item-count based; canvas measure uses full innerW which
-    // would be wrong for half-width columns, so skip canvas for 2-col ingredients.
-    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont, will2Col ? undefined : measureIng)
+    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont, will2Col ? measureIng2Col : measureIng)
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
     const ytLinks      = instYoutubeLinks(r.instructions || "");
@@ -363,8 +365,9 @@ function buildSlots(
     // using splitText(instAvail) so the embedded chunk NEVER overflows.
     if (ingAllChunks.length === 1 && fullInstText.trim()) {
       const ingItems = ingAllChunks[0].split("\n").filter(l => l.trim()).length;
-      // 2-column layout kicks in at ≥5 items; each row holds 2 items
-      const ingRows  = ingItems >= 5 ? Math.ceil(ingItems / 2) : lineCount(ingAllChunks[0], charsPerLine, measureIng);
+      const ingRows  = ingItems >= 5
+        ? Math.ceil(lineCount(ingAllChunks[0], charsPerLine, measureIng2Col) / 2)
+        : lineCount(ingAllChunks[0], charsPerLine, measureIng);
       const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
       const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
 
@@ -378,9 +381,10 @@ function buildSlots(
           pxW:  fontsReady ? (() => { const c = canvasCtx(instFontSpec); return c ? Math.round(c.measureText(l).width) : "?" })() : "font-not-ready",
         }));
         console.group(`%c  📄 ${r.title || "recipe " + ri}`, "color:#555");
-        console.log("ingItems:", ingItems, "| will2Col:", will2Col, "| ingRows:", ingRows,
-          "| instAvailPx:", instAvailPx.toFixed(1), "| instAvail:", instAvail,
-          "| contLinesInst:", contLinesInst);
+        console.log("ingItems:", ingItems, "| will2Col:", will2Col,
+          "| canvas2Col:", !!measureIng2Col, "| colW:", Math.floor((innerW - colGapPx) / 2),
+          "| ingRows:", ingRows, "| instAvailPx:", instAvailPx.toFixed(1),
+          "| instAvail:", instAvail, "| contLinesInst:", contLinesInst);
         console.table(stepRows);
         console.groupEnd();
       }
