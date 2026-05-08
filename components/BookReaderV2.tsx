@@ -492,7 +492,7 @@ function AuthorClickButton({ label, onClick }: { label: string; onClick: () => v
       ref={ref}
       onClick={onClick}
       className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
-      style={{ fontSize: "clamp(8px,1.8vw,11px)" }}
+      style={{ fontSize: "clamp(9px,2vmin,14px)", fontFamily: "Georgia,'Times New Roman',serif" }}
     >
       by {label}
     </button>
@@ -522,30 +522,31 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
 
           {/* Title frame + author stacked so author sits just below the frame */}
           <div style={{ width: "calc(100% - 1.5rem)" }}>
-            <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 w-full"
-                 style={{ padding: "clamp(1.5rem,8%,3rem) 1rem" }}>
+            <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center w-full"
+                 style={{ padding: "clamp(1.5rem,8%,3rem) clamp(12px,3%,20px)", gap: "clamp(4px,1vmin,10px)" }}>
               <p className="tracking-[.38em] text-white/48 uppercase truncate w-full"
-                 style={{ fontSize: "clamp(8px,1.8vw,11px)" }}>
+                 style={{ fontSize: "clamp(8px,1.8vmin,14px)" }}>
                 {book.tagline ?? "ตำรับอาหาร"}
               </p>
               <div className="w-1/3 h-px bg-white/20" />
               <h2 className="font-bold leading-tight break-words w-full"
-                  style={{ fontSize: "clamp(1.4rem,5vw,2.4rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
+                  style={{ fontSize: "clamp(1.5rem,6.5vmin,3rem)", fontFamily: "'Playfair Display','Thonburi',Georgia,serif" }}>
                 {book.title}
               </h2>
               {book.subtitle && (<>
-                <div className="w-12 h-px bg-white/20 mt-1" />
-                <p className="text-white/65 text-sm leading-snug mt-1">{book.subtitle}</p>
+                <div className="h-px bg-white/20" style={{ width: "clamp(24px,6%,48px)" }} />
+                <p className="text-white/65 leading-snug"
+                   style={{ fontSize: "clamp(10px,2vmin,15px)" }}>{book.subtitle}</p>
               </>)}
             </div>
 
             {/* Author — directly below the title frame, left-aligned */}
             {authorName && (
-              <div className="mt-2 px-1">
+              <div className="px-1" style={{ marginTop: "clamp(4px,1vmin,10px)" }}>
                 {onAuthorClick
                   ? <AuthorClickButton label={authorName} onClick={onAuthorClick} />
                   : <p className="text-white/50 italic tracking-widest"
-                       style={{ fontSize: "clamp(8px,1.8vw,11px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
+                       style={{ fontSize: "clamp(9px,2vmin,14px)", fontFamily: "Georgia,'Times New Roman',serif" }}>
                       by {authorName}
                     </p>
                 }
@@ -556,10 +557,12 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
       </div>
       {publicCount > 0 && (
         <div className="absolute z-10 pointer-events-none whitespace-nowrap"
-             style={{ bottom: 44, right: 5, background: "rgba(255,255,255,0.95)", color: C,
-               fontSize: 11, padding: "4px 12px", borderRadius: 9999,
-               display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-          <Globe style={{ width: 14, height: 14 }} /> Shared {publicCount}
+             style={{ bottom: "8%", right: "3%", background: "rgba(255,255,255,0.95)", color: C,
+               fontSize: "clamp(9px,1.6vmin,12px)", padding: "clamp(3px,0.5vmin,5px) clamp(8px,1.6vmin,14px)",
+               borderRadius: 9999, display: "flex", alignItems: "center",
+               gap: "clamp(3px,0.5vmin,6px)", fontWeight: 600 }}>
+          <Globe style={{ width: "clamp(10px,1.8vmin,14px)", height: "clamp(10px,1.8vmin,14px)" }} />
+          Shared {publicCount}
         </div>
       )}
     </div>

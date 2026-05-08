@@ -23,12 +23,32 @@ export default function BookCover({
   onClick?: () => void;
 }) {
   const DIMS = {
-    xs: { w: 120, h: 168, title: "text-sm",  tag: "text-[7px]",  sub: "text-[8px]",  frame: "py-3 px-2",   spine: 14, by: 6 },
-    sm: { w: 160, h: 220, title: "text-base", tag: "text-[7.5px]", sub: "text-[8.5px]", frame: "py-4 px-2.5", spine: 18, by: 7 },
-    md: { w: 240, h: 320, title: "text-2xl", tag: "text-[8.5px]", sub: "text-[9.5px]", frame: "py-7 px-3",   spine: 22, by: 8.5 },
-    lg: { w: 300, h: 400, title: "text-3xl", tag: "text-[9.5px]", sub: "text-[10.5px]", frame: "py-9 px-4",  spine: 26, by: 9.5 },
-    xl: { w: 390, h: 540, title: "text-4xl", tag: "text-[11px]",  sub: "text-[12px]",   frame: "py-12 px-5", spine: 32, by: 11 },
+    xs: { w: 120, h: 168, spine: 14 },
+    sm: { w: 160, h: 220, spine: 18 },
+    md: { w: 240, h: 320, spine: 22 },
+    lg: { w: 300, h: 400, spine: 26 },
+    xl: { w: 390, h: 540, spine: 32 },
   }[size];
+
+  // All typography and spacing derived proportionally from cover dimensions.
+  // Anchored to the xl face (faceW=358, h=540) — same baseline as PageCoverFront.
+  const faceW     = DIMS.w - DIMS.spine;
+  const titlePx   = Math.max(13, Math.round(faceW * 0.115));
+  const tagPx     = Math.max(7,  Math.round(titlePx * 0.30));
+  const subPx     = Math.max(7,  Math.round(titlePx * 0.33));
+  const byPx      = Math.max(6,  Math.round(titlePx * 0.26));
+  const framePyPx = Math.round(DIMS.h  * 0.08);
+  const framePxPx = Math.round(faceW   * 0.06);
+  const gapPx     = Math.max(4,  Math.round(DIMS.h  * 0.025));
+  const authorMt  = Math.max(2,  Math.round(DIMS.h  * 0.010));
+  const washiTop  = Math.max(4,  Math.round(DIMS.h  * 0.020));
+  const washiRight= Math.max(12, Math.round(faceW   * 0.130));
+  const washiW    = Math.max(24, Math.round(faceW   * 0.145));
+  const washiH    = Math.max(8,  Math.round(DIMS.h  * 0.033));
+  const badgeFsPx = Math.max(7,  Math.round(faceW   * 0.038));
+  const badgeIcPx = Math.max(7,  Math.round(faceW   * 0.036));
+  const badgePyPx = Math.max(2,  Math.round(DIMS.h  * 0.005));
+  const badgePxPx = Math.max(4,  Math.round(faceW   * 0.030));
 
   const Wrapper = onClick ? "button" : "div";
 
@@ -83,10 +103,7 @@ export default function BookCover({
           <div
             className="absolute rounded-sm pointer-events-none"
             style={{
-              top: size === "xs" ? 6 : 10,
-              right: size === "xs" ? 14 : 20,
-              width: size === "xs" ? 30 : 52,
-              height: size === "xs" ? 10 : 18,
+              top: washiTop, right: washiRight, width: washiW, height: washiH,
               background: "linear-gradient(90deg,rgba(212,184,150,.6),rgba(232,208,172,.7),rgba(212,184,150,.6))",
               transform: "rotate(9deg)",
               boxShadow: "0 1px 3px rgba(0,0,0,.1)",
@@ -96,22 +113,26 @@ export default function BookCover({
 
           {/* Frame + author stacked — mirrors BookReaderV2 layout */}
           <div className="mx-3" style={{ width: `calc(100% - 1.5rem)` }}>
-            <div className={`border border-white/22 text-center text-white flex flex-col items-center justify-center gap-2 w-full ${DIMS.frame}`}>
+            <div className="border border-white/22 text-center text-white flex flex-col items-center justify-center w-full"
+                 style={{ padding: `${framePyPx}px ${framePxPx}px`, gap: gapPx }}>
               {book.tagline && (
                 <>
-                  <p className={`${DIMS.tag} tracking-[.38em] text-white/48 uppercase truncate w-full`}>
+                  <p className="tracking-[.38em] text-white/48 uppercase truncate w-full"
+                     style={{ fontSize: tagPx }}>
                     {book.tagline}
                   </p>
                   <div className="w-7 h-px bg-white/20" />
                 </>
               )}
-              <h2 className={`${DIMS.title} font-bold leading-tight break-words w-full`}>
+              <h2 className="font-bold leading-tight break-words w-full"
+                  style={{ fontSize: titlePx }}>
                 {book.title}
               </h2>
               {book.subtitle && (
                 <>
                   <div className="w-7 h-px bg-white/20" />
-                  <p className={`${DIMS.sub} text-white/55 line-clamp-2 break-words w-full px-1`}>
+                  <p className="text-white/55 line-clamp-2 break-words w-full px-1"
+                     style={{ fontSize: subPx }}>
                     {book.subtitle}
                   </p>
                 </>
@@ -120,7 +141,7 @@ export default function BookCover({
 
             {/* Author — directly below the title frame, left-aligned */}
             {author && (
-              <div className="mt-1 px-1">
+              <div className="px-1" style={{ marginTop: authorMt }}>
                 {onAuthorClick ? (
                   // Must NOT be <button> here — the outer Wrapper is already a <button>,
                   // and nested buttons are invalid HTML; the browser rewrites the DOM,
@@ -131,14 +152,14 @@ export default function BookCover({
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); onAuthorClick(); }}
                     className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors cursor-pointer"
-                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    style={{ fontSize: byPx, fontFamily: "Georgia, 'Times New Roman', serif" }}
                   >
                     by {author}
                   </span>
                 ) : (
                   <p
                     className="text-white/50 italic tracking-widest"
-                    style={{ fontSize: DIMS.by, fontFamily: "Georgia, 'Times New Roman', serif" }}
+                    style={{ fontSize: byPx, fontFamily: "Georgia, 'Times New Roman', serif" }}
                   >
                     by {author}
                   </p>
@@ -154,20 +175,18 @@ export default function BookCover({
         <div
           className="absolute z-10 pointer-events-none whitespace-nowrap"
           style={{
-            bottom: 8,
-            right: 8,
+            bottom: 8, right: 8,
             background: "rgba(255,255,255,0.95)",
             color: "#16a34a",
-            fontSize: size === "xs" ? 8 : 10,
-            padding: size === "xs" ? "2px 6px" : "2px 8px",
+            fontSize: badgeFsPx,
+            padding: `${badgePyPx}px ${badgePxPx}px`,
             borderRadius: 9999,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
+            display: "flex", alignItems: "center",
+            gap: Math.max(3, Math.round(badgeFsPx * 0.4)),
             fontWeight: 600,
           }}
         >
-          <Globe style={{ width: size === "xs" ? 8 : 10, height: size === "xs" ? 8 : 10 }} />
+          <Globe style={{ width: badgeIcPx, height: badgeIcPx }} />
           Shared {publicCount}
         </div>
       )}
