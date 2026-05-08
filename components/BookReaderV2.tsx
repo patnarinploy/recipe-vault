@@ -832,9 +832,9 @@ const PageRecipeCont = forwardRef<
         {showRibbon && (
           <div className="absolute top-0 z-10"
                style={{
-                 [isRight ? "right" : "left"]: "clamp(10px,2vw,18px)",
-                 width: "clamp(15px,2.8vw,24px)",
-                 height: "clamp(38px,7.5vw,64px)",
+                 [isRight ? "right" : "left"]: "clamp(8px,1.8vmin,16px)",
+                 width:  "clamp(14px,2.6vmin,22px)",
+                 height: "clamp(36px,7vmin,60px)",
                  background: "linear-gradient(160deg,#c0392b 0%,#8e1c12 100%)",
                  clipPath: "polygon(0 0,100% 0,100% 100%,50% 87%,0 100%)",
                  boxShadow: "1px 2px 6px rgba(0,0,0,0.28)",
@@ -1223,7 +1223,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const flipKey = `${flipType}:${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
 
   const pages: React.ReactElement[] = slots.map((slot, si) => {
-    const isRight = si % 2 === 0; // even index = right page in spread
+    // In portrait (single-page), all pages are visually "right pages" — the ribbon
+    // and page number must always anchor to the right edge of the visible page.
+    const isRight = portrait ? true : si % 2 === 0;
     switch (slot.kind) {
       case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
