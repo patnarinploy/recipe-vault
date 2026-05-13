@@ -11,7 +11,7 @@ import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Youtube } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 
@@ -717,36 +717,67 @@ function InstructionStep({ line, fallbackNum, stepImage }: { line: string; fallb
         </span>
       </div>
       {stepImage && (
-        <div style={{
-          height: "clamp(48px,9vmin,75px)",
-          marginTop: "clamp(3px,0.5vw,5px)",
-          marginLeft: "clamp(18px,2.8vw,30px)",
-          borderRadius: 4,
-          overflow: "hidden",
-          flexShrink: 0,
-        }}>
+        <div style={{ marginTop: "clamp(3px,0.5vw,5px)", marginLeft: "clamp(18px,2.8vw,30px)", flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={stepImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={stepImage} alt="" style={{
+            display: "block",
+            maxWidth: "100%",
+            maxHeight: "clamp(48px,9vmin,75px)",
+            width: "auto",
+            height: "auto",
+            borderRadius: 4,
+          }} />
         </div>
       )}
     </div>
   );
 }
 
-// ─── YouTube step links (shared by inst page + combined ing/inst page) ────────
+function ytVideoId(url: string): string | null {
+  if (!url?.trim()) return null;
+  const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([^?&\s]{11})/);
+  return m?.[1] ?? null;
+}
+
+// ─── YouTube step links — thumbnail cards with play overlay ───────
 function YoutubeLinks({ links }: { links?: { step: number; url: string }[] }) {
   if (!links?.length) return null;
   return (
-    <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(2px,0.5vw,4px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
-      {links.map(({ step, url }) => (
-        <a key={step} href={url} target="_blank" rel="noopener noreferrer"
-           onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
-           className="flex items-center gap-1 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full transition-colors font-medium"
-           style={{ fontSize: "clamp(5.5px,1vw,8px)", padding: "clamp(2px,0.4vw,4px) clamp(5px,1vw,8px)" }}>
-          <Youtube className="w-2 h-2 shrink-0" />
-          Step {step}
-        </a>
-      ))}
+    <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(3px,0.5vw,5px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
+      {links.map(({ step, url }) => {
+        const vid = ytVideoId(url);
+        return (
+          <a key={step} href={url} target="_blank" rel="noopener noreferrer"
+             onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+             className="relative overflow-hidden rounded flex-shrink-0"
+             style={{ height: "clamp(18px,3vmin,28px)", aspectRatio: "16/9", background: "#111", display: "inline-flex" }}>
+            {vid && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt=""
+                draggable={false}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            )}
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{
+                background: "rgba(255,0,0,0.88)", borderRadius: 2,
+                width: "clamp(9px,1.8vmin,14px)", height: "clamp(6px,1.2vmin,9px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <div style={{ width: 0, height: 0, borderTop: "clamp(2px,0.45vmin,3.5px) solid transparent", borderBottom: "clamp(2px,0.45vmin,3.5px) solid transparent", borderLeft: "clamp(3.5px,0.7vmin,6px) solid white", marginLeft: 1 }} />
+              </div>
+            </div>
+            <span style={{
+              position: "absolute", bottom: 0, left: 0,
+              background: "rgba(0,0,0,0.65)", color: "white",
+              fontSize: "clamp(4.5px,0.75vmin,6px)", lineHeight: 1, letterSpacing: "0.04em",
+              padding: "clamp(1px,0.15vmin,1.5px) clamp(2px,0.3vmin,3px)",
+              fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)",
+            }}>
+              {step}
+            </span>
+          </a>
+        );
+      })}
     </div>
   );
 }

@@ -5,16 +5,16 @@ import type { Recipe } from "@/lib/types";
 
 // ─── Parsers ───────────────────────────────────────────────────────────────────
 
-interface InstructionStep { text: string; youtube?: string; }
+interface InstructionStep { text: string; youtube?: string; image_url?: string | null; }
 
 function parseInstructions(raw: string): InstructionStep[] {
   if (!raw.trim()) return [];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0 && "text" in parsed[0]) {
-      return (parsed as { text?: string; youtube?: string }[])
+      return (parsed as { text?: string; youtube?: string; image_url?: string | null }[])
         .filter(s => s.text?.trim())
-        .map(s => ({ text: s.text!.trim(), youtube: s.youtube?.trim() || undefined }));
+        .map(s => ({ text: s.text!.trim(), youtube: s.youtube?.trim() || undefined, image_url: s.image_url || null }));
     }
   } catch {}
   return raw.split("\n").filter(l => l.trim()).map(line => ({
@@ -240,6 +240,15 @@ export default function RecipeViewV2({
                         >
                           {step.text}
                         </p>
+
+                        {step.image_url && (
+                          <div className="mt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={step.image_url} alt=""
+                              className="rounded-xl shadow-sm"
+                              style={{ maxWidth: "100%", maxHeight: "20rem", width: "auto", height: "auto" }} />
+                          </div>
+                        )}
 
                         {embed && (
                           <div

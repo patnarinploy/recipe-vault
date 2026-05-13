@@ -17,6 +17,12 @@ const UNITS = [
   "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
 ];
 
+function ytVideoId(url: string): string | null {
+  if (!url?.trim()) return null;
+  const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([^?&\s]{11})/);
+  return m?.[1] ?? null;
+}
+
 interface IngredientRow { name: string; amount: string; unit: string; }
 interface InstructionStep { text: string; youtube: string; image_url: string | null; }
 
@@ -86,6 +92,26 @@ function UnitCombobox({ value, onChange, className = "" }: { value: string; onCh
   );
 }
 
+// ─── YouTube thumbnail preview card ──────────────────────────────
+function YtPreview({ url }: { url: string }) {
+  const vid = ytVideoId(url);
+  if (!vid) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+       className="mx-3 mb-2 mt-1 rounded-xl overflow-hidden relative block group"
+       style={{ aspectRatio: "16/9" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt=""
+        className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
+          <div style={{ width: 0, height: 0, borderTop: "7px solid transparent", borderBottom: "7px solid transparent", borderLeft: "12px solid white", marginLeft: 2 }} />
+        </div>
+      </div>
+    </a>
+  );
+}
+
 // ─── Compact image upload for instruction steps ───────────────────
 function StepImageUpload({ value, onChange }: { value: string | null; onChange: (url: string | null) => void }) {
   const supabase = createClient();
@@ -118,9 +144,10 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
   return (
     <div className="px-3 py-2 border-t border-stone-100 bg-stone-50/60">
       {value ? (
-        <div className="relative h-24 w-full rounded-lg overflow-hidden group">
+        <div className="relative w-full rounded-xl overflow-hidden group bg-stone-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="w-full h-full object-cover" />
+          <img src={value} alt="" className="block w-full h-auto"
+            style={{ maxHeight: "12rem", objectFit: "contain" }} />
           <button type="button" onClick={remove}
             className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <X className="w-3 h-3" />
@@ -354,20 +381,22 @@ export default function RecipeForm({
           <div className="space-y-2">
             {ingredientRows.map((row, i) => (
               <div key={i}>
-                {/* Mobile: 2-row stacked layout */}
-                <div className="sm:hidden flex flex-col gap-2">
-                  <div className="flex gap-2">
+                {/* Mobile: left 2-row content + right single delete spanning full height */}
+                <div className="sm:hidden flex items-stretch gap-2">
+                  <div className="flex-1 flex flex-col gap-2">
                     <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                      placeholder="เช่น กุ้ง" className={inputCls + " flex-1"} />
-                    <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible shrink-0">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                      placeholder="เช่น กุ้ง" className={inputCls} />
+                    <div className="flex gap-2">
+                      <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
+                        placeholder="0" className={inputCls + " w-24 shrink-0"} />
+                      <UnitCombobox value={row.unit} onChange={v => updateRow(i, "unit", v)} className={inputCls + " flex-1"} />
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
-                      placeholder="0" className={inputCls + " w-20 shrink-0"} />
-                    <UnitCombobox value={row.unit} onChange={v => updateRow(i, "unit", v)} className={inputCls + " flex-1"} />
+                  <div className="flex items-center">
+                    <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible shrink-0">
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
                 {/* Desktop: single-row grid */}
@@ -414,12 +443,15 @@ export default function RecipeForm({
                 <textarea value={step.text} onChange={e => updateStep(i, "text", e.target.value)}
                   placeholder={`อธิบายขั้นตอนที่ ${i + 1}`} rows={2}
                   className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-white border-0" />
-                {/* YouTube URL */}
-                <div className="flex items-center gap-2 px-3 py-2 border-t border-stone-100 bg-stone-50/60">
-                  <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                  <input value={step.youtube} onChange={e => updateStep(i, "youtube", e.target.value)}
-                    placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
-                    className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300" />
+                {/* YouTube URL + live preview */}
+                <div className="border-t border-stone-100">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-stone-50/60">
+                    <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                    <input value={step.youtube} onChange={e => updateStep(i, "youtube", e.target.value)}
+                      placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
+                      className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300" />
+                  </div>
+                  <YtPreview url={step.youtube} />
                 </div>
                 {/* Step image */}
                 <StepImageUpload
