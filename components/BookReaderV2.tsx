@@ -1215,7 +1215,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   }, [fetchData, router]);
 
   // ─────────────────────────────────────────────────────────────────
-  if (!ready || loading || !book) return <SkeletonOpenBook />;
+  if (!ready || loading || !book) return <SkeletonOpenBook pageW={pageW} pageH={pageH} portrait={portrait} />;
 
   const bookW   = portrait ? pageW : pageW * 2;
   const flipKey = `${flipType}:${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
