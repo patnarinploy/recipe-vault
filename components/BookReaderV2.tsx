@@ -192,8 +192,8 @@ type PageSlot =
   | { kind: "toc"; tocPage: number }
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
-  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
-  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; showMeta?: boolean }
+  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[] }
+  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
 
@@ -255,6 +255,19 @@ function instYoutubeLinks(raw: string): { step: number; url: string }[] {
     if (Array.isArray(steps)) {
       return (steps as { text?: string; youtube?: string }[])
         .map((s, i) => ({ step: i + 1, url: s.youtube ?? "" }))
+        .filter(s => s.url.trim());
+    }
+  } catch {}
+  return [];
+}
+
+// Collect per-step images from structured instructions JSON.
+function instStepImages(raw: string): { step: number; url: string }[] {
+  try {
+    const steps = JSON.parse(raw);
+    if (Array.isArray(steps)) {
+      return (steps as { image_url?: string | null }[])
+        .map((s, i) => ({ step: i + 1, url: s.image_url ?? "" }))
         .filter(s => s.url.trim());
     }
   } catch {}
@@ -364,6 +377,22 @@ function buildSlots(
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
     const ytLinks      = instYoutubeLinks(r.instructions || "");
+    const stepImages   = instStepImages(r.instructions || "");
+
+    // Wrap measureInst to add IMG_ROW_COST rows for steps with images so
+    // toChunks / splitText budget correctly for the rendered image height.
+    const IMG_ROW_COST = 3;
+    const imageStepNums = new Set(stepImages.map(s => s.step));
+    const measureInstImg: MeasureFn | undefined = imageStepNums.size === 0
+      ? measureInst
+      : (line: string) => {
+          const rows = measureInst
+            ? measureInst(line)
+            : Math.max(1, Math.ceil((line.length || 0.1) / charsPerLine));
+          const m = line.trim().match(/^(\d+)\./);
+          const n = m ? parseInt(m[1]) : null;
+          return rows + (n !== null && imageStepNums.has(n) ? IMG_ROW_COST : 0);
+        };
 
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
 
@@ -403,7 +432,7 @@ function buildSlots(
       }
 
       if (instAvail >= 2) {
-        const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail, measureInst);
+        const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail, measureInstImg);
         if (typeof window !== "undefined") {
           const embeddedCount = instEmbed.split("\n").filter(l => l.trim()).length;
           const restCount     = instRest.split("\n").filter(l => l.trim()).length;
@@ -412,7 +441,8 @@ function buildSlots(
         slots.push({
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
-          ...(ytLinks.length > 0 ? { instFirstYtLinks: ytLinks } : {}),
+          ...(ytLinks.length > 0    ? { instFirstYtLinks:    ytLinks    } : {}),
+          ...(stepImages.length > 0 ? { instFirstStepImages: stepImages } : {}),
         });
         instOverflowText = instRest;
         ytLinksOnIng    = ytLinks.length > 0;
@@ -428,14 +458,15 @@ function buildSlots(
 
     // Paginate instructions that didn't fit on the ingredient page
     const instChunks = instOverflowText.trim()
-      ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInst).filter(c => c.trim().length > 0)
+      ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInstImg).filter(c => c.trim().length > 0)
       : [];
 
     for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({
         kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-        ...(ci === 0 && !ytLinksOnIng && ytLinks.length > 0 ? { youtubeLinks: ytLinks } : {}),
-        ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
+        ...(ci === 0 && !ytLinksOnIng && ytLinks.length > 0    ? { youtubeLinks: ytLinks    } : {}),
+        ...(stepImages.length > 0                              ? { stepImages                } : {}),
+        ...(ci === 0 && ingAllChunks.length === 0              ? { showMeta: true }           : {}),
       });
 
     // Watermark for spread alignment — skip in portrait.
@@ -668,21 +699,36 @@ function PageSectionHead({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Instruction step row (shared by inst page + combined ing/inst page) ─────
-function InstructionStep({ line, fallbackNum }: { line: string; fallbackNum?: number }) {
+function InstructionStep({ line, fallbackNum, stepImage }: { line: string; fallbackNum?: number; stepImage?: string }) {
   const m    = line.trim().match(/^(\d+)\.\s*(.*)/);
   const num  = m?.[1] ?? (fallbackNum != null ? String(fallbackNum) : undefined);
   const body = m?.[2] ?? line.trim();
   return (
-    <div className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
-      {num && (
-        <span className="shrink-0 select-none pointer-events-none"
-              style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(15px,2.9vw,25px)", color: "#d4af37", opacity: 0.55, lineHeight: 1 }}>
-          {num}
+    <div className="min-w-0">
+      <div className="flex items-baseline min-w-0" style={{ gap: "clamp(5px,1vw,10px)" }}>
+        {num && (
+          <span className="shrink-0 select-none pointer-events-none"
+                style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontStyle: "italic", fontSize: "clamp(15px,2.9vw,25px)", color: "#d4af37", opacity: 0.55, lineHeight: 1 }}>
+            {num}
+          </span>
+        )}
+        <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>
+          {body}
         </span>
+      </div>
+      {stepImage && (
+        <div style={{
+          height: "clamp(48px,9vmin,75px)",
+          marginTop: "clamp(3px,0.5vw,5px)",
+          marginLeft: "clamp(18px,2.8vw,30px)",
+          borderRadius: 4,
+          overflow: "hidden",
+          flexShrink: 0,
+        }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={stepImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
       )}
-      <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>
-        {body}
-      </span>
     </div>
   );
 }
@@ -812,8 +858,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[] }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[] }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks, instFirstStepImages }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -905,9 +951,12 @@ const PageRecipeCont = forwardRef<
               <PageSectionHead>Instructions</PageSectionHead>
             </div>
             <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
-              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => (
-                <InstructionStep key={i} line={line} fallbackNum={i + 1} />
-              ))}
+              {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => {
+                const m = line.trim().match(/^(\d+)\./);
+                const n = m ? parseInt(m[1]) : null;
+                const img = n !== null ? (instFirstStepImages ?? []).find(s => s.step === n)?.url : undefined;
+                return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
+              })}
             </div>
             <YoutubeLinks links={instFirstYtLinks} />
           </>
@@ -916,7 +965,12 @@ const PageRecipeCont = forwardRef<
         {/* ── Instructions ─────────────────────────────────── */}
         {variant === "inst" && (
           <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(5px,1vw,10px)" }}>
-            {instLines.map((line, i) => <InstructionStep key={i} line={line} fallbackNum={i + 1} />)}
+            {instLines.map((line, i) => {
+              const m = line.trim().match(/^(\d+)\./);
+              const n = m ? parseInt(m[1]) : null;
+              const img = n !== null ? (stepImages ?? []).find(s => s.step === n)?.url : undefined;
+              return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
+            })}
           </div>
         )}
 
@@ -1246,7 +1300,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         variant="ing" showMeta={slot.chunkIdx === 0}
                         showRibbon={slot.chunkIdx === 0}
                         instFirstChunk={slot.instFirstChunk}
-                        instFirstYtLinks={slot.instFirstYtLinks} />
+                        instFirstYtLinks={slot.instFirstYtLinks}
+                        instFirstStepImages={slot.instFirstStepImages} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -1254,6 +1309,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         label="" text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         youtubeLinks={slot.youtubeLinks}
+                        stepImages={slot.stepImages}
                         variant="inst" showMeta={slot.showMeta ?? false}
                         showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)} />
       );
