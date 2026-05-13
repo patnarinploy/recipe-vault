@@ -180,9 +180,13 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
     + tocTitlePx  * 1.25 + tocTitleMbPx;
   const itemsPerPage  = Math.max(3, Math.floor((pageH - tocOverhead + tocItemGapPx) / (tocRowH + tocItemGapPx)));
 
+  // Step image height for budget calculation: clamp(80px,20vmin,200px)
+  const imgHPx      = cv(80, 0.20, 200);
+  const imgRowCost  = Math.ceil((imgHPx + instGapPure) / lhInstPure);
+
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
            ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-           innerW, ingFontPx, instFontPx };
+           innerW, ingFontPx, instFontPx, imgRowCost };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -317,7 +321,7 @@ function buildSlots(
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-          innerW, ingFontPx, instFontPx } = pageLimits(pageH, pageW, vwPx, vhPx);
+          innerW, ingFontPx, instFontPx, imgRowCost } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   // Build canvas-based measure closures once fonts are loaded.
   const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
@@ -379,9 +383,8 @@ function buildSlots(
     const ytLinks      = instYoutubeLinks(r.instructions || "");
     const stepImages   = instStepImages(r.instructions || "");
 
-    // Wrap measureInst to add IMG_ROW_COST rows for steps with images so
+    // Wrap measureInst to add imgRowCost rows for steps with images so
     // toChunks / splitText budget correctly for the rendered image height.
-    const IMG_ROW_COST = 3;
     const imageStepNums = new Set(stepImages.map(s => s.step));
     const measureInstImg: MeasureFn | undefined = imageStepNums.size === 0
       ? measureInst
@@ -391,7 +394,7 @@ function buildSlots(
             : Math.max(1, Math.ceil((line.length || 0.1) / charsPerLine));
           const m = line.trim().match(/^(\d+)\./);
           const n = m ? parseInt(m[1]) : null;
-          return rows + (n !== null && imageStepNums.has(n) ? IMG_ROW_COST : 0);
+          return rows + (n !== null && imageStepNums.has(n) ? imgRowCost : 0);
         };
 
     slots.push({ kind: "recipe-first", recipeIdx: ri, ingText: "" });
@@ -722,7 +725,7 @@ function InstructionStep({ line, fallbackNum, stepImage }: { line: string; fallb
           <img src={stepImage} alt="" style={{
             display: "block",
             maxWidth: "100%",
-            maxHeight: "clamp(48px,9vmin,75px)",
+            maxHeight: "clamp(80px,20vmin,200px)",
             width: "auto",
             height: "auto",
             borderRadius: 4,
@@ -740,17 +743,18 @@ function ytVideoId(url: string): string | null {
 }
 
 // ─── YouTube step links — thumbnail cards with play overlay ───────
-function YoutubeLinks({ links }: { links?: { step: number; url: string }[] }) {
+function YoutubeLinks({ links, onPlay }: { links?: { step: number; url: string }[]; onPlay?: (url: string) => void }) {
   if (!links?.length) return null;
   return (
     <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(3px,0.5vw,5px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
       {links.map(({ step, url }) => {
         const vid = ytVideoId(url);
         return (
-          <a key={step} href={url} target="_blank" rel="noopener noreferrer"
-             onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+          <button key={step} type="button"
+             onMouseDown={e => e.stopPropagation()}
+             onClick={e => { e.stopPropagation(); onPlay ? onPlay(url) : window.open(url, "_blank", "noopener,noreferrer"); }}
              className="relative overflow-hidden rounded flex-shrink-0"
-             style={{ height: "clamp(18px,3vmin,28px)", aspectRatio: "16/9", background: "#111", display: "inline-flex" }}>
+             style={{ height: "clamp(36px,6vmin,60px)", aspectRatio: "16/9", background: "#111", display: "inline-flex", cursor: "pointer", border: "none", padding: 0 }}>
             {vid && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt=""
@@ -775,7 +779,7 @@ function YoutubeLinks({ links }: { links?: { step: number; url: string }[] }) {
             }}>
               {step}
             </span>
-          </a>
+          </button>
         );
       })}
     </div>
@@ -889,8 +893,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[] }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks, instFirstStepImages }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
+>(({ recipe: r, text, isRight, pn, density, youtubeLinks, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks, instFirstStepImages, onPlayVideo }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -989,7 +993,7 @@ const PageRecipeCont = forwardRef<
                 return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
               })}
             </div>
-            <YoutubeLinks links={instFirstYtLinks} />
+            <YoutubeLinks links={instFirstYtLinks} onPlay={onPlayVideo} />
           </>
         )}
 
@@ -1005,7 +1009,7 @@ const PageRecipeCont = forwardRef<
           </div>
         )}
 
-        <YoutubeLinks links={youtubeLinks} />
+        <YoutubeLinks links={youtubeLinks} onPlay={onPlayVideo} />
 
         <Pn n={pn} right={isRight} />
       </div>
@@ -1198,6 +1202,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [editRecipeOpen,  setEditRecipeOpen]  = useState(false);
   const [coverEditorOpen, setCoverEditorOpen] = useState(false);
   const [tocSortOpen,     setTocSortOpen]     = useState(false);
+  const [ytModal,         setYtModal]         = useState<string | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -1332,7 +1337,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         showRibbon={slot.chunkIdx === 0}
                         instFirstChunk={slot.instFirstChunk}
                         instFirstYtLinks={slot.instFirstYtLinks}
-                        instFirstStepImages={slot.instFirstStepImages} />
+                        instFirstStepImages={slot.instFirstStepImages}
+                        onPlayVideo={setYtModal} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -1342,7 +1348,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         youtubeLinks={slot.youtubeLinks}
                         stepImages={slot.stepImages}
                         variant="inst" showMeta={slot.showMeta ?? false}
-                        showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)} />
+                        showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)}
+                        onPlayVideo={setYtModal} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
@@ -1373,7 +1380,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           clickEventForward={false} useMouseEvents={true}
           swipeDistance={10} disableFlipByClick={false}
           className="" style={{}}
-          onFlip={(e: any) => setCurrentPage(e.data)}
+          onFlip={(e: any) => { setCurrentPage(e.data); setYtModal(null); }}
           onChangeState={(e: any) => {
             if (e.data === "read") {
               const p = bookRef.current?.pageFlip().getCurrentPageIndex();
@@ -1525,6 +1532,40 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           </div>
         </Modal>
       )}
+
+      {/* ── YouTube in-book modal ──────────────────────────── */}
+      {ytModal && (() => {
+        const vid = ytVideoId(ytModal);
+        const src = vid ? `https://www.youtube.com/embed/${vid}?rel=0&autoplay=1` : "";
+        return (
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.85)" }}
+            onMouseDown={() => setYtModal(null)}
+          >
+            <div
+              className="relative"
+              style={{ width: "min(90vw, 800px)", aspectRatio: "16/9" }}
+              onMouseDown={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setYtModal(null)}
+                className="absolute -top-8 right-0 text-white/60 hover:text-white text-sm flex items-center gap-1 transition-colors"
+              >
+                <X className="w-4 h-4" /> ปิด
+              </button>
+              {src && (
+                <iframe
+                  src={src}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full rounded-xl border-0"
+                />
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

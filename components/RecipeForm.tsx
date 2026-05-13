@@ -7,7 +7,7 @@ import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
-import { Plus, Trash2, X, Youtube, ImageIcon } from "lucide-react";
+import { Plus, Trash2, X, ChevronDown, ImageIcon } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
 
 const UNITS = [
@@ -17,6 +17,8 @@ const UNITS = [
   "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
 ];
 
+const NUM_RE = /^[\d.,\/½¼¾⅓⅔⅛⅜⅝⅞]+$/;
+
 function ytVideoId(url: string): string | null {
   if (!url?.trim()) return null;
   const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([^?&\s]{11})/);
@@ -24,10 +26,16 @@ function ytVideoId(url: string): string | null {
 }
 
 interface IngredientRow { name: string; amount: string; unit: string; }
-interface InstructionStep { text: string; youtube: string; image_url: string | null; }
+interface InstructionStep { text: string; image_url: string | null; }
 
-// ─── Unit combobox: searchable + free-text creatable ──────────────
-function UnitCombobox({ value, onChange, className = "" }: { value: string; onChange: (v: string) => void; className?: string }) {
+// ─── Generic searchable + creatable combobox ──────────────────────
+function Combobox({ value, onChange, options, placeholder = "ไม่ระบุ", className = "" }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: readonly string[];
+  placeholder?: string;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -46,8 +54,8 @@ function UnitCombobox({ value, onChange, className = "" }: { value: string; onCh
     return () => document.removeEventListener("mousedown", onDown);
   }, [open, query, onChange]);
 
-  const filtered = UNITS.filter(u => !query || u.toLowerCase().includes(query.toLowerCase()));
-  const showCreate = query.trim() !== "" && !UNITS.some(u => u.toLowerCase() === query.trim().toLowerCase());
+  const filtered = options.filter(u => !query || u.toLowerCase().includes(query.toLowerCase()));
+  const showCreate = query.trim() !== "" && !options.some(u => u.toLowerCase() === query.trim().toLowerCase());
 
   function select(v: string) { onChange(v); setQuery(v); setOpen(false); }
 
@@ -61,16 +69,20 @@ function UnitCombobox({ value, onChange, className = "" }: { value: string; onCh
           if (e.key === "Escape") { onChange(query.trim()); setOpen(false); }
           if (e.key === "Enter") { e.preventDefault(); select(query.trim()); }
         }}
-        placeholder="ไม่ระบุ"
+        placeholder={placeholder}
         className={className}
+        style={{ paddingRight: "2rem" }}
       />
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+        <ChevronDown className="w-4 h-4" />
+      </div>
       {open && (filtered.length > 0 || showCreate) && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-y-auto"
              style={{ maxHeight: "12rem" }}>
           {!query && (
             <button type="button" onClick={() => select("")}
               className="w-full text-left px-3 py-2 text-sm text-stone-400 hover:bg-stone-50">
-              ไม่ระบุ
+              {placeholder}
             </button>
           )}
           {filtered.map(u => (
@@ -169,33 +181,63 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
 function parseIngredients(text: string): IngredientRow[] {
   if (!text.trim()) return [{ name: "", amount: "", unit: "" }];
   return text.split("\n").filter(l => l.trim()).map(line => {
-    const cleaned = line.trim().replace(/^[-•*\d+.]\s*/, "");
-    const parts = cleaned.split(/\s+/);
-    const knownUnit = UNITS.find(u => parts[parts.length - 1] === u);
-    if (knownUnit && parts.length >= 3) {
-      return { name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
+    const cleaned = line.trim().replace(/^[\d]+[.)]\s*|^[-•*]\s*/, "");
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return { name: cleaned, amount: "", unit: "" };
+
+    const last = parts[parts.length - 1];
+    const secondToLast = parts.length >= 2 ? parts[parts.length - 2] : null;
+
+    // Known unit at end
+    const knownUnit = UNITS.find(u => last === u);
+    if (knownUnit) {
+      if (parts.length >= 3) return { name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
+      if (parts.length === 2) return { name: "", amount: parts[0], unit: knownUnit };
+      return { name: cleaned, amount: "", unit: knownUnit };
     }
+
+    // Custom unit: last is non-number, second-to-last is number
+    if (secondToLast && NUM_RE.test(secondToLast) && !NUM_RE.test(last) && parts.length >= 3) {
+      return { name: parts.slice(0, -2).join(" "), amount: secondToLast, unit: last };
+    }
+
+    // Name + amount only: last token is a number
+    if (NUM_RE.test(last) && parts.length >= 2) {
+      return { name: parts.slice(0, -1).join(" "), amount: last, unit: "" };
+    }
+
     return { name: cleaned, amount: "", unit: "" };
   });
 }
 
 function parseInstructions(raw: string): InstructionStep[] {
-  if (!raw.trim()) return [{ text: "", youtube: "", image_url: null }];
+  if (!raw.trim()) return [{ text: "", image_url: null }];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0 && "text" in parsed[0]) {
-      return parsed.map((s: { text?: string; youtube?: string; image_url?: string | null }) => ({
+      return parsed.map((s: { text?: string; image_url?: string | null }) => ({
         text: s.text ?? "",
-        youtube: s.youtube ?? "",
         image_url: s.image_url ?? null,
       }));
     }
   } catch {}
   return raw.split("\n").filter(l => l.trim()).map(line => ({
     text: line.replace(/^\d+\.\s*/, "").trim(),
-    youtube: "",
     image_url: null,
   }));
+}
+
+function extractRecipeYoutube(raw: string): string {
+  if (!raw.trim()) return "";
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      for (const s of parsed as { youtube?: string }[]) {
+        if (s.youtube?.trim()) return s.youtube.trim();
+      }
+    }
+  } catch {}
+  return "";
 }
 
 interface Props {
@@ -237,6 +279,7 @@ export default function RecipeForm({
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
+    recipe_youtube: extractRecipeYoutube(recipe?.instructions ?? ""),
   });
 
   function addRow() { setIngredientRows(r => [...r, { name: "", amount: "", unit: "" }]); }
@@ -245,14 +288,14 @@ export default function RecipeForm({
     setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
   }
 
-  function addStep() { setInstructionSteps(s => [...s, { text: "", youtube: "", image_url: null }]); }
+  function addStep() { setInstructionSteps(s => [...s, { text: "", image_url: null }]); }
   function removeStep(i: number) { setInstructionSteps(s => s.filter((_, idx) => idx !== i)); }
   function updateStep(i: number, field: keyof InstructionStep, value: string | null) {
     setInstructionSteps(s => s.map((step, idx) => idx === i ? { ...step, [field]: value } : step));
   }
 
   function set(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((p) => ({ ...p, [field]: e.target.value }));
   }
 
@@ -273,10 +316,10 @@ export default function RecipeForm({
     if (!isEdit && !bookId) { toast.error("ไม่มี book_id"); return; }
 
     const instructionsJson = JSON.stringify(
-      validSteps.map(s => ({
+      validSteps.map((s, i) => ({
         text: s.text.trim(),
-        ...(s.youtube.trim()  ? { youtube:   s.youtube.trim() }  : {}),
-        ...(s.image_url       ? { image_url: s.image_url }       : {}),
+        ...(i === 0 && form.recipe_youtube.trim() ? { youtube: form.recipe_youtube.trim() } : {}),
+        ...(s.image_url ? { image_url: s.image_url } : {}),
       }))
     );
 
@@ -351,10 +394,13 @@ export default function RecipeForm({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className={labelCls}>หมวดหมู่</label>
-            <select value={form.category} onChange={set("category")} className={inputCls}>
-              <option value="">เลือกหมวดหมู่</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Combobox
+              value={form.category}
+              onChange={v => setForm(p => ({ ...p, category: v }))}
+              options={CATEGORIES}
+              placeholder="เลือกหมวดหมู่"
+              className={inputCls}
+            />
           </div>
           <div>
             <label className={labelCls}>เวลาทำ (นาที)</label>
@@ -362,7 +408,7 @@ export default function RecipeForm({
           </div>
           <div>
             <label className={labelCls}>จำนวนที่เสิร์ฟ</label>
-            <input type="number" min="1" value={form.servings} onChange={set("servings")} placeholder="4" className={inputCls} />
+            <input type="number" min="1" value={form.servings} onChange={set("servings")} placeholder="1" className={inputCls} />
           </div>
         </div>
 
@@ -389,7 +435,7 @@ export default function RecipeForm({
                     <div className="flex gap-2">
                       <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                         placeholder="0" className={inputCls + " w-24 shrink-0"} />
-                      <UnitCombobox value={row.unit} onChange={v => updateRow(i, "unit", v)} className={inputCls + " flex-1"} />
+                      <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls + " flex-1"} />
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -405,7 +451,7 @@ export default function RecipeForm({
                     placeholder="เช่น กุ้ง" className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
-                  <UnitCombobox value={row.unit} onChange={v => updateRow(i, "unit", v)} className={inputCls} />
+                  <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
@@ -443,16 +489,6 @@ export default function RecipeForm({
                 <textarea value={step.text} onChange={e => updateStep(i, "text", e.target.value)}
                   placeholder={`อธิบายขั้นตอนที่ ${i + 1}`} rows={2}
                   className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-white border-0" />
-                {/* YouTube URL + live preview */}
-                <div className="border-t border-stone-100">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-stone-50/60">
-                    <Youtube className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                    <input value={step.youtube} onChange={e => updateStep(i, "youtube", e.target.value)}
-                      placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
-                      className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300" />
-                  </div>
-                  <YtPreview url={step.youtube} />
-                </div>
                 {/* Step image */}
                 <StepImageUpload
                   value={step.image_url}
@@ -466,6 +502,31 @@ export default function RecipeForm({
             <Plus className="w-4 h-4" />
             เพิ่มขั้นตอน
           </button>
+        </div>
+
+        {/* ── Recipe-level YouTube ─────────────────────────── */}
+        <div>
+          <label className={labelCls}>วิดีโอ YouTube ประกอบสูตร</label>
+          <div className="border border-stone-200 rounded-xl overflow-hidden bg-white">
+            <div className="flex items-center gap-2 px-3 py-2.5 bg-stone-50/60">
+              <div className="w-4 h-4 rounded bg-red-600 flex items-center justify-center shrink-0">
+                <div style={{ width: 0, height: 0, borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "7px solid white", marginLeft: 1 }} />
+              </div>
+              <input
+                value={form.recipe_youtube}
+                onChange={set("recipe_youtube")}
+                placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
+                className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300"
+              />
+              {form.recipe_youtube && (
+                <button type="button" onClick={() => setForm(p => ({ ...p, recipe_youtube: "" }))}
+                  className="text-stone-300 hover:text-stone-500 transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <YtPreview url={form.recipe_youtube} />
+          </div>
         </div>
 
         {/* Public toggle */}
