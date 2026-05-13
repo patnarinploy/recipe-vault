@@ -23,10 +23,11 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const defaultTitle = author ? `หนังสือของ${author}` : "";
   const [form, setForm] = useState({
-    title: book?.title ?? "The Cozy Folio",
-    subtitle: book?.subtitle ?? "บันทึกสูตรอาหารอุ่นหัวใจ",
-    tagline: book?.tagline ?? "Have a Nice Meal",
+    title:       book?.title    ?? defaultTitle,
+    subtitle:    book?.subtitle ?? "",
+    tagline:     book?.tagline  ?? "",
     cover_color: book?.cover_color ?? "#6b7c5b",
   });
 
@@ -101,7 +102,6 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               <input
                 value={form.tagline}
                 onChange={(e) => setForm((p) => ({ ...p, tagline: e.target.value }))}
-                placeholder="Have a Nice Meal"
                 maxLength={40}
                 className={inputCls}
               />
@@ -112,7 +112,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               <input
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                placeholder="The Cozy Folio"
+                placeholder={defaultTitle || "ชื่อหนังสือ"}
                 maxLength={30}
                 required
                 className={inputCls}
@@ -124,7 +124,6 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               <input
                 value={form.subtitle}
                 onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
-                placeholder="บันทึกสูตรอาหารอุ่นหัวใจ"
                 maxLength={60}
                 className={inputCls}
               />

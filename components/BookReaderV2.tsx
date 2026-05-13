@@ -284,11 +284,15 @@ function hexToRgba(hex: string, alpha: number): string {
 
 function ShareBadge({ coverColor, solid }: { coverColor: string; solid?: boolean }) {
   return (
-    <span className="inline-flex items-center leading-none gap-1 text-[10px] font-semibold px-1.5 py-[3px] rounded-full shrink-0 whitespace-nowrap"
-          style={solid
-            ? { background: coverColor, color: "white" }
-            : { background: hexToRgba(coverColor, 0.18), color: coverColor }}>
-      <Globe className="w-2.5 h-2.5 shrink-0" /> Shared
+    <span className="inline-flex items-center leading-none font-semibold rounded-full shrink-0 whitespace-nowrap"
+          style={{
+            fontSize: "clamp(9px,1.4vmin,11px)",
+            gap: "0.35em", padding: "0.28em 0.6em",
+            ...(solid
+              ? { background: coverColor, color: "white" }
+              : { background: hexToRgba(coverColor, 0.18), color: coverColor }),
+          }}>
+      <Globe style={{ width: "1em", height: "1em" }} /> Shared
     </span>
   );
 }
@@ -557,10 +561,11 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
       </div>
       {publicCount > 0 && (
         <div className="absolute z-10 pointer-events-none whitespace-nowrap"
-             style={{ bottom: "8%", right: "3%", background: "rgba(255,255,255,0.95)", color: C,
-               fontSize: "clamp(9px,1.6vmin,12px)", padding: "clamp(3px,0.5vmin,5px) clamp(8px,1.6vmin,14px)",
+             style={{ bottom: "clamp(8px,2%,14px)", right: "clamp(8px,3%,16px)",
+               background: "rgba(255,255,255,0.95)", color: C,
+               fontSize: "clamp(10px,1.8vmin,14px)", padding: "clamp(4px,0.7vmin,7px) clamp(10px,1.8vmin,16px)",
                borderRadius: 9999, display: "flex", alignItems: "center",
-               gap: "clamp(3px,0.5vmin,6px)", fontWeight: 600 }}>
+               gap: "clamp(4px,0.6vmin,6px)", fontWeight: 600 }}>
           <Globe style={{ width: "clamp(10px,1.8vmin,14px)", height: "clamp(10px,1.8vmin,14px)" }} />
           Shared {publicCount}
         </div>

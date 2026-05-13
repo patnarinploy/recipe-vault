@@ -45,10 +45,10 @@ export default function BookCover({
   const washiRight= Math.max(12, Math.round(faceW   * 0.130));
   const washiW    = Math.max(24, Math.round(faceW   * 0.145));
   const washiH    = Math.max(8,  Math.round(DIMS.h  * 0.033));
-  const badgeFsPx = Math.max(7,  Math.round(faceW   * 0.038));
-  const badgeIcPx = Math.max(7,  Math.round(faceW   * 0.036));
-  const badgePyPx = Math.max(2,  Math.round(DIMS.h  * 0.005));
-  const badgePxPx = Math.max(4,  Math.round(faceW   * 0.030));
+  const badgeFsPx = Math.max(10, Math.round(faceW   * 0.048));
+  const badgeIcPx = Math.max(10, Math.round(faceW   * 0.046));
+  const badgePyPx = Math.max(3,  Math.round(DIMS.h  * 0.010));
+  const badgePxPx = Math.max(7,  Math.round(faceW   * 0.042));
 
   const Wrapper = onClick ? "button" : "div";
 
