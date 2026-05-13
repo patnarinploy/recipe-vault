@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 9;
-export const BUILD_TIMESTAMP = "2026-05-13T19:18:52.000Z";
-export const BUILD_TOOLTIP   = "fix(ux): shared badge, modal skeleton, settings skeletons, book defaults";
+export const BUILD_NUMBER    = 10;
+export const BUILD_TIMESTAMP = "2026-05-13T20:04:03.000Z";
+export const BUILD_TOOLTIP   = "fix(badge): restore SharedBadge, PageCoverFront badge, and BookCover bad";
