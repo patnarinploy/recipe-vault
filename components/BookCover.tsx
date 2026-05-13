@@ -45,10 +45,6 @@ export default function BookCover({
   const washiRight= Math.max(12, Math.round(faceW   * 0.130));
   const washiW    = Math.max(24, Math.round(faceW   * 0.145));
   const washiH    = Math.max(8,  Math.round(DIMS.h  * 0.033));
-  const badgeFsPx = Math.max(10, Math.round(faceW   * 0.048));
-  const badgeIcPx = Math.max(10, Math.round(faceW   * 0.046));
-  const badgePyPx = Math.max(3,  Math.round(DIMS.h  * 0.010));
-  const badgePxPx = Math.max(7,  Math.round(faceW   * 0.042));
 
   const Wrapper = onClick ? "button" : "div";
 
@@ -178,15 +174,15 @@ export default function BookCover({
             bottom: 8, right: 8,
             background: "rgba(255,255,255,0.95)",
             color: "#16a34a",
-            fontSize: badgeFsPx,
-            padding: `${badgePyPx}px ${badgePxPx}px`,
+            fontSize: size === "xs" ? 8 : 10,
+            padding: size === "xs" ? "2px 6px" : "2px 8px",
             borderRadius: 9999,
             display: "flex", alignItems: "center",
-            gap: Math.max(3, Math.round(badgeFsPx * 0.4)),
+            gap: 4,
             fontWeight: 600,
           }}
         >
-          <Globe style={{ width: badgeIcPx, height: badgeIcPx }} />
+          <Globe style={{ width: size === "xs" ? 8 : 10, height: size === "xs" ? 8 : 10 }} />
           Shared {publicCount}
         </div>
       )}
