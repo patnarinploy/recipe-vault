@@ -444,22 +444,31 @@ export default function RecipeForm({
             {ingredientRows.map((row, i) => (
               <div key={row.id}>
                 {/* Mobile */}
-                <div className="sm:hidden flex items-stretch gap-2">
-                  <div className="flex items-center pt-1 pb-1">
-                    <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing shrink-0 touch-none" />
+                <div className="sm:hidden flex items-start gap-2">
+                  <div className="mt-[1.85rem] shrink-0">
+                    <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing touch-none" />
                   </div>
-                  <div className="flex-1 flex flex-col gap-2 min-w-0">
-                    <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                      placeholder="เช่น กุ้ง" className={inputCls} />
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div>
+                      <p className="text-[10px] font-medium text-stone-400 mb-1">วัตถุดิบ</p>
+                      <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
+                        placeholder="เช่น กุ้ง" className={inputCls} />
+                    </div>
                     <div className="flex gap-2">
-                      <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
-                        placeholder="0" className={inputCls + " w-24 shrink-0"} />
-                      <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} wrapperClass="flex-1 min-w-0" />
+                      <div className="w-[4.5rem] shrink-0">
+                        <p className="text-[10px] font-medium text-stone-400 mb-1">ปริมาณ</p>
+                        <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
+                          placeholder="0" className={inputCls} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-medium text-stone-400 mb-1">หน่วย</p>
+                        <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} wrapperClass="w-full" />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center">
+                  <div className="mt-[1.85rem] shrink-0">
                     <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible shrink-0">
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
