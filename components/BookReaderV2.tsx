@@ -589,7 +589,7 @@ function AuthorClickButton({ label, onClick }: { label: string; onClick: () => v
 }
 
 // ─── Page components ──────────────────────────────────────────────
-const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string; onAuthorClick?: () => void }>(({ book, publicCount, authorName, onAuthorClick }, ref) => {
+const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string; onAuthorClick?: () => void; lastUpdated?: string }>(({ book, publicCount, authorName, onAuthorClick, lastUpdated }, ref) => {
   const C = book.cover_color;
   return (
     <div ref={ref} data-density="hard" style={{ position: "relative" }}>
@@ -646,7 +646,7 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
             <p title="Last updated"
                className="px-1 text-white/30 tracking-wide"
                style={{ marginTop: "clamp(2px,0.4vmin,5px)", fontSize: "clamp(6px,1.2vw,9px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
-              {new Date(book.updated_at ?? book.created_at).toLocaleString("en-GB", {
+              {new Date(lastUpdated ?? book.updated_at ?? book.created_at).toLocaleString("en-GB", {
                 day: "numeric", month: "short", year: "numeric",
               })}
             </p>
@@ -1391,6 +1391,17 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     [recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady],
   );
 
+  // True book freshness = max of book ts and every recipe ts (updated_at ?? created_at).
+  // ISO strings are lexicographically ordered so string reduce works correctly.
+  const bookLastUpdated = useMemo(() => {
+    const ts = [
+      book?.updated_at,
+      book?.created_at,
+      ...recipes.map(r => r.updated_at ?? r.created_at),
+    ].filter((s): s is string => Boolean(s));
+    return ts.length ? ts.reduce((a, b) => (a > b ? a : b)) : undefined;
+  }, [book, recipes]);
+
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
   useEffect(() => {
     if (currentPage >= slots.length) setCurrentPage(0);
@@ -1474,7 +1485,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     // and page number must always anchor to the right edge of the visible page.
     const isRight = portrait ? true : si % 2 === 0;
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} lastUpdated={bookLastUpdated} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
