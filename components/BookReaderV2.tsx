@@ -187,12 +187,13 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
 
   // YouTube block height: matches YoutubeBlock CSS: width=min(innerW, clamp(80px,20vmin,200px)×16/9)
   // so height = min(innerW×9/16, clamp(80px,20vmin,200px))
-  const ytHPx     = Math.min(innerW * 9 / 16, cv(80, 0.20, 200));
-  const ytRowCost = Math.ceil((ytHPx + instGapPure) / lhInstPure);
+  const ytHPx         = Math.min(innerW * 9 / 16, cv(80, 0.20, 200));
+  const ytRowCost     = Math.ceil((ytHPx + instGapPure)  / lhInstPure);
+  const ytRowCostEmbed = Math.ceil((ytHPx + instGapEmbed) / lhInstEmbed);
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
            ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-           innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost };
+           innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost, ytRowCostEmbed };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -328,7 +329,7 @@ function buildSlots(
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-          innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost } = pageLimits(pageH, pageW, vwPx, vhPx);
+          innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost, ytRowCostEmbed } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   // Build canvas-based measure closures once fonts are loaded.
   const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
@@ -409,6 +410,7 @@ function buildSlots(
 
     // Track what instructions still need their own pages after embedding.
     let instOverflowText = fullInstText;
+    let ytOnIngPage = false; // set to true if YouTube fits on the recipe-ing page
 
     // Embed the first portion of instructions on the ingredient page when:
     //   • ingredients fit on exactly one page (so there IS remaining vertical space)
@@ -449,10 +451,19 @@ function buildSlots(
           const restCount     = instRest.split("\n").filter(l => l.trim()).length;
           console.log(`  ↳ embed ${embeddedCount} steps, overflow ${restCount} steps → ${Math.ceil(restCount / contLinesInst)} inst page(s)`);
         }
+        // When all instructions fit embedded, check if YouTube also fits on this page.
+        if (allEmbedded && youtubeUrl) {
+          const usedEmbedRows = lineCount(instEmbed, charsPerLine, measureInstImg);
+          const ytNeededEmbed = ytRowCostEmbed + 2; // thumbnail rows + heading rows (embed scale)
+          ytOnIngPage = usedEmbedRows + ytNeededEmbed <= instAvail;
+          if (typeof window !== "undefined")
+            console.log(`  ↳ yt-ing: usedEmbed=${usedEmbedRows} ytNeeded=${ytNeededEmbed} instAvail=${instAvail} → ${ytOnIngPage ? "append-ing" : "needs-own-page"}`);
+        }
         slots.push({
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
           ...(stepImages.length > 0 ? { instFirstStepImages: stepImages } : {}),
+          ...(ytOnIngPage ? { youtubeUrl: youtubeUrl! } : {}),
         });
         instOverflowText = instRest;
       } else {
@@ -493,8 +504,8 @@ function buildSlots(
         ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
       });
 
-    // Dedicated YouTube page: when it doesn't fit on last inst page, or no inst pages exist
-    if (youtubeUrl && !ytOnLastPage) {
+    // Dedicated YouTube page: only when it doesn't fit on last inst page AND not on ing page
+    if (youtubeUrl && !ytOnLastPage && !ytOnIngPage) {
       slots.push({ kind: "recipe-youtube", recipeIdx: ri, youtubeUrl: youtubeUrl as string });
     }
 
@@ -502,12 +513,14 @@ function buildSlots(
     if (typeof window !== "undefined" && youtubeUrl) {
       const ytBlocks = slots.filter(s =>
         ((s.kind === "recipe-inst" && (s as any).recipeIdx === ri && (s as any).youtubeUrl)) ||
+        ((s.kind === "recipe-ing"  && (s as any).recipeIdx === ri && (s as any).youtubeUrl)) ||
         (s.kind === "recipe-youtube" && s.recipeIdx === ri)
       );
       const flag = ytBlocks.length !== 1 ? " ⚠ WRONG COUNT!" : "";
+      const placement = ytOnLastPage ? "last-inst-page" : ytOnIngPage ? "ing-page" : "dedicated-page";
       console.log(
         `%c  🎬 ${r.title} — youtube blocks: ${ytBlocks.length}${flag}` +
-        ` | placement: ${ytOnLastPage ? "last-inst-page" : "dedicated-page"}` +
+        ` | placement: ${placement}` +
         ` | inst pages: ${instChunks.length}`,
         ytBlocks.length !== 1 ? "color:red;font-weight:bold" : "color:#888",
       );
@@ -515,7 +528,7 @@ function buildSlots(
 
     // Watermark for spread alignment — skip in portrait.
     if (!portrait) {
-      const ytSlotCount = youtubeUrl && !ytOnLastPage ? 1 : 0;
+      const ytSlotCount = youtubeUrl && !ytOnLastPage && !ytOnIngPage ? 1 : 0;
       const total = 1 + ingAllChunks.length + instChunks.length + ytSlotCount;
       if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
     }
@@ -1046,6 +1059,14 @@ const PageRecipeCont = forwardRef<
                 const img = n !== null ? (instFirstStepImages ?? []).find(s => s.step === n)?.url : undefined;
                 return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
               })}
+              {youtubeUrl && (
+                <>
+                  <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)" }}>
+                    <PageSectionHead>Video Reference</PageSectionHead>
+                  </div>
+                  <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
+                </>
+              )}
             </div>
           </>
         )}
