@@ -203,7 +203,8 @@ type PageSlot =
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
   | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; youtubeUrl?: string }
   | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; showMeta?: boolean }
-  | { kind: "recipe-wm";    recipeIdx: number }
+  | { kind: "recipe-wm";      recipeIdx: number }
+  | { kind: "recipe-youtube"; recipeIdx: number; youtubeUrl: string }
   | { kind: "back-cover" }
 
 // Splits text so the first returned value fits within maxLines display rows.
@@ -468,43 +469,53 @@ function buildSlots(
       ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInstImg).filter(c => c.trim().length > 0)
       : [];
 
-    // Reserve space for YouTube block (thumbnail + "Video Reference" heading ≈ +2 rows)
+    // ── Phase 2: YouTube placement (AFTER instruction pagination is complete) ──────
+    // Never modifies instChunks — instructions are paginated exactly as before.
+    // Measure rows used on the final instruction page, then decide:
+    //   • enough room → attach youtubeUrl to that slot
+    //   • not enough room OR no instruction pages → dedicated recipe-youtube slot
+    let ytOnLastPage = false;
     if (youtubeUrl && instChunks.length > 0) {
-      const adjustedMax = Math.max(1, contLinesInst - ytRowCost - 2);
-      const lastIdx = instChunks.length - 1;
-      const [fits, overflow] = splitText(instChunks[lastIdx], charsPerLine, adjustedMax, measureInstImg);
-      if (overflow.trim()) {
-        instChunks[lastIdx] = fits;
-        instChunks.push(overflow);
-      }
+      const lastIdx   = instChunks.length - 1;
+      const usedRows  = lineCount(instChunks[lastIdx], charsPerLine, measureInstImg);
+      const ytNeeded  = ytRowCost + 2; // thumbnail rows + "Video Reference" heading rows
+      ytOnLastPage    = usedRows + ytNeeded <= contLinesInst;
+      if (typeof window !== "undefined")
+        console.log(`  ↳ yt: lastPage usedRows=${usedRows} ytNeeded=${ytNeeded} contLines=${contLinesInst} → ${ytOnLastPage ? "append" : "new page"}`);
     }
 
     for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({
         kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-        ...(ci === instChunks.length - 1 && youtubeUrl ? { youtubeUrl } : {}),
+        ...(ci === instChunks.length - 1 && ytOnLastPage ? { youtubeUrl: youtubeUrl! } : {}),
         ...(stepImages.length > 0 ? { stepImages } : {}),
         ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
       });
 
+    // Dedicated YouTube page: when it doesn't fit on last inst page, or no inst pages exist
+    if (youtubeUrl && !ytOnLastPage) {
+      slots.push({ kind: "recipe-youtube", recipeIdx: ri, youtubeUrl: youtubeUrl as string });
+    }
+
     // Debug: verify exactly one YouTube block per recipe
     if (typeof window !== "undefined" && youtubeUrl) {
       const ytBlocks = slots.filter(s =>
-        (s.kind === "recipe-ing" || s.kind === "recipe-inst") &&
-        (s as any).recipeIdx === ri && (s as any).youtubeUrl
+        ((s.kind === "recipe-inst" && (s as any).recipeIdx === ri && (s as any).youtubeUrl)) ||
+        (s.kind === "recipe-youtube" && s.recipeIdx === ri)
       );
       const flag = ytBlocks.length !== 1 ? " ⚠ WRONG COUNT!" : "";
       console.log(
         `%c  🎬 ${r.title} — youtube blocks: ${ytBlocks.length}${flag}` +
-        ` | slot indices: [${ytBlocks.map(s => slots.indexOf(s)).join(",")}]` +
-        ` | total inst pages: ${instChunks.length}`,
+        ` | placement: ${ytOnLastPage ? "last-inst-page" : "dedicated-page"}` +
+        ` | inst pages: ${instChunks.length}`,
         ytBlocks.length !== 1 ? "color:red;font-weight:bold" : "color:#888",
       );
     }
 
     // Watermark for spread alignment — skip in portrait.
     if (!portrait) {
-      const total = 1 + ingAllChunks.length + instChunks.length;
+      const ytSlotCount = youtubeUrl && !ytOnLastPage ? 1 : 0;
+      const total = 1 + ingAllChunks.length + instChunks.length + ytSlotCount;
       if (total % 2 !== 0) slots.push({ kind: "recipe-wm", recipeIdx: ri });
     }
   }
@@ -790,7 +801,7 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
   if (!url) return null;
   const vid = ytVideoId(url);
   return (
-    <div className="shrink-0" style={{ marginTop: "clamp(6px,1.2vw,12px)", width: "100%" }}>
+    <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)" }}>
       <button
         ref={btnRef}
         type="button"
@@ -799,8 +810,14 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
           if (onPlay) onPlay(url);
           else window.open(url, "_blank", "noopener,noreferrer");
         }}
-        className="relative overflow-hidden w-full"
-        style={{ aspectRatio: "16/9", display: "block", cursor: "pointer", border: "none", padding: 0, background: "#111", borderRadius: "clamp(4px,0.8vmin,8px)" }}
+        className="relative overflow-hidden"
+        style={{
+          display: "block",
+          aspectRatio: "16/9",
+          width: "min(100%, calc(clamp(80px,20vmin,200px) * 16 / 9))",
+          cursor: "pointer", border: "none", padding: 0, background: "#111",
+          borderRadius: "clamp(4px,0.8vmin,8px)",
+        }}
       >
         {vid && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -1078,6 +1095,29 @@ const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight
 );
 PageRecipeWatermark.displayName = "PageRecipeWatermark";
 
+// ─── Dedicated YouTube page — appears when video block doesn't fit on last inst page ──
+const PageRecipeYoutube = forwardRef<
+  HTMLDivElement,
+  { recipe: Recipe; youtubeUrl: string; isRight: boolean; pn: number; density: "soft" | "hard"; onPlayVideo?: (url: string) => void }
+>(({ recipe: r, youtubeUrl, isRight, pn, density, onPlayVideo }, ref) => (
+  <div ref={ref} data-density={density}>
+    <div className="w-full h-full flex flex-col relative overflow-hidden"
+         style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
+      <div className="shrink-0" style={{ height: "clamp(12px,3vmin,28px)" }} />
+      <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
+         style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8px,1.4vmin,12px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
+        {r.title}
+      </p>
+      <div className="mb-[clamp(5px,1vw,9px)] shrink-0">
+        <PageSectionHead>Video Reference</PageSectionHead>
+      </div>
+      <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
+      <Pn n={pn} right={isRight} />
+    </div>
+  </div>
+));
+PageRecipeYoutube.displayName = "PageRecipeYoutube";
+
 const PageFiller = forwardRef<HTMLDivElement, { density: "soft" | "hard" }>(({ density }, ref) => (
   <div ref={ref} data-density={density}>
     <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center"
@@ -1331,8 +1371,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   else if (currentSlot.kind === "inside-cover" || currentSlot.kind === "toc" || currentSlot.kind === "filler") ctx = "toc";
   else if (currentSlot.kind === "back-cover") ctx = "backcover";
   else if (
-    currentSlot.kind === "recipe-first" || currentSlot.kind === "recipe-ing" ||
-    currentSlot.kind === "recipe-inst"  || currentSlot.kind === "recipe-wm"
+    currentSlot.kind === "recipe-first"   || currentSlot.kind === "recipe-ing" ||
+    currentSlot.kind === "recipe-inst"    || currentSlot.kind === "recipe-wm"  ||
+    currentSlot.kind === "recipe-youtube"
   ) {
     ctx = "recipe";
     recipeIdx = currentSlot.recipeIdx;
@@ -1406,6 +1447,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
                              recipe={recipes[slot.recipeIdx]} isRight={isRight} density={flipType} />
+      );
+      case "recipe-youtube": return (
+        <PageRecipeYoutube key={`ryt-${slot.recipeIdx}`}
+                           recipe={recipes[slot.recipeIdx]}
+                           youtubeUrl={slot.youtubeUrl}
+                           isRight={isRight} pn={si} density={flipType}
+                           onPlayVideo={setYtModal} />
       );
       case "back-cover": return <PageBackCover key="cb" book={book} />;
     }
