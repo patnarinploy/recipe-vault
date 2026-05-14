@@ -1391,14 +1391,17 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     [recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady],
   );
 
-  // True book freshness = max of book ts and every recipe ts (updated_at ?? created_at).
-  // ISO strings are lexicographically ordered so string reduce works correctly.
+  // Book freshness = MAX(book.updated_at, each recipe's own updated_at).
+  // recipe.created_at is intentionally excluded: adding a new recipe is not an "edit".
+  // recipe.updated_at is only non-null when that recipe's content was actually changed.
+  // ISO strings compare lexicographically, so string reduce is correct for UTC timestamps.
   const bookLastUpdated = useMemo(() => {
-    const ts = [
-      book?.updated_at,
-      book?.created_at,
-      ...recipes.map(r => r.updated_at ?? r.created_at),
-    ].filter((s): s is string => Boolean(s));
+    const ts: string[] = [];
+    const bookTs = book?.updated_at ?? book?.created_at;
+    if (bookTs) ts.push(bookTs);
+    for (const r of recipes) {
+      if (r.updated_at) ts.push(r.updated_at);
+    }
     return ts.length ? ts.reduce((a, b) => (a > b ? a : b)) : undefined;
   }, [book, recipes]);
 
