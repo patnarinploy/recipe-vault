@@ -185,8 +185,9 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const imgHPx      = cv(80, 0.20, 200);
   const imgRowCost  = Math.ceil((imgHPx + instGapPure) / lhInstPure);
 
-  // YouTube block height: full inner width at 16:9 (width:100%, aspect-ratio:16/9)
-  const ytHPx     = innerW * 9 / 16;
+  // YouTube block height: matches YoutubeBlock CSS: width=min(innerW, clamp(80px,20vmin,200px)×16/9)
+  // so height = min(innerW×9/16, clamp(80px,20vmin,200px))
+  const ytHPx     = Math.min(innerW * 9 / 16, cv(80, 0.20, 200));
   const ytRowCost = Math.ceil((ytHPx + instGapPure) / lhInstPure);
 
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
@@ -801,7 +802,7 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
   if (!url) return null;
   const vid = ytVideoId(url);
   return (
-    <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)" }}>
+    <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)", display: "flex", justifyContent: "center" }}>
       <button
         ref={btnRef}
         type="button"
