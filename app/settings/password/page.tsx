@@ -1,30 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowLeft, KeyRound, Mail } from "lucide-react";
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { requireSession } from "@/lib/session";
 
-export default function PasswordPage() {
-  const [sending, setSending] = useState(false);
+export default async function PasswordPage() {
+  const user = await requireSession();
 
-  async function handleReset() {
-    setSending(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) {
-      toast.error("ไม่พบอีเมลในบัญชีของคุณ");
-      setSending(false);
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/settings/password/update`,
-    });
-    if (error) toast.error(error.message);
-    else toast.success("ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว — กรุณาตรวจสอบกล่องจดหมาย");
-    setSending(false);
-  }
+  const provider = user.auth_provider
+    ? { google: "Google", azure: "Microsoft", email: "Email" }[user.auth_provider] ?? user.auth_provider
+    : "OAuth";
 
   return (
     <div className="max-w-lg mx-auto">
@@ -36,33 +19,24 @@ export default function PasswordPage() {
         ตั้งค่า
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-6">รหัสผ่าน</h1>
+      <h1 className="text-2xl font-bold text-stone-800 mb-6">ความปลอดภัย</h1>
 
       <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-        <div className="flex items-center gap-2.5 mb-6 pb-5 border-b border-stone-100">
-          <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
-            <KeyRound className="w-4.5 h-4.5 text-orange-500" />
+        <div className="flex items-center gap-3 mb-5 pb-5 border-b border-stone-100">
+          <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-stone-800">เปลี่ยนรหัสผ่าน</p>
-            <p className="text-xs text-stone-400 mt-0.5">ระบบจะส่งลิงก์รีเซ็ตไปยังอีเมลของคุณ</p>
+            <p className="text-sm font-semibold text-stone-800">บัญชีจัดการโดย {provider}</p>
+            <p className="text-xs text-stone-400 mt-0.5">รหัสผ่านและความปลอดภัยดูแลโดย {provider}</p>
           </div>
         </div>
-
-        <p className="text-sm text-stone-600 mb-6 leading-relaxed">
-          กดปุ่มด้านล่างเพื่อรับอีเมลพร้อมลิงก์สำหรับตั้งรหัสผ่านใหม่
-          ลิงก์มีอายุ 1 ชั่วโมง
+        <p className="text-sm text-stone-500 leading-relaxed">
+          บัญชีของคุณเข้าสู่ระบบผ่าน <strong>{provider}</strong> —
+          รหัสผ่านจึงไม่ได้เก็บอยู่ใน Recipe Vault
+          หากต้องการเปลี่ยนรหัสผ่านหรือตั้งค่าความปลอดภัย
+          กรุณาดำเนินการผ่านบัญชี {provider} ของคุณโดยตรง
         </p>
-
-        <button
-          type="button"
-          onClick={handleReset}
-          disabled={sending}
-          className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-3 rounded-xl text-sm font-semibold transition-colors"
-        >
-          <Mail className="w-4 h-4" />
-          {sending ? "กำลังส่ง…" : "ส่งอีเมลรีเซ็ตรหัสผ่าน"}
-        </button>
       </div>
     </div>
   );

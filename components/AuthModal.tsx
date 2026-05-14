@@ -3,168 +3,175 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Modal from "./Modal";
-import { ChefHat, Mail, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
+import { ChefHat } from "lucide-react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type Tab = "login" | "signup";
-type Stage = "form" | "email_sent";
+// Env-var gates evaluated at build time.
+// Set NEXT_PUBLIC_AUTH_GOOGLE_ENABLED=true and/or NEXT_PUBLIC_AUTH_AZURE_ENABLED=true
+// in .env.local once each provider is configured in the Supabase dashboard.
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true";
+const AZURE_ENABLED  = process.env.NEXT_PUBLIC_AUTH_AZURE_ENABLED  === "true";
 
-const REDIRECT_BASE = typeof window !== "undefined" ? window.location.origin : "";
+const REDIRECT_BASE  = typeof window !== "undefined" ? window.location.origin : "";
 
-// Map Supabase error codes / messages to human-readable Thai
 function friendlyError(msg: string): string {
   const m = msg.toLowerCase();
-  if (m.includes("invalid login credentials") || m.includes("invalid_credentials"))
-    return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
-  if (m.includes("email not confirmed") || m.includes("email_not_confirmed"))
-    return "กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ";
-  if (m.includes("user already registered") || m.includes("already registered"))
-    return "อีเมลนี้มีบัญชีอยู่แล้ว — ลองเข้าสู่ระบบแทน";
-  if (m.includes("password should be") || m.includes("weak_password"))
-    return "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
-  if (m.includes("rate limit") || m.includes("too_many_requests"))
+  if (m.includes("provider is not enabled") || m.includes("validation_failed") || m.includes("unsupported provider"))
+    return "ระบบเข้าสู่ระบบนี้ยังไม่พร้อมใช้งาน";
+  if (m.includes("popup") || m.includes("cancelled") || m.includes("closed by user"))
+    return "การเข้าสู่ระบบถูกยกเลิก";
+  if (m.includes("redirect") || m.includes("mismatch") || m.includes("redirect_uri"))
+    return "การตั้งค่า redirect ไม่ถูกต้อง — กรุณาติดต่อผู้ดูแลระบบ";
+  if (m.includes("rate limit") || m.includes("too_many"))
     return "ส่งคำขอบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่";
   if (m.includes("network") || m.includes("fetch"))
     return "ไม่สามารถเชื่อมต่อได้ กรุณาตรวจสอบอินเทอร์เน็ต";
-  if (m.includes("validation_failed") || m.includes("unsupported provider") || m.includes("provider is not enabled"))
-    return "ระบบเข้าสู่ระบบนี้ยังไม่พร้อมใช้งาน";
   return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
 }
 
+type Provider = "google" | "azure";
+type LoadingState = Provider | null;
+
 export default function AuthModal({ open, onClose }: Props) {
-  const [tab, setTab]       = useState<Tab>("login");
-  const [stage, setStage]   = useState<Stage>("form");
-  const [email, setEmail]   = useState("");
-  const [password, setPass] = useState("");
-  const [showPass, setShow] = useState(false);
-  const [loading, setLoad]  = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [loading, setLoading]   = useState<LoadingState>(null);
+  const [error, setError]       = useState<string | null>(null);
 
   const supabase = createClient();
 
-  function reset() {
-    setStage("form"); setEmail(""); setPass(""); setError(null); setLoad(false); setShow(false);
-  }
-
-  function switchTab(t: Tab) { setTab(t); reset(); }
-
-  async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim() || !password) return;
-    setLoad(true); setError(null);
-
-    if (tab === "login") {
-      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (err) { setError(friendlyError(err.message)); setLoad(false); return; }
-      toast.success("เข้าสู่ระบบสำเร็จ");
-      onClose();
-      window.location.href = "/";
-    } else {
-      const { error: err } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: { emailRedirectTo: `${REDIRECT_BASE}/auth/callback` },
-      });
-      if (err) { setError(friendlyError(err.message)); setLoad(false); return; }
-      setStage("email_sent");
-      setLoad(false);
+  async function handleOAuth(provider: Provider) {
+    setLoading(provider);
+    setError(null);
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${REDIRECT_BASE}/auth/callback` },
+    });
+    if (err) {
+      setError(friendlyError(err.message));
+      setLoading(null);
     }
+    // On success the browser navigates away — no cleanup needed
   }
 
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
+  const anyProviderEnabled = GOOGLE_ENABLED || AZURE_ENABLED;
 
   return (
-    <Modal open={open} onClose={() => { onClose(); reset(); }} maxWidth="max-w-sm">
+    <Modal open={open} onClose={() => { setError(null); setLoading(null); onClose(); }} maxWidth="max-w-sm">
       <div className="bg-white rounded-2xl border border-stone-100 shadow-xl overflow-hidden">
 
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 text-center border-b border-stone-100">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-2xl mb-3">
+        <div className="px-6 pt-7 pb-5 text-center">
+          <div className="inline-flex items-center justify-center w-13 h-13 bg-orange-100 rounded-2xl mb-4">
             <ChefHat className="w-6 h-6 text-orange-500" />
           </div>
-          <h2 className="text-xl font-bold text-stone-800">Recipe Vault</h2>
-          <p className="text-sm text-stone-400 mt-0.5">
-            {tab === "login" ? "เข้าสู่ระบบเพื่อจัดการสูตรอาหาร" : "สร้างบัญชีใหม่ฟรี"}
-          </p>
+          <h2 className="text-xl font-bold text-stone-800">เข้าสู่ระบบ / สมัครสมาชิก</h2>
+          <p className="text-sm text-stone-400 mt-1">เลือกบัญชีที่คุณต้องการใช้</p>
         </div>
 
-        {stage === "email_sent" ? (
-          <div className="px-6 py-8 text-center">
-            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-7 h-7 text-green-500" />
-            </div>
-            <h3 className="text-lg font-bold text-stone-800 mb-2">ตรวจสอบอีเมลของคุณ</h3>
-            <p className="text-sm text-stone-500 leading-relaxed mb-6">
-              เราส่งลิงก์ยืนยันไปที่{" "}
-              <span className="font-medium text-stone-700">{email}</span>{" "}
-              แล้ว — กรุณาคลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชี
-            </p>
-            <button onClick={() => { reset(); onClose(); }}
-              className="text-sm text-orange-500 hover:text-orange-600 font-medium">
-              ปิด
-            </button>
-          </div>
-        ) : (
-          <div className="px-6 py-5 space-y-4">
+        <div className="px-6 pb-7 space-y-3">
 
-            {/* Tab toggle */}
-            <div className="flex gap-1 bg-stone-100 rounded-xl p-1">
-              {(["login", "signup"] as Tab[]).map(t => (
-                <button key={t} onClick={() => switchTab(t)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-                    tab === t ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600"
-                  }`}>
-                  {t === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
-                </button>
-              ))}
-            </div>
+          {/* Google */}
+          <ProviderButton
+            enabled={GOOGLE_ENABLED}
+            loading={loading === "google"}
+            anyLoading={loading !== null}
+            onClick={() => handleOAuth("google")}
+            icon={
+              <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            }
+            label="Continue with Google"
+            disabledLabel="Google — ยังไม่พร้อมใช้งาน"
+          />
 
-            {/* Email + Password form */}
-            <form onSubmit={handleEmailSubmit} className="space-y-3">
-              <input value={email} onChange={e => setEmail(e.target.value)}
-                type="email" placeholder="อีเมล" required autoComplete="email"
-                className={inputCls} />
+          {/* Microsoft */}
+          <ProviderButton
+            enabled={AZURE_ENABLED}
+            loading={loading === "azure"}
+            anyLoading={loading !== null}
+            onClick={() => handleOAuth("azure")}
+            icon={
+              <svg viewBox="0 0 21 21" className="w-5 h-5 shrink-0">
+                <path fill="#f35325" d="M0 0h10v10H0z"/>
+                <path fill="#81bc06" d="M11 0h10v10H11z"/>
+                <path fill="#05a6f0" d="M0 11h10v10H0z"/>
+                <path fill="#ffba08" d="M11 11h10v10H11z"/>
+              </svg>
+            }
+            label="Continue with Microsoft"
+            disabledLabel="Microsoft — ยังไม่พร้อมใช้งาน"
+          />
 
-              <div className="relative">
-                <input value={password} onChange={e => setPass(e.target.value)}
-                  type={showPass ? "text" : "password"}
-                  placeholder={tab === "login" ? "รหัสผ่าน" : "รหัสผ่าน (อย่างน้อย 6 ตัว)"}
-                  required minLength={6}
-                  autoComplete={tab === "login" ? "current-password" : "new-password"}
-                  className={inputCls} style={{ paddingRight: "2.75rem" }} />
-                <button type="button" onClick={() => setShow(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              {error && (
-                <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-              )}
-
-              <button type="submit" disabled={loading}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm">
-                {loading ? "กำลังดำเนินการ…" : tab === "login" ? "เข้าสู่ระบบ" : "สร้างบัญชี"}
-              </button>
-            </form>
-
-            {tab === "login" && (
-              <p className="text-center text-xs text-stone-400">
-                ยังไม่มีบัญชี?{" "}
-                <button onClick={() => switchTab("signup")}
-                  className="text-orange-500 hover:text-orange-600 font-medium">
-                  สมัครสมาชิก
-                </button>
+          {/* No providers at all */}
+          {!anyProviderEnabled && (
+            <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-4 text-center">
+              <p className="text-sm text-stone-500 leading-relaxed">
+                ระบบเข้าสู่ระบบยังอยู่ระหว่างการตั้งค่า<br />
+                กรุณาติดต่อผู้ดูแลระบบ
               </p>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 text-center">{error}</p>
+          )}
+
+          <p className="text-center text-xs text-stone-400 pt-1 leading-relaxed">
+            การเข้าสู่ระบบถือว่าคุณยอมรับ<br />เงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว
+          </p>
+        </div>
       </div>
     </Modal>
+  );
+}
+
+function ProviderButton({
+  enabled,
+  loading,
+  anyLoading,
+  onClick,
+  icon,
+  label,
+  disabledLabel,
+}: {
+  enabled: boolean;
+  loading: boolean;
+  anyLoading: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  disabledLabel: string;
+}) {
+  if (!enabled) {
+    return (
+      <div className="w-full flex items-center justify-between gap-3 border border-stone-200 rounded-xl px-4 py-3.5 text-sm text-stone-400 bg-stone-50 cursor-not-allowed select-none">
+        <div className="flex items-center gap-3">
+          <span className="opacity-40">{icon}</span>
+          <span className="font-medium">{disabledLabel}</span>
+        </div>
+        <span className="text-[10px] bg-stone-200 text-stone-500 px-2 py-0.5 rounded-full font-semibold shrink-0">Coming soon</span>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={anyLoading}
+      className="w-full flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 hover:border-stone-300 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {loading ? (
+        <span className="w-5 h-5 shrink-0 rounded-full border-2 border-stone-300 border-t-orange-500 animate-spin" />
+      ) : icon}
+      <span className="flex-1 text-left">{loading ? "กำลังเชื่อมต่อ…" : label}</span>
+    </button>
   );
 }

@@ -51,7 +51,7 @@ export default async function SettingsPage() {
     {
       label: "บัญชี",
       items: [
-        { href: "/settings/password", icon: KeyRound, label: "รหัสผ่าน",             sub: "ส่งอีเมลเพื่อรีเซ็ตรหัสผ่าน" },
+        { href: "/settings/password", icon: KeyRound, label: "ความปลอดภัย",          sub: "บัญชีจัดการโดย Google / Microsoft" },
       ],
     },
     {
