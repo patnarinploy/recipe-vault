@@ -11,6 +11,7 @@ import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
+import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
@@ -417,10 +418,7 @@ function buildSlots(
       const ingRows  = ingItems >= 5
         ? Math.ceil(lineCount(ingAllChunks[0], charsPerLine, measureIng2Col) / 2)
         : lineCount(ingAllChunks[0], charsPerLine, measureIng);
-      // Reserve vertical space for YouTube footer when recipe has one.
-      // colGapPx = clamp(6px,1.2vw,12px) matches YoutubeBlock's marginTop exactly.
-      const ytFooterPx  = youtubeUrl ? (innerW * 9 / 16 + colGapPx) : 0;
-      const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed - ytFooterPx;
+      const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
       const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
 
       // Per-step row trace — shows exact canvas vs formula measurement per step
@@ -435,8 +433,7 @@ function buildSlots(
         console.group(`%c  📄 ${r.title || "recipe " + ri}`, "color:#555");
         console.log("ingItems:", ingItems, "| will2Col:", will2Col,
           "| canvas2Col:", !!measureIng2Col, "| colW:", Math.floor((innerW - colGapPx) / 2),
-          "| ingRows:", ingRows, "| ytFooterPx:", ytFooterPx.toFixed(1),
-          "| instAvailPx:", instAvailPx.toFixed(1),
+          "| ingRows:", ingRows, "| instAvailPx:", instAvailPx.toFixed(1),
           "| instAvail:", instAvail, "| contLinesInst:", contLinesInst);
         console.table(stepRows);
         console.groupEnd();
@@ -454,7 +451,6 @@ function buildSlots(
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
           ...(stepImages.length > 0 ? { instFirstStepImages: stepImages } : {}),
-          ...(allEmbedded && youtubeUrl ? { youtubeUrl } : {}),
         });
         instOverflowText = instRest;
       } else {
@@ -472,9 +468,9 @@ function buildSlots(
       ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInstImg).filter(c => c.trim().length > 0)
       : [];
 
-    // Ensure the last instruction page has room for the YouTube thumbnail
+    // Reserve space for YouTube block (thumbnail + "Video Reference" heading ≈ +2 rows)
     if (youtubeUrl && instChunks.length > 0) {
-      const adjustedMax = Math.max(1, contLinesInst - ytRowCost);
+      const adjustedMax = Math.max(1, contLinesInst - ytRowCost - 2);
       const lastIdx = instChunks.length - 1;
       const [fits, overflow] = splitText(instChunks[lastIdx], charsPerLine, adjustedMax, measureInstImg);
       if (overflow.trim()) {
@@ -1045,10 +1041,16 @@ const PageRecipeCont = forwardRef<
               const img = n !== null ? (stepImages ?? []).find(s => s.step === n)?.url : undefined;
               return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
             })}
+            {youtubeUrl && (
+              <>
+                <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)" }}>
+                  <PageSectionHead>Video Reference</PageSectionHead>
+                </div>
+                <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
+              </>
+            )}
           </div>
         )}
-
-        <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
 
         <Pn n={pn} right={isRight} />
       </div>
@@ -1242,6 +1244,17 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [coverEditorOpen, setCoverEditorOpen] = useState(false);
   const [tocSortOpen,     setTocSortOpen]     = useState(false);
   const [ytModal,         setYtModal]         = useState<string | null>(null);
+
+  // Register YouTube modal in the ESC stack so it intercepts ESC before the book modal
+  useEffect(() => {
+    if (!ytModal) return;
+    const id = pushModal(() => setYtModal(null));
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && isTopModal(id)) { e.preventDefault(); setYtModal(null); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => { popModal(id); document.removeEventListener("keydown", onKey); };
+  }, [ytModal]);
 
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
