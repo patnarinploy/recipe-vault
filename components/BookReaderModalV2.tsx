@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import BookReaderV2 from "./BookReaderV2";
+import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 
 interface Props {
   bookId: string | null;
@@ -16,13 +17,15 @@ interface Props {
 export default function BookReaderModalV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   useEffect(() => {
     if (!bookId) return;
+    const id = pushModal(onClose);
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && isTopModal(id)) { e.preventDefault(); onClose(); }
     }
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      popModal(id);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };

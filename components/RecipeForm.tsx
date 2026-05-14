@@ -7,17 +7,20 @@ import { CATEGORIES, type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
-import { Plus, Trash2, X, ChevronDown, ImageIcon } from "lucide-react";
+import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
+import { ReactSortable } from "react-sortablejs";
 
 const UNITS = [
   "กรัม", "กิโลกรัม", "ขีด",
   "มิลลิลิตร", "ลิตร",
   "ช้อนชา", "ช้อนโต๊ะ", "ถ้วย",
   "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
+  "ฟอง", "เม็ด", "แว่น",
 ];
 
 const NUM_RE = /^[\d.,\/½¼¾⅓⅔⅛⅜⅝⅞]+$/;
+const uid = () => Math.random().toString(36).slice(2, 10);
 
 function ytVideoId(url: string): string | null {
   if (!url?.trim()) return null;
@@ -25,16 +28,17 @@ function ytVideoId(url: string): string | null {
   return m?.[1] ?? null;
 }
 
-interface IngredientRow { name: string; amount: string; unit: string; }
-interface InstructionStep { text: string; image_url: string | null; }
+interface IngredientRow { id: string; name: string; amount: string; unit: string; }
+interface InstructionStep { id: string; text: string; image_url: string | null; }
 
 // ─── Generic searchable + creatable combobox ──────────────────────
-function Combobox({ value, onChange, options, placeholder = "ไม่ระบุ", className = "" }: {
+function Combobox({ value, onChange, options, placeholder = "ไม่ระบุ", className = "", wrapperClass = "" }: {
   value: string;
   onChange: (v: string) => void;
   options: readonly string[];
   placeholder?: string;
   className?: string;
+  wrapperClass?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
@@ -60,7 +64,7 @@ function Combobox({ value, onChange, options, placeholder = "ไม่ระบ�
   function select(v: string) { onChange(v); setQuery(v); setOpen(false); }
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className={`relative ${wrapperClass}`}>
       <input
         value={query}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
@@ -179,11 +183,11 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
 
 // ─── Parsers ─────────────────────────────────────────────────────
 function parseIngredients(text: string): IngredientRow[] {
-  if (!text.trim()) return [{ name: "", amount: "", unit: "" }];
+  if (!text.trim()) return [{ id: uid(), name: "", amount: "", unit: "" }];
   return text.split("\n").filter(l => l.trim()).map(line => {
     const cleaned = line.trim().replace(/^[\d]+[.)]\s*|^[-•*]\s*/, "");
     const parts = cleaned.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { name: cleaned, amount: "", unit: "" };
+    if (parts.length === 0) return { id: uid(), name: cleaned, amount: "", unit: "" };
 
     const last = parts[parts.length - 1];
     const secondToLast = parts.length >= 2 ? parts[parts.length - 2] : null;
@@ -191,42 +195,45 @@ function parseIngredients(text: string): IngredientRow[] {
     // Known unit at end
     const knownUnit = UNITS.find(u => last === u);
     if (knownUnit) {
-      if (parts.length >= 3) return { name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
-      if (parts.length === 2) return { name: "", amount: parts[0], unit: knownUnit };
-      return { name: cleaned, amount: "", unit: knownUnit };
+      if (parts.length >= 3) return { id: uid(), name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
+      if (parts.length === 2) return { id: uid(), name: "", amount: parts[0], unit: knownUnit };
+      return { id: uid(), name: cleaned, amount: "", unit: knownUnit };
     }
 
     // Custom unit: last is non-number, second-to-last is number
     if (secondToLast && NUM_RE.test(secondToLast) && !NUM_RE.test(last) && parts.length >= 3) {
-      return { name: parts.slice(0, -2).join(" "), amount: secondToLast, unit: last };
+      return { id: uid(), name: parts.slice(0, -2).join(" "), amount: secondToLast, unit: last };
     }
 
     // Name + amount only: last token is a number
     if (NUM_RE.test(last) && parts.length >= 2) {
-      return { name: parts.slice(0, -1).join(" "), amount: last, unit: "" };
+      return { id: uid(), name: parts.slice(0, -1).join(" "), amount: last, unit: "" };
     }
 
-    return { name: cleaned, amount: "", unit: "" };
+    return { id: uid(), name: cleaned, amount: "", unit: "" };
   });
 }
 
 function parseInstructions(raw: string): InstructionStep[] {
-  if (!raw.trim()) return [{ text: "", image_url: null }];
+  if (!raw.trim()) return [{ id: uid(), text: "", image_url: null }];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0 && "text" in parsed[0]) {
       return parsed.map((s: { text?: string; image_url?: string | null }) => ({
+        id: uid(),
         text: s.text ?? "",
         image_url: s.image_url ?? null,
       }));
     }
   } catch {}
   return raw.split("\n").filter(l => l.trim()).map(line => ({
+    id: uid(),
     text: line.replace(/^\d+\.\s*/, "").trim(),
     image_url: null,
   }));
 }
 
+// Backward-compat: read youtube URL from old instructions JSON format
 function extractRecipeYoutube(raw: string): string {
   if (!raw.trim()) return "";
   try {
@@ -279,18 +286,19 @@ export default function RecipeForm({
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
-    recipe_youtube: extractRecipeYoutube(recipe?.instructions ?? ""),
+    // youtube_url: prefer top-level column, fall back to legacy instructions JSON
+    recipe_youtube: recipe?.youtube_url ?? extractRecipeYoutube(recipe?.instructions ?? ""),
   });
 
-  function addRow() { setIngredientRows(r => [...r, { name: "", amount: "", unit: "" }]); }
+  function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unit: "" }]); }
   function removeRow(i: number) { setIngredientRows(r => r.filter((_, idx) => idx !== i)); }
-  function updateRow(i: number, field: keyof IngredientRow, value: string) {
+  function updateRow(i: number, field: keyof Omit<IngredientRow, "id">, value: string) {
     setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
   }
 
-  function addStep() { setInstructionSteps(s => [...s, { text: "", image_url: null }]); }
+  function addStep() { setInstructionSteps(s => [...s, { id: uid(), text: "", image_url: null }]); }
   function removeStep(i: number) { setInstructionSteps(s => s.filter((_, idx) => idx !== i)); }
-  function updateStep(i: number, field: keyof InstructionStep, value: string | null) {
+  function updateStep(i: number, field: keyof Omit<InstructionStep, "id">, value: string | null) {
     setInstructionSteps(s => s.map((step, idx) => idx === i ? { ...step, [field]: value } : step));
   }
 
@@ -316,9 +324,8 @@ export default function RecipeForm({
     if (!isEdit && !bookId) { toast.error("ไม่มี book_id"); return; }
 
     const instructionsJson = JSON.stringify(
-      validSteps.map((s, i) => ({
+      validSteps.map(s => ({
         text: s.text.trim(),
-        ...(i === 0 && form.recipe_youtube.trim() ? { youtube: form.recipe_youtube.trim() } : {}),
         ...(s.image_url ? { image_url: s.image_url } : {}),
       }))
     );
@@ -332,6 +339,7 @@ export default function RecipeForm({
       cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
       servings: form.servings ? parseInt(form.servings) : null,
       image_url: imageUrl,
+      youtube_url: form.recipe_youtube.trim() || null,
       is_public: form.is_public,
     };
 
@@ -417,25 +425,36 @@ export default function RecipeForm({
           <label className={labelCls}>ส่วนผสม <span className="text-red-400">*</span></label>
 
           {/* Column headers — desktop only */}
-          <div className="hidden sm:grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1fr 5.5rem 8.5rem 2rem" }}>
+          <div className="hidden sm:grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
+            <span />
             <span className="text-xs text-stone-400">วัตถุดิบ</span>
             <span className="text-xs text-stone-400">ปริมาณ</span>
             <span className="text-xs text-stone-400">หน่วย</span>
             <span />
           </div>
 
-          <div className="space-y-2">
+          <ReactSortable
+            list={ingredientRows}
+            setList={setIngredientRows}
+            handle=".ing-drag-handle"
+            animation={150}
+            ghostClass="opacity-40"
+            className="space-y-2"
+          >
             {ingredientRows.map((row, i) => (
-              <div key={i}>
-                {/* Mobile: left 2-row content + right single delete spanning full height */}
+              <div key={row.id}>
+                {/* Mobile */}
                 <div className="sm:hidden flex items-stretch gap-2">
-                  <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex items-center pt-1 pb-1">
+                    <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing shrink-0 touch-none" />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2 min-w-0">
                     <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
                       placeholder="เช่น กุ้ง" className={inputCls} />
                     <div className="flex gap-2">
                       <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                         placeholder="0" className={inputCls + " w-24 shrink-0"} />
-                      <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls + " flex-1"} />
+                      <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} wrapperClass="flex-1 min-w-0" />
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -445,8 +464,9 @@ export default function RecipeForm({
                     </button>
                   </div>
                 </div>
-                {/* Desktop: single-row grid */}
-                <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 5.5rem 8.5rem 2rem" }}>
+                {/* Desktop */}
+                <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
+                  <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing touch-none" />
                   <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
                     placeholder="เช่น กุ้ง" className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
@@ -459,7 +479,7 @@ export default function RecipeForm({
                 </div>
               </div>
             ))}
-          </div>
+          </ReactSortable>
 
           <button type="button" onClick={addRow}
             className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
@@ -471,11 +491,19 @@ export default function RecipeForm({
         {/* ── Instructions ────────────────────────────────── */}
         <div>
           <label className={labelCls}>วิธีทำ <span className="text-red-400">*</span></label>
-          <div className="space-y-2.5">
+          <ReactSortable
+            list={instructionSteps}
+            setList={setInstructionSteps}
+            handle=".step-drag-handle"
+            animation={150}
+            ghostClass="opacity-40"
+            className="space-y-2.5"
+          >
             {instructionSteps.map((step, i) => (
-              <div key={i} className="border border-stone-200 rounded-xl overflow-hidden bg-white">
+              <div key={step.id} className="border border-stone-200 rounded-xl overflow-hidden bg-white">
                 {/* Step header */}
                 <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 border-b border-stone-100">
+                  <GripVertical className="step-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing shrink-0 touch-none" />
                   <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
@@ -496,7 +524,7 @@ export default function RecipeForm({
                 />
               </div>
             ))}
-          </div>
+          </ReactSortable>
           <button type="button" onClick={addStep}
             className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
             <Plus className="w-4 h-4" />

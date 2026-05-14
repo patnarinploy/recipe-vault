@@ -273,6 +273,22 @@ export default function RecipeViewV2({
             )}
           </div>
 
+            {/* ── Recipe-level YouTube video ────────────────────────── */}
+            {recipe.youtube_url && (() => {
+              const embed = youtubeEmbedUrl(recipe.youtube_url!);
+              if (!embed) return null;
+              return (
+                <section className="mb-20">
+                  <SectionHeader>วิดีโอสูตร</SectionHeader>
+                  <div className="mt-6 rounded-xl overflow-hidden shadow-md" style={{ aspectRatio: "16/9" }}>
+                    <iframe src={embed} title="วิดีโอสูตรอาหาร"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen loading="lazy" className="w-full h-full border-0" />
+                  </div>
+                </section>
+              );
+            })()}
+
           {/* Handwritten note — bottom-right corner */}
           <div
             className="absolute bottom-8 right-10 text-[#4a6fa5] pointer-events-none select-none"

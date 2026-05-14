@@ -7,6 +7,7 @@ export type Recipe = {
   ingredients: string;
   instructions: string;
   image_url: string | null;
+  youtube_url: string | null;
   category: string | null;
   cook_time_minutes: number | null;
   servings: number | null;

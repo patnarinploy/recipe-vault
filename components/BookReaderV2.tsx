@@ -184,9 +184,13 @@ function pageLimits(pageH: number, pageW: number, vwPx: number, vhPx: number) {
   const imgHPx      = cv(80, 0.20, 200);
   const imgRowCost  = Math.ceil((imgHPx + instGapPure) / lhInstPure);
 
+  // YouTube block height: full inner width at 16:9 (width:100%, aspect-ratio:16/9)
+  const ytHPx     = innerW * 9 / 16;
+  const ytRowCost = Math.ceil((ytHPx + instGapPure) / lhInstPure);
+
   return { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
            ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-           innerW, ingFontPx, instFontPx, imgRowCost };
+           innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost };
 }
 
 // ─── Page slot types ──────────────────────────────────────────────
@@ -196,8 +200,8 @@ type PageSlot =
   | { kind: "toc"; tocPage: number }
   | { kind: "filler" }
   | { kind: "recipe-first"; recipeIdx: number; ingText: string }
-  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[] }
-  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; showMeta?: boolean }
+  | { kind: "recipe-ing";   recipeIdx: number; chunkIdx: number; ingText: string; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; youtubeUrl?: string }
+  | { kind: "recipe-inst";  recipeIdx: number; chunkIdx: number; instText: string; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; showMeta?: boolean }
   | { kind: "recipe-wm";    recipeIdx: number }
   | { kind: "back-cover" }
 
@@ -321,7 +325,7 @@ function buildSlots(
 ): { slots: PageSlot[]; recipeSlotMap: number[]; itemsPerPage: number } {
   const { charsPerLine, contLinesInst, contLinesIngFirst, contLinesIngCont,
           ohMeta, lhIng, lhInstEmbed, instGapEmbed, ihEmbed, itemsPerPage,
-          innerW, ingFontPx, instFontPx, imgRowCost } = pageLimits(pageH, pageW, vwPx, vhPx);
+          innerW, ingFontPx, instFontPx, imgRowCost, ytRowCost } = pageLimits(pageH, pageW, vwPx, vhPx);
 
   // Build canvas-based measure closures once fonts are loaded.
   const fontBase    = "'IBM Plex Sans Thai', Sarabun, sans-serif";
@@ -380,8 +384,9 @@ function buildSlots(
     const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont, will2Col ? measureIng2Col : measureIng)
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
-    const ytLinks      = instYoutubeLinks(r.instructions || "");
     const stepImages   = instStepImages(r.instructions || "");
+    // YouTube URL: prefer top-level column, fall back to legacy instructions JSON
+    const youtubeUrl   = r.youtube_url ?? instYoutubeLinks(r.instructions || "")[0]?.url ?? null;
 
     // Wrap measureInst to add imgRowCost rows for steps with images so
     // toChunks / splitText budget correctly for the rendered image height.
@@ -401,7 +406,6 @@ function buildSlots(
 
     // Track what instructions still need their own pages after embedding.
     let instOverflowText = fullInstText;
-    let ytLinksOnIng    = false;
 
     // Embed the first portion of instructions on the ingredient page when:
     //   • ingredients fit on exactly one page (so there IS remaining vertical space)
@@ -436,6 +440,7 @@ function buildSlots(
 
       if (instAvail >= 2) {
         const [instEmbed, instRest] = splitText(fullInstText, charsPerLine, instAvail, measureInstImg);
+        const allEmbedded = !instRest.trim();
         if (typeof window !== "undefined") {
           const embeddedCount = instEmbed.split("\n").filter(l => l.trim()).length;
           const restCount     = instRest.split("\n").filter(l => l.trim()).length;
@@ -444,11 +449,10 @@ function buildSlots(
         slots.push({
           kind: "recipe-ing", recipeIdx: ri, chunkIdx: 0, ingText: ingAllChunks[0],
           instFirstChunk: instEmbed,
-          ...(ytLinks.length > 0    ? { instFirstYtLinks:    ytLinks    } : {}),
           ...(stepImages.length > 0 ? { instFirstStepImages: stepImages } : {}),
+          ...(allEmbedded && youtubeUrl ? { youtubeUrl } : {}),
         });
         instOverflowText = instRest;
-        ytLinksOnIng    = ytLinks.length > 0;
       } else {
         if (typeof window !== "undefined")
           console.log(`  ↳ instAvail=${instAvail} < 2 → no embed, all ${fullInstText.split("\n").filter(l=>l.trim()).length} steps go to pure pages`);
@@ -464,12 +468,23 @@ function buildSlots(
       ? toChunks(instOverflowText, charsPerLine, contLinesInst, contLinesInst, measureInstImg).filter(c => c.trim().length > 0)
       : [];
 
+    // Ensure the last instruction page has room for the YouTube thumbnail
+    if (youtubeUrl && instChunks.length > 0) {
+      const adjustedMax = Math.max(1, contLinesInst - ytRowCost);
+      const lastIdx = instChunks.length - 1;
+      const [fits, overflow] = splitText(instChunks[lastIdx], charsPerLine, adjustedMax, measureInstImg);
+      if (overflow.trim()) {
+        instChunks[lastIdx] = fits;
+        instChunks.push(overflow);
+      }
+    }
+
     for (let ci = 0; ci < instChunks.length; ci++)
       slots.push({
         kind: "recipe-inst", recipeIdx: ri, chunkIdx: ci, instText: instChunks[ci],
-        ...(ci === 0 && !ytLinksOnIng && ytLinks.length > 0    ? { youtubeLinks: ytLinks    } : {}),
-        ...(stepImages.length > 0                              ? { stepImages                } : {}),
-        ...(ci === 0 && ingAllChunks.length === 0              ? { showMeta: true }           : {}),
+        ...(ci === instChunks.length - 1 && youtubeUrl ? { youtubeUrl } : {}),
+        ...(stepImages.length > 0 ? { stepImages } : {}),
+        ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
       });
 
     // Watermark for spread alignment — skip in portrait.
@@ -742,46 +757,39 @@ function ytVideoId(url: string): string | null {
   return m?.[1] ?? null;
 }
 
-// ─── YouTube step links — thumbnail cards with play overlay ───────
-function YoutubeLinks({ links, onPlay }: { links?: { step: number; url: string }[]; onPlay?: (url: string) => void }) {
-  if (!links?.length) return null;
+// ─── YouTube full-width block — appears after instructions ────────
+function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: string) => void }) {
+  if (!url) return null;
+  const vid = ytVideoId(url);
   return (
-    <div className="flex flex-wrap shrink-0" style={{ gap: "clamp(3px,0.5vw,5px)", marginTop: "clamp(4px,0.8vw,8px)" }}>
-      {links.map(({ step, url }) => {
-        const vid = ytVideoId(url);
-        return (
-          <button key={step} type="button"
-             onMouseDown={e => e.stopPropagation()}
-             onClick={e => { e.stopPropagation(); onPlay ? onPlay(url) : window.open(url, "_blank", "noopener,noreferrer"); }}
-             className="relative overflow-hidden rounded flex-shrink-0"
-             style={{ height: "clamp(36px,6vmin,60px)", aspectRatio: "16/9", background: "#111", display: "inline-flex", cursor: "pointer", border: "none", padding: 0 }}>
-            {vid && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt=""
-                draggable={false}
-                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-            )}
-            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{
-                background: "rgba(255,0,0,0.88)", borderRadius: 2,
-                width: "clamp(9px,1.8vmin,14px)", height: "clamp(6px,1.2vmin,9px)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <div style={{ width: 0, height: 0, borderTop: "clamp(2px,0.45vmin,3.5px) solid transparent", borderBottom: "clamp(2px,0.45vmin,3.5px) solid transparent", borderLeft: "clamp(3.5px,0.7vmin,6px) solid white", marginLeft: 1 }} />
-              </div>
-            </div>
-            <span style={{
-              position: "absolute", bottom: 0, left: 0,
-              background: "rgba(0,0,0,0.65)", color: "white",
-              fontSize: "clamp(4.5px,0.75vmin,6px)", lineHeight: 1, letterSpacing: "0.04em",
-              padding: "clamp(1px,0.15vmin,1.5px) clamp(2px,0.3vmin,3px)",
-              fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)",
-            }}>
-              {step}
-            </span>
-          </button>
-        );
-      })}
+    <div className="shrink-0" style={{ marginTop: "clamp(6px,1.2vw,12px)", width: "100%" }}>
+      <button
+        type="button"
+        onMouseDown={e => e.stopPropagation()}
+        onClick={e => {
+          e.stopPropagation();
+          if (onPlay) onPlay(url);
+          else window.open(url, "_blank", "noopener,noreferrer");
+        }}
+        className="relative overflow-hidden w-full"
+        style={{ aspectRatio: "16/9", display: "block", cursor: "pointer", border: "none", padding: 0, background: "#111", borderRadius: "clamp(4px,0.8vmin,8px)" }}
+      >
+        {vid && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt=""
+            draggable={false}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            background: "rgba(220,0,0,0.92)", borderRadius: 5,
+            width: "clamp(28px,7vmin,52px)", height: "clamp(20px,5vmin,36px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{ width: 0, height: 0, borderTop: "clamp(8px,2vmin,13px) solid transparent", borderBottom: "clamp(8px,2vmin,13px) solid transparent", borderLeft: "clamp(14px,3.5vmin,22px) solid white", marginLeft: 3 }} />
+          </div>
+        </div>
+      </button>
     </div>
   );
 }
@@ -893,8 +901,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeLinks?: { step: number; url: string }[]; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstYtLinks?: { step: number; url: string }[]; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
->(({ recipe: r, text, isRight, pn, density, youtubeLinks, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstYtLinks, instFirstStepImages, onPlayVideo }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
+>(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo }, ref) => {
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -993,7 +1001,7 @@ const PageRecipeCont = forwardRef<
                 return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
               })}
             </div>
-            <YoutubeLinks links={instFirstYtLinks} onPlay={onPlayVideo} />
+            <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
           </>
         )}
 
@@ -1009,7 +1017,7 @@ const PageRecipeCont = forwardRef<
           </div>
         )}
 
-        <YoutubeLinks links={youtubeLinks} onPlay={onPlayVideo} />
+        <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
 
         <Pn n={pn} right={isRight} />
       </div>
@@ -1336,8 +1344,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         variant="ing" showMeta={slot.chunkIdx === 0}
                         showRibbon={slot.chunkIdx === 0}
                         instFirstChunk={slot.instFirstChunk}
-                        instFirstYtLinks={slot.instFirstYtLinks}
                         instFirstStepImages={slot.instFirstStepImages}
+                        youtubeUrl={slot.youtubeUrl}
                         onPlayVideo={setYtModal} />
       );
       case "recipe-inst": return (
@@ -1345,7 +1353,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         recipe={recipes[slot.recipeIdx]}
                         label="" text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
-                        youtubeLinks={slot.youtubeLinks}
+                        youtubeUrl={slot.youtubeUrl}
                         stepImages={slot.stepImages}
                         variant="inst" showMeta={slot.showMeta ?? false}
                         showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)}
