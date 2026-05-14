@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 13;
-export const BUILD_TIMESTAMP = "2026-05-13T21:22:08.000Z";
-export const BUILD_TOOLTIP   = "feat(recipe-ux): mobile ingredient layout, natural step images, YouTube ";
+export const BUILD_NUMBER    = 14;
+export const BUILD_TIMESTAMP = "2026-05-14T07:54:49.000Z";
+export const BUILD_TOOLTIP   = "fix(book-reader): eliminate double YouTube block, fix budget, fix click ";
