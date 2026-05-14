@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 15;
-export const BUILD_TIMESTAMP = "2026-05-14T08:21:00.000Z";
-export const BUILD_TOOLTIP   = "fix(book-reader): correct pagination regression, YouTube layout, ESC sta";
+export const BUILD_NUMBER    = 16;
+export const BUILD_TIMESTAMP = "2026-05-14T08:39:56.000Z";
+export const BUILD_TOOLTIP   = "fix(book-reader): two-phase YouTube placement, dedicated slot, step-imag";
