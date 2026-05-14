@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 20;
-export const BUILD_TIMESTAMP = "2026-05-14T11:56:09.000Z";
-export const BUILD_TOOLTIP   = "refactor: unify metadata + writer card stats across all surfaces";
+export const BUILD_NUMBER    = 21;
+export const BUILD_TIMESTAMP = "2026-05-14T12:12:40.000Z";
+export const BUILD_TOOLTIP   = "feat: book cover uses true activity timestamp (max of book + all recipe ";
