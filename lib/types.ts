@@ -25,6 +25,7 @@ export type Book = {
   tagline: string | null;
   cover_color: string;
   created_at: string;
+  updated_at?: string;
 };
 
 export const BOOK_COLORS = [

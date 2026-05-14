@@ -1,11 +1,35 @@
 import { requireSession } from "@/lib/session";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
 import { BUILD_NUMBER, BUILD_TIMESTAMP, BUILD_TOOLTIP } from "@/lib/build-version";
+import type { WriterInfo } from "@/lib/types";
 
 export default async function SettingsPage() {
-  const user = await requireSession();
+  const user     = await requireSession();
+  const supabase = await createClient();
+
+  // Fetch current user's own stats for the writer card preview
+  const { data: myBooksData } = await supabase
+    .from("books").select("id").eq("user_id", user.id);
+  const bkIds = (myBooksData ?? []).map((b: { id: string }) => b.id);
+  const [recipeRes, publicRes] = bkIds.length
+    ? await Promise.all([
+        supabase.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
+        supabase.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
+      ])
+    : [{ count: 0 as number | null }, { count: 0 as number | null }];
+  const writerInfo: WriterInfo = {
+    username:     user.username,
+    display_name: user.display_name,
+    bio:          user.bio,
+    avatar:       user.avatar,
+    role:         user.role,
+    book_count:   bkIds.length,
+    recipe_count: recipeRes.count ?? 0,
+    public_count: publicRes.count ?? 0,
+  };
 
   const buildDate    = new Date(BUILD_TIMESTAMP).toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
@@ -58,7 +82,7 @@ export default async function SettingsPage() {
             แก้ไข
           </Link>
         </div>
-        <WriterCard info={{ username: user.username, display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role }} />
+        <WriterCard info={writerInfo} />
       </div>
 
       {/* Nav groups */}

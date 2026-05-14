@@ -641,6 +641,15 @@ const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: num
                 }
               </div>
             )}
+
+            {/* Book timestamp — below author, mono metadata */}
+            <p title="Last updated"
+               className="px-1 text-white/30 tracking-wide"
+               style={{ marginTop: "clamp(2px,0.4vmin,5px)", fontSize: "clamp(6px,1.2vw,9px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
+              {new Date(book.updated_at ?? book.created_at).toLocaleString("en-GB", {
+                day: "numeric", month: "short", year: "numeric",
+              })}
+            </p>
           </div>
         </div>
       </div>
@@ -943,18 +952,22 @@ const PageRecipeFirst = forwardRef<
             </p>
           )}
 
-          <div className="mt-[clamp(6px,1.2vw,12px)]"
-               style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
+          {/* Gold rule + timestamp on the same row */}
+          <div className="mt-[clamp(6px,1.2vw,12px)] flex items-center min-w-0"
+               style={{ gap: "clamp(6px,1vw,10px)" }}>
+            <div className="shrink-0"
+                 style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
+            <p title="Last updated"
+               className="text-white/40 tracking-wide truncate min-w-0"
+               style={{ fontSize: "clamp(7px,1.1vw,10px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
+              {new Date(r.updated_at ?? r.created_at).toLocaleString("en-GB", {
+                day: "numeric", month: "short", year: "numeric",
+                hour: "2-digit", minute: "2-digit", second: "2-digit",
+              }).replace(", ", " · ")}
+            </p>
+          </div>
 
-          <p className="mt-[clamp(3px,0.6vw,6px)] text-white/40 tracking-wide"
-             style={{ fontSize: "clamp(7px,1.1vw,10px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
-            {new Date(r.updated_at ?? r.created_at).toLocaleString("en-GB", {
-              day: "numeric", month: "short", year: "numeric",
-              hour: "2-digit", minute: "2-digit", second: "2-digit",
-            }).replace(", ", " · ")}
-          </p>
-
-          <p className="mt-[clamp(2px,0.4vw,4px)] text-white/25 tracking-widest"
+          <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
              style={{ fontSize: "clamp(6.5px,1vw,9px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
             {String(pn).padStart(2, "0")}
           </p>

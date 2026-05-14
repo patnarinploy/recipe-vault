@@ -56,9 +56,24 @@ async function BookLibraryData({ userId }: { userId: string }) {
         .returns<PublicBookRaw[]>()
     : { data: [] };
 
+  // Aggregate public stats per author so WriterCard badges are accurate
+  const authorPublicStats = new Map<string, { book_count: number; recipe_count: number; public_count: number }>();
+  for (const b of publicBooksRaw ?? []) {
+    const uname: string | undefined = (b as any).users?.username;
+    if (!uname) continue;
+    const cnt = (publicRecipes ?? []).filter((r) => r.book_id === b.id).length;
+    const prev = authorPublicStats.get(uname) ?? { book_count: 0, recipe_count: 0, public_count: 0 };
+    authorPublicStats.set(uname, { book_count: prev.book_count + 1, recipe_count: prev.recipe_count + cnt, public_count: prev.public_count + cnt });
+  }
+
   const publicBooks: BookWithCounts[] = (publicBooksRaw ?? []).map((b) => {
-    const count = (publicRecipes ?? []).filter((r) => r.book_id === b.id).length;
-    return { ...b, recipe_count: count, public_count: count, bookAuthor: (b as any).users ?? undefined };
+    const count   = (publicRecipes ?? []).filter((r) => r.book_id === b.id).length;
+    const uname: string | undefined = (b as any).users?.username;
+    const stats   = uname ? authorPublicStats.get(uname) : undefined;
+    const bookAuthor: WriterInfo | undefined = (b as any).users
+      ? { ...(b as any).users, ...stats }
+      : undefined;
+    return { ...b, recipe_count: count, public_count: count, bookAuthor };
   });
 
   return { myBooks, publicBooks };
@@ -67,7 +82,14 @@ async function BookLibraryData({ userId }: { userId: string }) {
 // Thin async component so Suspense can stream it in
 async function LibraryWithData({ userId, currentUser }: { userId: string; currentUser: WriterInfo }) {
   const { myBooks, publicBooks } = await BookLibraryData({ userId });
-  return <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={currentUser} />;
+  // Enrich currentUser with real stats so WriterCard badges match everywhere
+  const enrichedUser: WriterInfo = {
+    ...currentUser,
+    book_count:   myBooks.length,
+    recipe_count: myBooks.reduce((s, b) => s + b.recipe_count, 0),
+    public_count: myBooks.reduce((s, b) => s + b.public_count, 0),
+  };
+  return <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={enrichedUser} />;
 }
 
 export default async function HomePage() {
