@@ -64,7 +64,7 @@ export async function updateRecipe(
     return { error: "ไม่มีสิทธิ์แก้ไขสูตรนี้" };
   }
 
-  const { error } = await supabase.from("recipes").update(payload).eq("id", id);
+  const { error } = await supabase.from("recipes").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) return { error: error.message };
   return { id };
 }
@@ -126,6 +126,9 @@ export async function updateRecipeOrder(
       .eq("id", orderedIds[i])
       .eq("book_id", bookId);
   }
+
+  // TOC reorder = book-level activity; bump book.updated_at but not recipe.updated_at
+  await supabase.from("books").update({ updated_at: new Date().toISOString() }).eq("id", bookId);
 
   return { success: true };
 }

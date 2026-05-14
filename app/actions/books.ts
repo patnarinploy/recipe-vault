@@ -44,7 +44,7 @@ export async function updateBook(
 
   if (!existing || existing.user_id !== user.id) return { error: "ไม่มีสิทธิ์แก้ไข" };
 
-  const { error } = await supabase.from("books").update(payload).eq("id", id);
+  const { error } = await supabase.from("books").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }
