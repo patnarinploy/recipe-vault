@@ -417,7 +417,10 @@ function buildSlots(
       const ingRows  = ingItems >= 5
         ? Math.ceil(lineCount(ingAllChunks[0], charsPerLine, measureIng2Col) / 2)
         : lineCount(ingAllChunks[0], charsPerLine, measureIng);
-      const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed;
+      // Reserve vertical space for YouTube footer when recipe has one.
+      // colGapPx = clamp(6px,1.2vw,12px) matches YoutubeBlock's marginTop exactly.
+      const ytFooterPx  = youtubeUrl ? (innerW * 9 / 16 + colGapPx) : 0;
+      const instAvailPx = pageH - ohMeta - ingRows * lhIng - ihEmbed - ytFooterPx;
       const instAvail   = Math.max(0, Math.floor((instAvailPx + instGapEmbed) / lhInstEmbed) - 1);
 
       // Per-step row trace — shows exact canvas vs formula measurement per step
@@ -432,7 +435,8 @@ function buildSlots(
         console.group(`%c  📄 ${r.title || "recipe " + ri}`, "color:#555");
         console.log("ingItems:", ingItems, "| will2Col:", will2Col,
           "| canvas2Col:", !!measureIng2Col, "| colW:", Math.floor((innerW - colGapPx) / 2),
-          "| ingRows:", ingRows, "| instAvailPx:", instAvailPx.toFixed(1),
+          "| ingRows:", ingRows, "| ytFooterPx:", ytFooterPx.toFixed(1),
+          "| instAvailPx:", instAvailPx.toFixed(1),
           "| instAvail:", instAvail, "| contLinesInst:", contLinesInst);
         console.table(stepRows);
         console.groupEnd();
@@ -486,6 +490,21 @@ function buildSlots(
         ...(stepImages.length > 0 ? { stepImages } : {}),
         ...(ci === 0 && ingAllChunks.length === 0 ? { showMeta: true } : {}),
       });
+
+    // Debug: verify exactly one YouTube block per recipe
+    if (typeof window !== "undefined" && youtubeUrl) {
+      const ytBlocks = slots.filter(s =>
+        (s.kind === "recipe-ing" || s.kind === "recipe-inst") &&
+        (s as any).recipeIdx === ri && (s as any).youtubeUrl
+      );
+      const flag = ytBlocks.length !== 1 ? " ⚠ WRONG COUNT!" : "";
+      console.log(
+        `%c  🎬 ${r.title} — youtube blocks: ${ytBlocks.length}${flag}` +
+        ` | slot indices: [${ytBlocks.map(s => slots.indexOf(s)).join(",")}]` +
+        ` | total inst pages: ${instChunks.length}`,
+        ytBlocks.length !== 1 ? "color:red;font-weight:bold" : "color:#888",
+      );
+    }
 
     // Watermark for spread alignment — skip in portrait.
     if (!portrait) {
@@ -759,13 +778,26 @@ function ytVideoId(url: string): string | null {
 
 // ─── YouTube full-width block — appears after instructions ────────
 function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: string) => void }) {
+  // Must be before early return to satisfy rules of hooks
+  const btnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const stop = (e: Event) => { e.stopPropagation(); };
+    el.addEventListener("mousedown", stop);
+    el.addEventListener("touchstart", stop, { passive: true });
+    return () => {
+      el.removeEventListener("mousedown", stop);
+      el.removeEventListener("touchstart", stop);
+    };
+  });
   if (!url) return null;
   const vid = ytVideoId(url);
   return (
     <div className="shrink-0" style={{ marginTop: "clamp(6px,1.2vw,12px)", width: "100%" }}>
       <button
+        ref={btnRef}
         type="button"
-        onMouseDown={e => e.stopPropagation()}
         onClick={e => {
           e.stopPropagation();
           if (onPlay) onPlay(url);
@@ -1001,7 +1033,6 @@ const PageRecipeCont = forwardRef<
                 return <InstructionStep key={i} line={line} fallbackNum={i + 1} stepImage={img} />;
               })}
             </div>
-            <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
           </>
         )}
 
