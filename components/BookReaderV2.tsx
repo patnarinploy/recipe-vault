@@ -1706,7 +1706,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       />
 
       {writerInfo && (
-        <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-sm">
+        <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-[30rem]">
           <div className="rounded-2xl overflow-hidden">
             <WriterCard info={writerInfo} onClose={() => setWriterCardOpen(false)} />
           </div>

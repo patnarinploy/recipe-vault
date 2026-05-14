@@ -240,7 +240,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
       />
 
       {/* Writer card modal */}
-      <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-sm">
+      <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-[30rem]">
         {writerCard && (
           <div className="rounded-2xl overflow-hidden">
             <WriterCard info={writerCard} onClose={() => setWriterCard(null)} />

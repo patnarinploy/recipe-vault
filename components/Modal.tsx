@@ -98,7 +98,7 @@ export default function Modal({
         >
           <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm" />
 
-          <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6">
+          <div className="relative min-h-full flex items-center justify-center p-4 sm:p-6">
             <motion.div
               key="modal-panel"
               initial={{ opacity: 0, y: 10, scale: 0.98 }}
