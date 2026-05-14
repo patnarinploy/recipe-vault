@@ -209,7 +209,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
       )}
 
       {/* New book modal */}
-      <Modal open={newBookOpen} onClose={() => setNewBookOpen(false)} title="สร้างหนังสือสูตรใหม่" maxWidth="max-w-3xl">
+      <Modal open={newBookOpen} onClose={() => setNewBookOpen(false)} title="สร้างหนังสือสูตรใหม่" maxWidth="max-w-3xl" disableBackdropClick>
         <BookCoverEditor
           author={displayName}
           inModal
@@ -219,7 +219,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
       </Modal>
 
       {/* Edit cover modal */}
-      <Modal open={!!editCoverBook} onClose={() => setEditCoverBook(null)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl">
+      <Modal open={!!editCoverBook} onClose={() => setEditCoverBook(null)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl" disableBackdropClick>
         {editCoverBook && (
           <BookCoverEditor
             book={editCoverBook}
@@ -243,7 +243,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
       <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-sm">
         {writerCard && (
           <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerCard} />
+            <WriterCard info={writerCard} onClose={() => setWriterCard(null)} />
           </div>
         )}
       </Modal>

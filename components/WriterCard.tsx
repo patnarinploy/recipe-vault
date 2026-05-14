@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
 
@@ -6,13 +7,28 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
   user:   { label: "📚 สมาชิก", className: "bg-stone-100  text-stone-500  border border-stone-200"  },
 };
 
-export default function WriterCard({ info }: { info: WriterInfo }) {
+export default function WriterCard({ info, onClose }: { info: WriterInfo; onClose?: () => void }) {
   const isUrl   = isAvatarUrl(info.avatar);
   const initial = (info.display_name ?? info.username)[0].toUpperCase();
   const badge   = info.role ? ROLE_BADGE[info.role] : null;
 
+  const hasStats = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
+
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 text-center">
+    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 text-center">
+
+      {/* Close button */}
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-orange-100 text-stone-400 hover:text-stone-600 transition-colors"
+          aria-label="ปิด"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Avatar */}
       <div className="flex justify-center mb-4">
         <div
@@ -42,11 +58,30 @@ export default function WriterCard({ info }: { info: WriterInfo }) {
         <p className="text-sm text-stone-600 leading-relaxed mb-4">{info.bio}</p>
       )}
 
-      {/* Role badge */}
-      {badge && (
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badge.className}`}>
-          {badge.label}
-        </span>
+      {/* Badges */}
+      {(badge || hasStats) && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {badge && (
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badge.className}`}>
+              {badge.label}
+            </span>
+          )}
+          {info.book_count !== undefined && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-500 border border-stone-200">
+              📖 {info.book_count} Books
+            </span>
+          )}
+          {info.recipe_count !== undefined && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-500 border border-stone-200">
+              🍳 {info.recipe_count} Recipes
+            </span>
+          )}
+          {info.public_count !== undefined && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+              🌐 {info.public_count} Shared
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

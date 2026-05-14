@@ -14,6 +14,7 @@ interface ModalProps {
   maxWidth?: string;
   fullscreen?: boolean;
   hideChrome?: boolean;
+  disableBackdropClick?: boolean;
 }
 
 export default function Modal({
@@ -24,6 +25,7 @@ export default function Modal({
   maxWidth = "max-w-2xl",
   fullscreen = false,
   hideChrome = false,
+  disableBackdropClick = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -90,7 +92,7 @@ export default function Modal({
           transition={{ duration: 0.15, ease: "easeOut" }}
           className="fixed inset-0 overflow-y-auto"
           style={{ zIndex: 9999 }}
-          onClick={onClose}
+          onClick={disableBackdropClick ? undefined : onClose}
           role="dialog"
           aria-modal="true"
         >

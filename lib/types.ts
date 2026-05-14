@@ -13,6 +13,7 @@ export type Recipe = {
   servings: number | null;
   is_public: boolean;
   created_at: string;
+  updated_at?: string;
   sort_order: number | null;
 };
 
@@ -43,6 +44,9 @@ export type WriterInfo = {
   bio: string | null;
   avatar: string | null;
   role?: "admin" | "user";
+  book_count?: number;
+  recipe_count?: number;
+  public_count?: number;
 };
 
 export type User = {

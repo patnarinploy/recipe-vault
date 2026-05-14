@@ -946,7 +946,15 @@ const PageRecipeFirst = forwardRef<
           <div className="mt-[clamp(6px,1.2vw,12px)]"
                style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
 
-          <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
+          <p className="mt-[clamp(3px,0.6vw,6px)] text-white/40 tracking-wide"
+             style={{ fontSize: "clamp(7px,1.1vw,10px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
+            {new Date(r.updated_at ?? r.created_at).toLocaleString("en-GB", {
+              day: "numeric", month: "short", year: "numeric",
+              hour: "2-digit", minute: "2-digit", second: "2-digit",
+            }).replace(", ", " · ")}
+          </p>
+
+          <p className="mt-[clamp(2px,0.4vw,4px)] text-white/25 tracking-widest"
              style={{ fontSize: "clamp(6.5px,1vw,9px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
             {String(pn).padStart(2, "0")}
           </p>
@@ -1203,7 +1211,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="เรียงลำดับสูตรอาหาร">
+    <Modal open={open} onClose={onClose} title="เรียงลำดับสูตรอาหาร" disableBackdropClick>
       <div className="bg-white rounded-b-2xl border border-stone-100 border-t-0 p-4 sm:p-5">
         <p className="text-xs text-stone-400 mb-3">ลากที่ไอคอน ⠿ หรือกดลูกศร เพื่อเปลี่ยนลำดับ</p>
         <div className="space-y-1 max-h-[52vh] overflow-y-auto">
@@ -1333,7 +1341,30 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       setBook(bk.data as Book);
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? u?.username ?? "");
-      if (u?.username) setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
+      if (u?.username) {
+        setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
+        // Fire-and-forget: enrich writer card with author stats after main load
+        const authorId: string = (bk.data as any).user_id;
+        void (async () => {
+          try {
+            const sc = createClient();
+            const { data: authorBooks } = await sc.from("books").select("id").eq("user_id", authorId);
+            const bkIds = (authorBooks ?? []).map((b: { id: string }) => b.id);
+            const [recipeRes, publicRes] = bkIds.length
+              ? await Promise.all([
+                  sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
+                  sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
+                ])
+              : [{ count: 0 }, { count: 0 }];
+            setWriterInfo(prev => prev ? {
+              ...prev,
+              book_count: bkIds.length,
+              recipe_count: recipeRes.count ?? 0,
+              public_count: publicRes.count ?? 0,
+            } : null);
+          } catch {}
+        })();
+      }
     }
     if (rc.data) setRecipes(rc.data);
     setLoading(false);
@@ -1618,14 +1649,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       </div>
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
-      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title="เพิ่มสูตรในเล่มนี้">
+      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title="เพิ่มสูตรในเล่มนี้" disableBackdropClick>
         <RecipeForm bookId={bookId} inModal
           onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
           onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
-        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title="แก้ไขสูตรอาหาร">
+        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title="แก้ไขสูตรอาหาร" disableBackdropClick>
           <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete
             onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
             onCancel={() => setEditRecipeOpen(false)}
@@ -1633,7 +1664,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         </Modal>
       )}
 
-      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl">
+      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl" disableBackdropClick>
         <BookCoverEditor book={book} inModal
           onSuccess={() => { setCoverEditorOpen(false); refreshAndReset(currentPage); }}
           onCancel={() => setCoverEditorOpen(false)} />
@@ -1650,7 +1681,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       {writerInfo && (
         <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-sm">
           <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerInfo} />
+            <WriterCard info={writerInfo} onClose={() => setWriterCardOpen(false)} />
           </div>
         </Modal>
       )}
