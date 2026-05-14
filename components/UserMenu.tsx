@@ -14,65 +14,52 @@ export default function UserMenu({ user }: { user: User }) {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const displayName = user.display_name ?? "ผู้ใช้ใหม่";
+  const subtitle    = user.email ?? "";
+
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors text-sm font-medium text-stone-700"
       >
-        {/* Avatar */}
         {isAvatarUrl(user.avatar) ? (
-          <img
-            src={user.avatar!}
-            alt={user.username}
-            draggable={false}
-            className="w-7 h-7 rounded-full object-cover shrink-0 pointer-events-none select-none"
-          />
+          <img src={user.avatar!} alt={displayName} draggable={false}
+            className="w-7 h-7 rounded-full object-cover shrink-0 pointer-events-none select-none" />
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-            {(user.display_name ?? "กระรอกสายลับ")[0].toUpperCase()}
+            {displayName[0].toUpperCase()}
           </span>
         )}
-        <span className="max-w-[120px] truncate">{user.display_name ?? "กระรอกสายลับ"}</span>
+        <span className="max-w-[120px] truncate">{displayName}</span>
         {user.role === "admin" && (
-          <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">
-            Admin
-          </span>
+          <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">Admin</span>
         )}
         <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-stone-100 py-1.5 z-50">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-lg border border-stone-100 py-1.5 z-50">
           <div className="px-4 py-2 border-b border-stone-100 mb-1">
-            <p className="text-xs text-stone-400">เข้าสู่ระบบในฐานะ</p>
-            <p className="text-sm font-semibold text-stone-800 truncate">{user.display_name ?? "กระรอกสายลับ"}</p>
-            <p className="text-xs text-stone-400">@{user.username}</p>
+            <p className="text-sm font-semibold text-stone-800 truncate">{displayName}</p>
+            {subtitle && <p className="text-xs text-stone-400 truncate">{subtitle}</p>}
           </div>
 
-          <Link
-            href="/settings"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-          >
+          <Link href="/settings" onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
             <Settings className="w-4 h-4 text-stone-400" />
             ตั้งค่า
           </Link>
 
           {user.role === "admin" && (
-            <Link
-              href="/admin/users"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-            >
+            <Link href="/admin/users" onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
               <Users className="w-4 h-4 text-stone-400" />
               จัดการผู้ใช้
             </Link>
@@ -80,10 +67,8 @@ export default function UserMenu({ user }: { user: User }) {
 
           <div className="border-t border-stone-100 mt-1 pt-1">
             <form action={logout}>
-              <button
-                type="submit"
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-              >
+              <button type="submit"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
                 <LogOut className="w-4 h-4" />
                 ออกจากระบบ
               </button>

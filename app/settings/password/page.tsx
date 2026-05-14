@@ -1,24 +1,30 @@
 "use client";
 
-import { changePassword } from "@/app/actions/auth";
-import { useActionState, useEffect } from "react";
-import { ArrowLeft, KeyRound } from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft, KeyRound, Mail } from "lucide-react";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import LoadingButton from "@/components/ui/LoadingButton";
 
 export default function PasswordPage() {
-  const [state, action, pending] = useActionState(changePassword, undefined);
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    if (!state) return;
-    if ("success" in state) toast.success("เปลี่ยนรหัสผ่านสำเร็จ");
-    else if ("error" in state) toast.error(state.error);
-  }, [state]);
-
-  const inputCls =
-    "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400";
-  const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
+  async function handleReset() {
+    setSending(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) {
+      toast.error("ไม่พบอีเมลในบัญชีของคุณ");
+      setSending(false);
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/settings/password/update`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success("ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว — กรุณาตรวจสอบกล่องจดหมาย");
+    setSending(false);
+  }
 
   return (
     <div className="max-w-lg mx-auto">
@@ -39,34 +45,24 @@ export default function PasswordPage() {
           </div>
           <div>
             <p className="text-sm font-semibold text-stone-800">เปลี่ยนรหัสผ่าน</p>
-            <p className="text-xs text-stone-400 mt-0.5">ต้องยืนยันรหัสผ่านเดิมก่อนทุกครั้ง</p>
+            <p className="text-xs text-stone-400 mt-0.5">ระบบจะส่งลิงก์รีเซ็ตไปยังอีเมลของคุณ</p>
           </div>
         </div>
 
-        <form action={action} className="space-y-4">
-          <div>
-            <label className={labelCls}>รหัสผ่านปัจจุบัน</label>
-            <input name="current_password" type="password" required className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>รหัสผ่านใหม่</label>
-            <input name="new_password" type="password" required minLength={4} className={inputCls} />
-            <p className="text-xs text-stone-400 mt-1.5">อย่างน้อย 4 ตัวอักษร</p>
-          </div>
-          <div>
-            <label className={labelCls}>ยืนยันรหัสผ่านใหม่</label>
-            <input name="confirm_password" type="password" required minLength={4} className={inputCls} />
-          </div>
+        <p className="text-sm text-stone-600 mb-6 leading-relaxed">
+          กดปุ่มด้านล่างเพื่อรับอีเมลพร้อมลิงก์สำหรับตั้งรหัสผ่านใหม่
+          ลิงก์มีอายุ 1 ชั่วโมง
+        </p>
 
-          <LoadingButton
-            type="submit"
-            pending={pending}
-            pendingLabel="กำลังบันทึก…"
-            className="w-full py-3 text-sm font-semibold mt-2"
-          >
-            บันทึกรหัสผ่านใหม่
-          </LoadingButton>
-        </form>
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={sending}
+          className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-3 rounded-xl text-sm font-semibold transition-colors"
+        >
+          <Mail className="w-4 h-4" />
+          {sending ? "กำลังส่ง…" : "ส่งอีเมลรีเซ็ตรหัสผ่าน"}
+        </button>
       </div>
     </div>
   );

@@ -1,22 +1,16 @@
-import { cookies } from "next/headers";
-import { verifySessionToken, SESSION_COOKIE } from "./auth";
-import { createClient } from "./supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import type { User } from "./types";
+import type { User } from "@/lib/types";
 
 export async function getSession(): Promise<User | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-
-  const userId = verifySessionToken(token);
-  if (!userId) return null;
-
   const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return null;
+
   const { data } = await supabase
     .from("users")
-    .select("id, username, display_name, bio, email, tel, role, avatar, created_at")
-    .eq("id", userId)
+    .select("*")
+    .eq("auth_id", authUser.id)
     .single<User>();
 
   return data ?? null;

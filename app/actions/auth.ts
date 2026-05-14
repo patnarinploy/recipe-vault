@@ -1,184 +1,19 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import {
-  verifyPassword,
-  hashPassword,
-  createSessionToken,
-  SESSION_COOKIE,
-} from "@/lib/auth";
 import { getSession } from "@/lib/session";
 
-export async function login(
-  _: unknown,
-  formData: FormData
-): Promise<{ error: string } | undefined> {
-  const username = (formData.get("username") as string)?.trim();
-  const password = formData.get("password") as string;
+// ─── Session ──────────────────────────────────────────────────────────────────
 
-  if (!username || !password) {
-    return { error: "กรุณากรอก username และ password" };
-  }
-
+export async function logout() {
   const supabase = await createClient();
-  const { data: user } = await supabase
-    .from("users")
-    .select("id, password_hash")
-    .eq("username", username)
-    .single();
-
-  if (!user || !verifyPassword(password, user.password_hash)) {
-    return { error: "username หรือ password ไม่ถูกต้อง" };
-  }
-
-  const token = createSessionToken(user.id);
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
-
+  await supabase.auth.signOut();
   redirect("/");
 }
 
-export async function logout() {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
-  redirect("/login");
-}
-
-export async function createUser(formData: FormData) {
-  const currentUser = await getSession();
-  if (!currentUser || currentUser.role !== "admin") {
-    return { error: "ไม่มีสิทธิ์" };
-  }
-
-  const username = (formData.get("username") as string)?.trim();
-  const password = formData.get("password") as string;
-  const role = (formData.get("role") as string) || "user";
-
-  if (!username || !password) {
-    return { error: "กรุณากรอก username และ password" };
-  }
-  if (username.length < 3) {
-    return { error: "username ต้องมีอย่างน้อย 3 ตัวอักษร" };
-  }
-  if (password.length < 4) {
-    return { error: "password ต้องมีอย่างน้อย 4 ตัวอักษร" };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("users").insert({
-    username,
-    password_hash: hashPassword(password),
-    role,
-  });
-
-  if (error) {
-    if (error.code === "23505") return { error: "username นี้มีอยู่แล้ว" };
-    return { error: error.message };
-  }
-
-  return { success: true };
-}
-
-export async function deleteUser(userId: string) {
-  const currentUser = await getSession();
-  if (!currentUser || currentUser.role !== "admin") {
-    return { error: "ไม่มีสิทธิ์" };
-  }
-  if (userId === currentUser.id) {
-    return { error: "ไม่สามารถลบตัวเองได้" };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("users").delete().eq("id", userId);
-  if (error) return { error: error.message };
-  return { success: true };
-}
-
-export async function changePassword(
-  _: unknown,
-  formData: FormData
-): Promise<{ error: string } | { success: true } | undefined> {
-  const currentUser = await getSession();
-  if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
-
-  const currentPassword = formData.get("current_password") as string;
-  const newPassword = formData.get("new_password") as string;
-  const confirmPassword = formData.get("confirm_password") as string;
-
-  if (!currentPassword || !newPassword || !confirmPassword) {
-    return { error: "กรุณากรอกข้อมูลให้ครบ" };
-  }
-  if (newPassword !== confirmPassword) {
-    return { error: "รหัสผ่านใหม่ไม่ตรงกัน" };
-  }
-  if (newPassword.length < 4) {
-    return { error: "รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร" };
-  }
-
-  const supabase = await createClient();
-  const { data: user } = await supabase
-    .from("users")
-    .select("password_hash")
-    .eq("id", currentUser.id)
-    .single();
-
-  if (!user || !verifyPassword(currentPassword, user.password_hash)) {
-    return { error: "รหัสผ่านปัจจุบันไม่ถูกต้อง" };
-  }
-
-  const { error } = await supabase
-    .from("users")
-    .update({ password_hash: hashPassword(newPassword) })
-    .eq("id", currentUser.id);
-
-  if (error) return { error: error.message };
-  return { success: true };
-}
-
-export async function changeUsername(
-  _: unknown,
-  formData: FormData,
-): Promise<{ error: string } | { success: true } | undefined> {
-  const currentUser = await getSession();
-  if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
-
-  const newUsername = (formData.get("new_username") as string)?.trim();
-
-  if (!newUsername) return { error: "กรุณากรอก username ใหม่" };
-  if (newUsername.length < 3) return { error: "username ต้องมีอย่างน้อย 3 ตัวอักษร" };
-  if (!/^[a-zA-Z0-9_]+$/.test(newUsername))
-    return { error: "ใช้ได้เฉพาะตัวอักษรภาษาอังกฤษ ตัวเลข และ _" };
-  if (newUsername === currentUser.username) return { error: "username เหมือนเดิม" };
-
-  const supabase = await createClient();
-
-  const { data: existing } = await supabase
-    .from("users")
-    .select("id")
-    .eq("username", newUsername)
-    .maybeSingle();
-
-  if (existing) return { error: "username นี้มีผู้ใช้แล้ว" };
-
-  const { error } = await supabase
-    .from("users")
-    .update({ username: newUsername })
-    .eq("id", currentUser.id);
-
-  if (error) return { error: error.message };
-
-  revalidatePath("/", "layout");
-  return { success: true };
-}
+// ─── Profile mutations ────────────────────────────────────────────────────────
 
 export async function updatePublicProfile(
   _: unknown,
@@ -189,7 +24,7 @@ export async function updatePublicProfile(
 
   const displayName = (formData.get("display_name") as string)?.trim() || null;
   const bio         = (formData.get("bio") as string)?.trim() || null;
-  const avatar      = formData.get("avatar") as string | null;
+  const avatar      = (formData.get("avatar") as string) || null;
 
   if (displayName !== null && displayName.length < 2)
     return { error: "นามแฝงต้องมีอย่างน้อย 2 ตัวอักษร" };
@@ -207,23 +42,26 @@ export async function updatePublicProfile(
   return { success: true };
 }
 
-export async function updatePrivateInfo(
+export async function completeOnboarding(
   _: unknown,
   formData: FormData,
 ): Promise<{ error: string } | { success: true } | undefined> {
   const currentUser = await getSession();
   if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
 
-  const email = (formData.get("email") as string)?.trim() || null;
-  const tel   = (formData.get("tel") as string)?.trim() || null;
+  const displayName = (formData.get("display_name") as string)?.trim() || null;
+  const bio         = (formData.get("bio") as string)?.trim() || null;
+  const avatar      = (formData.get("avatar") as string) || null;
 
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    return { error: "รูปแบบ email ไม่ถูกต้อง" };
+  if (!displayName || displayName.length < 2)
+    return { error: "กรุณากรอกนามแฝงอย่างน้อย 2 ตัวอักษร" };
+  if (!avatar)
+    return { error: "กรุณาเลือก Avatar" };
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("users")
-    .update({ email, tel })
+    .update({ display_name: displayName, bio, avatar, onboarding_complete: true })
     .eq("id", currentUser.id);
 
   if (error) return { error: error.message };
@@ -231,10 +69,128 @@ export async function updatePrivateInfo(
   return { success: true };
 }
 
-// kept for backwards compat — redirects to updatePublicProfile
-export async function updateProfile(
+export async function updatePrivateInfo(
   _: unknown,
   formData: FormData,
 ): Promise<{ error: string } | { success: true } | undefined> {
-  return updatePublicProfile(_, formData);
+  const currentUser = await getSession();
+  if (!currentUser) return { error: "กรุณาเข้าสู่ระบบ" };
+
+  const tel      = (formData.get("tel") as string)?.trim() || null;
+  const dob      = (formData.get("dob") as string)?.trim() || null;
+  const country  = (formData.get("country") as string)?.trim() || null;
+  const language = (formData.get("language") as string)?.trim() || null;
+
+  const twitter   = (formData.get("social_twitter") as string)?.trim() || "";
+  const instagram = (formData.get("social_instagram") as string)?.trim() || "";
+  const youtube   = (formData.get("social_youtube") as string)?.trim() || "";
+  const website   = (formData.get("social_website") as string)?.trim() || "";
+  const social_links = (twitter || instagram || youtube || website)
+    ? { twitter, instagram, youtube, website }
+    : null;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ tel, dob: dob || null, country, language, social_links })
+    .eq("id", currentUser.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+// kept for backwards compat
+export const updateProfile = updatePublicProfile;
+
+// ─── Admin actions ────────────────────────────────────────────────────────────
+
+async function getAdminSession() {
+  const user = await getSession();
+  if (!user || user.role !== "admin") return null;
+  return user;
+}
+
+export async function banUser(
+  targetId: string,
+  reason: string,
+): Promise<{ success: true } | { error: string }> {
+  const admin = await getAdminSession();
+  if (!admin) return { error: "ไม่มีสิทธิ์" };
+  if (targetId === admin.id) return { error: "ไม่สามารถแบนตัวเองได้" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "banned", banned_at: new Date().toISOString(), banned_reason: reason.trim() || null, banned_by: admin.id })
+    .eq("id", targetId);
+  if (error) return { error: error.message };
+
+  await supabase.from("audit_log").insert({
+    actor_id: admin.id, target_id: targetId, action: "ban", detail: { reason },
+  });
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
+export async function unbanUser(
+  targetId: string,
+): Promise<{ success: true } | { error: string }> {
+  const admin = await getAdminSession();
+  if (!admin) return { error: "ไม่มีสิทธิ์" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "active", banned_at: null, banned_reason: null, banned_by: null })
+    .eq("id", targetId);
+  if (error) return { error: error.message };
+
+  await supabase.from("audit_log").insert({
+    actor_id: admin.id, target_id: targetId, action: "unban", detail: {},
+  });
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
+export async function promoteUser(
+  targetId: string,
+): Promise<{ success: true } | { error: string }> {
+  const admin = await getAdminSession();
+  if (!admin) return { error: "ไม่มีสิทธิ์" };
+  if (targetId === admin.id) return { error: "คุณเป็น Admin อยู่แล้ว" };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("users").update({ role: "admin" }).eq("id", targetId);
+  if (error) return { error: error.message };
+
+  await supabase.from("audit_log").insert({
+    actor_id: admin.id, target_id: targetId, action: "promote", detail: { role: "admin" },
+  });
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
+export async function demoteUser(
+  targetId: string,
+): Promise<{ success: true } | { error: string }> {
+  const admin = await getAdminSession();
+  if (!admin) return { error: "ไม่มีสิทธิ์" };
+  if (targetId === admin.id) return { error: "ไม่สามารถลด rank ตัวเองได้" };
+
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("users")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "admin");
+  if ((count ?? 0) <= 1) return { error: "ต้องมี Admin อย่างน้อย 1 คนในระบบ" };
+
+  const { error } = await supabase.from("users").update({ role: "user" }).eq("id", targetId);
+  if (error) return { error: error.message };
+
+  await supabase.from("audit_log").insert({
+    actor_id: admin.id, target_id: targetId, action: "demote", detail: { role: "user" },
+  });
+  revalidatePath("/admin/users");
+  return { success: true };
 }

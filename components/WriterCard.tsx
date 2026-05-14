@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
+import OnlineIndicator from "./OnlineIndicator";
 
 const ROLE_BADGE: Record<string, { label: string; className: string }> = {
   admin:  { label: "👑 Admin",  className: "bg-orange-100 text-orange-600 border border-orange-200" },
@@ -11,8 +12,8 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
   const isUrl   = isAvatarUrl(info.avatar);
   const initial = (info.display_name ?? info.username)[0].toUpperCase();
   const badge   = info.role ? ROLE_BADGE[info.role] : null;
-
   const hasStats = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
+  const showPresence = "last_seen" in info;
 
   return (
     <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 text-center">
@@ -31,14 +32,21 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
 
       {/* Avatar */}
       <div className="flex justify-center mb-4">
-        <div
-          className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden"
-          style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
-        >
-          {isUrl ? (
-            <img src={info.avatar!} alt={initial} draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
-          ) : (
-            <span className="text-3xl font-bold text-white">{initial}</span>
+        <div className="relative">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden"
+            style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
+          >
+            {isUrl ? (
+              <img src={info.avatar!} alt={initial} draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
+            ) : (
+              <span className="text-3xl font-bold text-white">{initial}</span>
+            )}
+          </div>
+          {showPresence && (
+            <span className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow">
+              <OnlineIndicator lastSeen={info.last_seen} size="md" />
+            </span>
           )}
         </div>
       </div>
@@ -49,6 +57,13 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
       </h3>
       {!info.display_name && (
         <p className="text-sm italic text-stone-300 mt-0.5">(ไม่ได้กำหนดนามแฝง)</p>
+      )}
+
+      {/* Online status label */}
+      {showPresence && (
+        <div className="flex justify-center mt-1.5">
+          <OnlineIndicator lastSeen={info.last_seen} showLabel size="sm" />
+        </div>
       )}
 
       <div className="w-10 h-px bg-orange-200 mx-auto mt-4 mb-4" />

@@ -45,13 +45,13 @@ export default async function SettingsPage() {
       label: "โปรไฟล์",
       items: [
         { href: "/settings/profile",  icon: User,        label: "โปรไฟล์นักเขียน",    sub: "นามแฝง, Avatar และคำอธิบายตัวตน" },
-        { href: "/settings/account",  icon: ShieldCheck, label: "ข้อมูลส่วนตัว",      sub: "อีเมลและเบอร์โทร (ไม่แสดงต่อสาธารณะ)" },
+        { href: "/settings/account",  icon: ShieldCheck, label: "ข้อมูลส่วนตัว",      sub: "เบอร์โทร, วันเกิด, ประเทศ, โซเชียล" },
       ],
     },
     {
       label: "บัญชี",
       items: [
-        { href: "/settings/password", icon: KeyRound, label: "รหัสผ่าน",             sub: "เปลี่ยนรหัสผ่านเข้าสู่ระบบ" },
+        { href: "/settings/password", icon: KeyRound, label: "รหัสผ่าน",             sub: "ส่งอีเมลเพื่อรีเซ็ตรหัสผ่าน" },
       ],
     },
     {

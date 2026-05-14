@@ -48,17 +48,30 @@ export type WriterInfo = {
   book_count?: number;
   recipe_count?: number;
   public_count?: number;
+  last_seen?: string | null;
 };
 
 export type User = {
   id: string;
+  auth_id: string | null;
+  auth_provider: string | null;
   username: string;
   display_name: string | null;
   bio: string | null;
   email: string | null;
   tel: string | null;
   role: "admin" | "user";
+  status: "active" | "banned";
+  banned_at: string | null;
+  banned_reason: string | null;
+  banned_by: string | null;
+  onboarding_complete: boolean;
+  last_seen: string | null;
   avatar: string | null;
+  dob: string | null;
+  country: string | null;
+  language: string | null;
+  social_links: Record<string, string> | null;
   created_at: string;
 };
 

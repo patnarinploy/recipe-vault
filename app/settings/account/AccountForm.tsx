@@ -3,20 +3,30 @@
 import { useActionState, useEffect } from "react";
 import { updatePrivateInfo } from "@/app/actions/auth";
 import Link from "next/link";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import LoadingButton from "@/components/ui/LoadingButton";
 
+const COUNTRY_LIST = [
+  "Thailand", "Japan", "South Korea", "United States", "United Kingdom",
+  "Australia", "Singapore", "Germany", "France", "Canada", "Other",
+];
+const LANGUAGE_LIST = ["ไทย", "English", "日本語", "한국어", "Français", "Deutsch", "Other"];
+
 export default function AccountForm({
-  currentUsername,
-  currentRole,
   currentEmail,
   currentTel,
+  currentDob,
+  currentCountry,
+  currentLanguage,
+  currentSocialLinks,
 }: {
-  currentUsername: string;
-  currentRole: "admin" | "user";
   currentEmail: string | null;
   currentTel: string | null;
+  currentDob: string | null;
+  currentCountry: string | null;
+  currentLanguage: string | null;
+  currentSocialLinks: Record<string, string> | null;
 }) {
   const [state, action, pending] = useActionState(updatePrivateInfo, undefined);
 
@@ -26,7 +36,8 @@ export default function AccountForm({
     else if ("error" in state) toast.error(state.error);
   }, [state]);
 
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none";
+  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white";
+  const labelCls = "block text-sm font-semibold text-stone-700 mb-1";
 
   return (
     <div className="max-w-lg mx-auto">
@@ -43,70 +54,73 @@ export default function AccountForm({
 
       <form action={action} className="space-y-5">
 
-        {/* Username (read-only) */}
+        {/* Email — read-only, managed by Supabase Auth */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-          <div className="flex items-start justify-between mb-1">
-            <p className="text-sm font-semibold text-stone-700">ชื่อผู้ใช้ (Username)</p>
-            <span className="flex items-center gap-1 text-xs text-stone-400">
-              <Lock className="w-3 h-3" />
-              ใช้สำหรับ Login
-            </span>
-          </div>
-          <p className="text-xs text-stone-400 mb-3">ไม่สามารถเปลี่ยนได้ที่นี่</p>
+          <label className={labelCls}>อีเมล</label>
+          <p className="text-xs text-stone-400 mb-2">จัดการผ่านการเข้าสู่ระบบ ไม่สามารถแก้ไขได้ที่นี่</p>
           <input
-            type="text"
-            value={currentUsername}
+            type="email"
+            value={currentEmail ?? ""}
             disabled
             className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm bg-stone-50 text-stone-400 cursor-not-allowed"
           />
         </div>
 
-        <div>
-          <p className="text-sm font-semibold text-stone-700 mb-1">Role</p>
-          <p className="text-xs text-stone-400 mb-3">ระดับสิทธิ์ในระบบ</p>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
-              currentRole === "admin"
-                ? "bg-orange-100 text-orange-600"
-                : "bg-stone-100 text-stone-600"
-            }`}>
-              {currentRole === "admin" ? "👑 Admin" : "👤 User"}
-            </span>
-            <span className="text-xs text-stone-400">ไม่สามารถเปลี่ยนได้</span>
-          </div>
-        </div>
-
-        {/* Email + Tel */}
+        {/* Contact */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-stone-700">ติดต่อ</p>
           <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1">อีเมล</label>
-            <input
-              name="email"
-              type="email"
-              defaultValue={currentEmail ?? ""}
-              placeholder="example@email.com"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1">เบอร์โทรศัพท์</label>
-            <input
-              name="tel"
-              type="tel"
-              defaultValue={currentTel ?? ""}
-              placeholder="08x-xxx-xxxx"
-              className={inputCls}
-            />
+            <label className={labelCls}>เบอร์โทรศัพท์</label>
+            <input name="tel" type="tel" defaultValue={currentTel ?? ""} placeholder="08x-xxx-xxxx" className={inputCls} />
           </div>
         </div>
 
-        <LoadingButton
-          type="submit"
-          pending={pending}
-          pendingLabel="กำลังบันทึก…"
-          className="w-full py-3 text-sm font-semibold"
-        >
+        {/* Personal */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-stone-700">ข้อมูลส่วนบุคคล</p>
+          <div>
+            <label className={labelCls}>วันเกิด</label>
+            <input name="dob" type="date" defaultValue={currentDob ?? ""} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>ประเทศ</label>
+            <select name="country" defaultValue={currentCountry ?? ""} className={inputCls}>
+              <option value="">— ไม่ระบุ —</option>
+              {COUNTRY_LIST.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>ภาษาหลัก</label>
+            <select name="language" defaultValue={currentLanguage ?? ""} className={inputCls}>
+              <option value="">— ไม่ระบุ —</option>
+              {LANGUAGE_LIST.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Social links */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-stone-700">ลิงก์โซเชียล</p>
+          {[
+            { name: "social_twitter",   label: "X / Twitter",  placeholder: "https://x.com/username" },
+            { name: "social_instagram", label: "Instagram",    placeholder: "https://instagram.com/username" },
+            { name: "social_youtube",   label: "YouTube",      placeholder: "https://youtube.com/@channel" },
+            { name: "social_website",   label: "เว็บไซต์",    placeholder: "https://yoursite.com" },
+          ].map(({ name, label, placeholder }) => (
+            <div key={name}>
+              <label className={labelCls}>{label}</label>
+              <input
+                name={name}
+                type="url"
+                defaultValue={currentSocialLinks?.[name.replace("social_", "")] ?? ""}
+                placeholder={placeholder}
+                className={inputCls}
+              />
+            </div>
+          ))}
+        </div>
+
+        <LoadingButton type="submit" pending={pending} pendingLabel="กำลังบันทึก…" className="w-full py-3 text-sm font-semibold">
           บันทึกข้อมูลส่วนตัว
         </LoadingButton>
       </form>
