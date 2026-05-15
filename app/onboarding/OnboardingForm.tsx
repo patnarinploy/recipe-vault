@@ -141,7 +141,7 @@ export default function OnboardingForm({
           <p className="text-xs text-stone-400 mb-2">ชื่อที่แสดงบนปกหนังสือและในเว็บ</p>
           <input name="display_name" type="text" defaultValue={currentDisplayName ?? ""}
             minLength={2} maxLength={50} required
-            placeholder="เช่น Chef แมวเหมียว, สูตรลับคุณแพนกวิ้น" className={inputCls} />
+            placeholder="เช่น กระรอกสายลับ" className={inputCls} />
         </div>
         <div>
           <div className="flex items-baseline gap-1.5 mb-1">
