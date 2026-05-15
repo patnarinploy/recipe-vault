@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
 import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import Heartbeat from "@/components/Heartbeat";
 
 const sarabun = Sarabun({
@@ -47,9 +46,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession();
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? "";
-  const isOnboarding = pathname.startsWith("/onboarding");
+  // Lock navbar when the user hasn't completed onboarding yet.
+  // Derived from user.onboarding_complete (source of truth) rather than pathname,
+  // so it unlocks immediately after the server action calls revalidatePath.
+  const isOnboarding = !!user && !user.onboarding_complete;
 
   // Banned user gate — shown regardless of page
   if (user && user.status === "banned") {
