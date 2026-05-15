@@ -79,7 +79,8 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
             </>
           )}
 
-          <div className="border-t border-stone-100 mt-1 pt-1">
+          {/* border-t only when nav items are above; when locked the identity block's border-b already separates */}
+          <div className={!locked ? "border-t border-stone-100 mt-1 pt-1" : "pt-1"}>
             <form action={logout}>
               <button type="submit"
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
@@ -89,11 +90,9 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
             </form>
           </div>
 
-          {!locked && (
-            <div className="border-t border-stone-100 px-4 pt-2 pb-1 flex justify-center">
-              <DbStatus />
-            </div>
-          )}
+          <div className="border-t border-stone-100 px-4 pt-2 pb-1 flex justify-center">
+            <DbStatus />
+          </div>
         </div>
       )}
     </div>
