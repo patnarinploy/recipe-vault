@@ -92,9 +92,10 @@ export default function OnboardingForm({
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
+            onMouseDown={(e) => e.preventDefault()}
             disabled={uploading}
             style={{ WebkitTapHighlightColor: "transparent" }}
-            className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all select-none focus:outline-none"
+            className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all select-none focus:outline-none focus-visible:outline-none"
             title="อัปโหลดรูปของคุณ"
           >
             {uploading ? <Loader2 className="w-4 h-4 text-stone-400 animate-spin" /> : <>
@@ -107,8 +108,9 @@ export default function OnboardingForm({
               key={value}
               type="button"
               onClick={() => setSelected(value)}
+              onMouseDown={(e) => e.preventDefault()}
               style={{ WebkitTapHighlightColor: "transparent" }}
-              className={`relative aspect-square rounded-full transition-all select-none focus:outline-none ${
+              className={`relative aspect-square rounded-full transition-all select-none focus:outline-none focus-visible:outline-none ${
                 selected === value
                   ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
                   : "[@media(hover:hover)]:hover:ring-2 [@media(hover:hover)]:hover:ring-stone-300 [@media(hover:hover)]:hover:ring-offset-1"

@@ -100,8 +100,9 @@ export default function ProfileForm({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
+              onMouseDown={(e) => e.preventDefault()}
               disabled={uploading}
-              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none select-none"
+              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none focus-visible:outline-none select-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
               title="อัปโหลดรูปของคุณ"
             >
@@ -121,7 +122,8 @@ export default function ProfileForm({
                 key={value}
                 type="button"
                 onClick={() => setSelected(value)}
-                className={`relative aspect-square rounded-full transition-all select-none focus:outline-none ${
+                onMouseDown={(e) => e.preventDefault()}
+                className={`relative aspect-square rounded-full transition-all select-none focus:outline-none focus-visible:outline-none ${
                   selected === value
                     ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
                     : "[@media(hover:hover)]:hover:ring-2 [@media(hover:hover)]:hover:ring-stone-300 [@media(hover:hover)]:hover:ring-offset-1"
