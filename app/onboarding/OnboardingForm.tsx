@@ -15,12 +15,12 @@ export default function OnboardingForm({
   currentDisplayName,
   currentBio,
   currentAvatar,
-  currentUsername,
+  currentEmail,
 }: {
   currentDisplayName: string | null;
   currentBio: string | null;
   currentAvatar: string | null;
-  currentUsername: string;
+  currentEmail: string | null;
 }) {
   const router = useRouter();
   const [state, action, pending] = useActionState(completeOnboarding, undefined);
@@ -55,6 +55,7 @@ export default function OnboardingForm({
   }
 
   const isUrl = isAvatarUrl(selected);
+  const emailInitial = currentEmail?.[0]?.toUpperCase() ?? "?";
   const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white";
 
   return (
@@ -76,7 +77,7 @@ export default function OnboardingForm({
             {isUrl ? (
               <img src={selected} alt="avatar" draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
             ) : selected ? (
-              <span className="text-3xl font-bold text-white">{currentUsername[0]?.toUpperCase()}</span>
+              <span className="text-3xl font-bold text-white">{emailInitial}</span>
             ) : (
               <span className="text-3xl text-stone-300">?</span>
             )}
@@ -88,22 +89,32 @@ export default function OnboardingForm({
         )}
 
         <div className="grid grid-cols-6 gap-2">
-          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all select-none"
-            title="อัปโหลดรูปของคุณ">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all select-none focus:outline-none"
+            title="อัปโหลดรูปของคุณ"
+          >
             {uploading ? <Loader2 className="w-4 h-4 text-stone-400 animate-spin" /> : <>
               <Camera className="w-4 h-4 text-stone-400" />
               <span className="text-[9px] text-stone-400">อัปโหลด</span>
             </>}
           </button>
           {AVATAR_PRESETS.map(({ value, name }) => (
-            <button key={value} type="button" onClick={() => setSelected(value)}
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSelected(value)}
+              style={{ WebkitTapHighlightColor: "transparent" }}
               className={`relative aspect-square rounded-full transition-all select-none focus:outline-none ${
                 selected === value
                   ? "ring-[3px] ring-orange-500 ring-offset-2 scale-105"
-                  : "hover:ring-2 hover:ring-stone-300 hover:ring-offset-1"
+                  : "[@media(hover:hover)]:hover:ring-2 [@media(hover:hover)]:hover:ring-stone-300 [@media(hover:hover)]:hover:ring-offset-1"
               }`}
-              title={name}>
+              title={name}
+            >
               <div className="w-full h-full rounded-full overflow-hidden">
                 <img src={value} alt={name} draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
               </div>
@@ -131,15 +142,20 @@ export default function OnboardingForm({
             placeholder="เช่น Chef แมวเหมียว, สูตรลับคุณแพนกวิ้น" className={inputCls} />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-stone-700 mb-1">คำอธิบายตัวตน <span className="text-stone-300">(ไม่บังคับ)</span></label>
+          <div className="flex items-baseline gap-1.5 mb-1">
+            <label className="block text-sm font-semibold text-stone-700">คำอธิบายตัวตน</label>
+            <span className="text-[11px] italic text-stone-300">(ไม่บังคับ)</span>
+          </div>
+          <p className="text-xs text-stone-400 mb-2">แนะนำตัวเองสั้นๆ ให้คนอื่นรู้จักคุณ</p>
           <textarea name="bio" defaultValue={currentBio ?? ""} maxLength={200} rows={3}
             placeholder="เช่น สายกินสายทำอาหาร ชอบทดลองสูตรใหม่ๆ..."
             className={`${inputCls} resize-none`} />
+          <p className="text-xs text-stone-400 mt-1">ไม่เกิน 200 ตัวอักษร</p>
         </div>
       </div>
 
       <LoadingButton type="submit" pending={pending || uploading} pendingLabel="กำลังบันทึก…" className="w-full py-3 text-sm font-semibold">
-        เริ่มใช้งาน Recipe Vault
+        บันทึกโปรไฟล์นักเขียน
       </LoadingButton>
     </form>
   );
