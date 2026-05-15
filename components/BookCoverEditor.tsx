@@ -71,7 +71,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
       const res = await deleteBook(book.id);
       if ("error" in res) { toast.error(res.error); return; }
       toast.success("ลบหนังสือแล้ว");
-      router.push("/");
+      onCancel?.();
       router.refresh();
     });
   }
@@ -186,22 +186,25 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               </button>
             )
           )}
-          <button
-            type="button"
-            onClick={cancel}
-            className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50"
-          >
-            ยกเลิก
-          </button>
-          <LoadingButton
-            type="submit"
-            pending={isPending}
-            pendingLabel="กำลังบันทึก…"
-            disabled={confirmDelete}
-            className="flex-1"
-          >
-            {isEdit ? "บันทึก" : "สร้างหนังสือ"}
-          </LoadingButton>
+          {!confirmDelete && (
+            <>
+              <button
+                type="button"
+                onClick={cancel}
+                className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50"
+              >
+                ยกเลิก
+              </button>
+              <LoadingButton
+                type="submit"
+                pending={isPending}
+                pendingLabel="กำลังบันทึก…"
+                className="flex-1"
+              >
+                {isEdit ? "บันทึก" : "สร้างหนังสือ"}
+              </LoadingButton>
+            </>
+          )}
         </div>
       </div>
     </form>

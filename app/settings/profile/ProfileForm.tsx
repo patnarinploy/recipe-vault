@@ -154,7 +154,9 @@ export default function ProfileForm({
         {/* Public info fields */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1">นามแฝง</label>
+            <label className="block text-sm font-semibold text-stone-700 mb-1">
+              นามแฝง <span className="text-red-400">*</span>
+            </label>
             <p className="text-xs text-stone-400 mb-2">ชื่อที่แสดงบนปกหนังสือและในเว็บ</p>
             <input
               name="display_name"
@@ -162,13 +164,17 @@ export default function ProfileForm({
               defaultValue={currentDisplayName ?? ""}
               minLength={2}
               maxLength={50}
+              required
               placeholder="เช่น Chef แมวเหมียว, สูตรลับคุณแพนกวิ้น"
               className={inputCls}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1">คำอธิบายตัวตน</label>
+            <div className="flex items-baseline gap-1.5 mb-1">
+              <label className="block text-sm font-semibold text-stone-700">คำอธิบายตัวตน</label>
+              <span className="text-[11px] italic text-stone-300">(ไม่บังคับ)</span>
+            </div>
             <p className="text-xs text-stone-400 mb-2">แนะนำตัวเองสั้นๆ ให้คนอื่นรู้จักคุณ</p>
             <textarea
               name="bio"

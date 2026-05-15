@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
 import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Heartbeat from "@/components/Heartbeat";
 
 const sarabun = Sarabun({
@@ -46,6 +47,9 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession();
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? "";
+  const isOnboarding = pathname.startsWith("/onboarding");
 
   // Banned user gate — shown regardless of page
   if (user && user.status === "banned") {
@@ -80,7 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
       <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
-        <Navbar user={user} />
+        <Navbar user={user} locked={isOnboarding} />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
           {children}
         </main>

@@ -53,11 +53,8 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
 
       {/* Name */}
       <h3 className="text-xl font-bold text-stone-800 leading-tight">
-        {info.display_name ?? "กระรอกสายลับ"}
+        {info.display_name ?? info.username}
       </h3>
-      {!info.display_name && (
-        <p className="text-sm italic text-stone-300 mt-0.5">(ไม่ได้กำหนดนามแฝง)</p>
-      )}
 
       {/* Online status label */}
       {showPresence && (

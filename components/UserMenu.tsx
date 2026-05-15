@@ -8,7 +8,7 @@ import type { User } from "@/lib/types";
 import { isAvatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 
-export default function UserMenu({ user }: { user: User }) {
+export default function UserMenu({ user, locked }: { user: User; locked?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -20,8 +20,10 @@ export default function UserMenu({ user }: { user: User }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const displayName = user.display_name ?? "ผู้ใช้ใหม่";
-  const subtitle    = user.email ?? "";
+  const hasName       = !!user.display_name;
+  const avatarInitial = hasName
+    ? user.display_name![0].toUpperCase()
+    : (user.email?.[0]?.toUpperCase() ?? "?");
 
   return (
     <div ref={ref} className="relative">
@@ -30,14 +32,18 @@ export default function UserMenu({ user }: { user: User }) {
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors text-sm font-medium text-stone-700"
       >
         {isAvatarUrl(user.avatar) ? (
-          <img src={user.avatar!} alt={displayName} draggable={false}
+          <img src={user.avatar!} alt={user.display_name ?? user.email ?? ""} draggable={false}
             className="w-7 h-7 rounded-full object-cover shrink-0 pointer-events-none select-none" />
         ) : (
           <span className="w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-            {displayName[0].toUpperCase()}
+            {avatarInitial}
           </span>
         )}
-        <span className="max-w-[120px] truncate">{displayName}</span>
+        {hasName ? (
+          <span className="max-w-[120px] truncate">{user.display_name}</span>
+        ) : (
+          <span className="max-w-[120px] truncate italic text-stone-400 font-normal">ยังไม่กำหนดนามแฝง</span>
+        )}
         {user.role === "admin" && (
           <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">Admin</span>
         )}
@@ -47,22 +53,30 @@ export default function UserMenu({ user }: { user: User }) {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-lg border border-stone-100 py-1.5 z-50">
           <div className="px-4 py-2 border-b border-stone-100 mb-1">
-            <p className="text-sm font-semibold text-stone-800 truncate">{displayName}</p>
-            {subtitle && <p className="text-xs text-stone-400 truncate">{subtitle}</p>}
+            {hasName ? (
+              <p className="text-sm font-semibold text-stone-800 truncate">{user.display_name}</p>
+            ) : (
+              <p className="text-sm italic text-stone-400 truncate">ยังไม่กำหนดนามแฝง</p>
+            )}
+            {user.email && <p className="text-xs text-stone-400 truncate">{user.email}</p>}
           </div>
 
-          <Link href="/settings" onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
-            <Settings className="w-4 h-4 text-stone-400" />
-            ตั้งค่า
-          </Link>
+          {!locked && (
+            <>
+              <Link href="/settings" onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
+                <Settings className="w-4 h-4 text-stone-400" />
+                ตั้งค่า
+              </Link>
 
-          {user.role === "admin" && (
-            <Link href="/admin/users" onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
-              <Users className="w-4 h-4 text-stone-400" />
-              จัดการผู้ใช้
-            </Link>
+              {user.role === "admin" && (
+                <Link href="/admin/users" onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
+                  <Users className="w-4 h-4 text-stone-400" />
+                  จัดการผู้ใช้
+                </Link>
+              )}
+            </>
           )}
 
           <div className="border-t border-stone-100 mt-1 pt-1">
@@ -75,9 +89,11 @@ export default function UserMenu({ user }: { user: User }) {
             </form>
           </div>
 
-          <div className="border-t border-stone-100 px-4 pt-2 pb-1 flex justify-center">
-            <DbStatus />
-          </div>
+          {!locked && (
+            <div className="border-t border-stone-100 px-4 pt-2 pb-1 flex justify-center">
+              <DbStatus />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -35,7 +35,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
   const [pubSearch, setPubSearch]           = useState("");
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  const displayName = currentUser?.display_name ?? "กระรอกสายลับ";
+  const displayName = currentUser?.display_name ?? currentUser?.username ?? "";
 
   useEffect(() => {
     if (!settingsBookId) return;
@@ -133,11 +133,16 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
             {tab === "mine" ? "เริ่มสร้างหนังสือสูตรเล่มแรกของคุณ" : "ลองเปลี่ยนคำค้นหา หรือรอนักเขียนแชร์สูตร"}
           </p>
           {tab === "mine" && !isGuest && (
-            <button onClick={() => requireAuth(() => setNewBookOpen(true))}
-              className="mt-5 inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm">
-              <Plus className="w-4 h-4" />
-              สร้างหนังสือเล่มแรก
-            </button>
+            <div className="flex justify-center mt-10">
+              <div className="flex flex-col items-center">
+                <button onClick={() => requireAuth(() => setNewBookOpen(true))}
+                  className="w-40 h-[220px] rounded-md border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-2 text-stone-400 hover:text-orange-500 transition-all group">
+                  <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-medium">สร้างหนังสือเล่มแรก</span>
+                </button>
+                <p className="mt-4 text-sm text-stone-400 text-center">หนังสือเล่มแรก</p>
+              </div>
+            </div>
           )}
         </div>
       ) : (
