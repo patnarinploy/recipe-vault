@@ -12,7 +12,8 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
   const isUrl   = isAvatarUrl(info.avatar);
   const initial = info.display_name?.[0]?.toUpperCase() ?? "?";
   const badge   = info.role ? ROLE_BADGE[info.role] : null;
-  const hasStats = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
+  const hasStats    = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
+  const isBanned    = info.status === "banned";
   const showPresence = "last_seen" in info;
 
   return (
@@ -71,8 +72,13 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
       )}
 
       {/* Badges */}
-      {(badge || hasStats) && (
+      {(isBanned || badge || hasStats) && (
         <div className="flex flex-wrap justify-center gap-2">
+          {isBanned && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600 border border-red-200">
+              🚫 Banned
+            </span>
+          )}
           {badge && (
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badge.className}`}>
               {badge.label}

@@ -44,6 +44,7 @@ export type WriterInfo = {
   bio: string | null;
   avatar: string | null;
   role?: "admin" | "user";
+  status?: "active" | "banned";
   book_count?: number;
   recipe_count?: number;
   public_count?: number;

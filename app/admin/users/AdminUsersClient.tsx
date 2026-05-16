@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { isAvatarUrl } from "@/lib/avatar";
 import WriterCard from "@/components/WriterCard";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -229,9 +230,33 @@ export default function AdminUsersClient({
   const [search, setSearch]     = useState("");
   const [banTarget, setBanTarget]   = useState<User | null>(null);
   const [roleTarget, setRoleTarget] = useState<{ user: User; direction: "promote" | "demote" } | null>(null);
-  const [previewUser, setPreviewUser] = useState<User | null>(null);
-  const [banPending,  startBanTransition]  = useTransition();
-  const [rolePending, startRoleTransition] = useTransition();
+  const [previewUser,  setPreviewUser]  = useState<User | null>(null);
+  const [previewStats, setPreviewStats] = useState<{ book_count: number; recipe_count: number; public_count: number } | null>(null);
+  const [banPending,   startBanTransition]  = useTransition();
+  const [rolePending,  startRoleTransition] = useTransition();
+
+  function openPreview(u: User) {
+    setPreviewUser(u);
+    setPreviewStats(null);
+    void (async () => {
+      try {
+        const sb = createClient();
+        const { data: books } = await sb.from("books").select("id").eq("user_id", u.id);
+        const bkIds = (books ?? []).map((b: { id: string }) => b.id);
+        const [recipeRes, publicRes] = bkIds.length
+          ? await Promise.all([
+              sb.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
+              sb.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
+            ])
+          : [{ count: 0 }, { count: 0 }];
+        setPreviewStats({
+          book_count:   bkIds.length,
+          recipe_count: recipeRes.count ?? 0,
+          public_count: publicRes.count ?? 0,
+        });
+      } catch {}
+    })();
+  }
 
   function optimisticUpdate(id: string, patch: Partial<User>) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...patch } : u));
@@ -297,7 +322,9 @@ export default function AdminUsersClient({
         bio:          previewUser.bio,
         avatar:       previewUser.avatar,
         role:         previewUser.role,
+        status:       previewUser.status,
         last_seen:    previewUser.last_seen,
+        ...previewStats,
       }
     : null;
 
@@ -358,7 +385,7 @@ export default function AdminUsersClient({
               showActions={false}
               banPending={banPending}
               rolePending={rolePending}
-              onPreview={() => setPreviewUser(selfUser)}
+              onPreview={() => openPreview(selfUser)}
               onBan={() => {}}
               onUnban={() => {}}
               onPromote={() => {}}
@@ -390,7 +417,7 @@ export default function AdminUsersClient({
                     showActions
                     banPending={banPending}
                     rolePending={rolePending}
-                    onPreview={() => setPreviewUser(u)}
+                    onPreview={() => openPreview(u)}
                     onBan={() => setBanTarget(u)}
                     onUnban={() => handleUnban(u)}
                     onPromote={() => setRoleTarget({ user: u, direction: "promote" })}
