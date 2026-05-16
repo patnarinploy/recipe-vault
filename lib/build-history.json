@@ -1,5 +1,12 @@
 [
   {
+    "build": 46,
+    "timestamp": "2026-05-16T22:17:12.000Z",
+    "subject": "improve(writer-card): unify badge token system + widen admin modal",
+    "hash": "85341c6",
+    "category": "improve"
+  },
+  {
     "build": 45,
     "timestamp": "2026-05-16T22:08:55.000Z",
     "subject": "refactor(version-history): auto-only architecture — remove lib/updates",
