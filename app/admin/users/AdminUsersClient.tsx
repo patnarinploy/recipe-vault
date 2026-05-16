@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { banUser, unbanUser, promoteUser, demoteUser } from "@/app/actions/auth";
 import type { User, WriterInfo } from "@/lib/types";
+import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
 import { Shield, ShieldOff, Crown, UserMinus, Search, X, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -88,7 +89,9 @@ function UserRow({ u, isSelf, showActions, banPending, rolePending, onPreview, o
             {u.display_name ?? u.email ?? ""}
           </button>
           {isAdmin && (
-            <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Admin</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold shrink-0 ${ROLE_COLORS.admin}`}>
+              {ROLE_LABELS.admin}
+            </span>
           )}
           {isBanned && (
             <span className="text-[10px] bg-red-100 text-red-500 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Banned</span>

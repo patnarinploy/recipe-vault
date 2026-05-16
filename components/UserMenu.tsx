@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
+import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
 import { Settings, Users, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
 import { isAvatarUrl } from "@/lib/avatar";
@@ -45,7 +46,9 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
           <span className="max-w-[120px] truncate italic text-stone-400 font-normal">ยังไม่กำหนดนามแฝง</span>
         )}
         {user.role === "admin" && (
-          <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold">Admin</span>
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${ROLE_COLORS.admin}`}>
+            {ROLE_LABELS.admin}
+          </span>
         )}
         <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>

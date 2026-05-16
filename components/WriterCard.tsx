@@ -2,16 +2,13 @@ import { X } from "lucide-react";
 import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
 import OnlineIndicator from "./OnlineIndicator";
-
-const ROLE_BADGE: Record<string, { label: string; className: string }> = {
-  admin:  { label: "👑 Admin",  className: "bg-orange-100 text-orange-600 border border-orange-200" },
-  user:   { label: "📚 สมาชิก", className: "bg-stone-100  text-stone-500  border border-stone-200"  },
-};
+import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
 
 export default function WriterCard({ info, onClose }: { info: WriterInfo; onClose?: () => void }) {
   const isUrl   = isAvatarUrl(info.avatar);
   const initial = info.display_name?.[0]?.toUpperCase() ?? "?";
-  const badge   = info.role ? ROLE_BADGE[info.role] : null;
+  const roleLabel = info.role ? ROLE_LABELS[info.role] : null;
+  const roleColor = info.role ? ROLE_COLORS[info.role] : null;
   const hasStats    = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
   const isBanned    = info.status === "banned";
   const showPresence = "last_seen" in info;
@@ -72,16 +69,16 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
       )}
 
       {/* Badges */}
-      {(isBanned || badge || hasStats) && (
+      {(isBanned || roleLabel || hasStats) && (
         <div className="flex flex-wrap justify-center gap-2">
           {isBanned && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600 border border-red-200">
               🚫 Banned
             </span>
           )}
-          {badge && (
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badge.className}`}>
-              {badge.label}
+          {roleLabel && roleColor && (
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${roleColor}`}>
+              {roleLabel}
             </span>
           )}
           {info.book_count !== undefined && (
