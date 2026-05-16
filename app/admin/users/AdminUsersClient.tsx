@@ -342,7 +342,7 @@ export default function AdminUsersClient({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={() => setPreviewUser(null)}
         >
-          <div className="w-full max-w-sm" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md" onClick={e => e.stopPropagation()}>
             <WriterCard info={previewInfo} statsLoading={previewStats === null} onClose={() => setPreviewUser(null)} />
           </div>
         </div>
