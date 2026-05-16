@@ -40,7 +40,6 @@ export const BOOK_COLORS = [
 ] as const;
 
 export type WriterInfo = {
-  username: string;
   display_name: string | null;
   bio: string | null;
   avatar: string | null;
@@ -55,7 +54,6 @@ export type User = {
   id: string;
   auth_id: string | null;
   auth_provider: string | null;
-  username: string;
   display_name: string | null;
   bio: string | null;
   email: string | null;

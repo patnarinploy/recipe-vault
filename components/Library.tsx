@@ -35,7 +35,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
   const [pubSearch, setPubSearch]           = useState("");
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  const displayName = currentUser?.display_name ?? currentUser?.username ?? "";
+  const displayName = currentUser?.display_name ?? "";
 
   useEffect(() => {
     if (!settingsBookId) return;
@@ -58,7 +58,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
   const books = rawBooks.filter(b => {
     const q = (tab === "mine" ? mySearch : pubSearch).toLowerCase().trim();
     if (!q) return true;
-    const authorLabel = (b.bookAuthor?.display_name ?? b.bookAuthor?.username ?? "").toLowerCase();
+    const authorLabel = (b.bookAuthor?.display_name ?? "").toLowerCase();
     return b.title.toLowerCase().includes(q) || authorLabel.includes(q);
   });
 
@@ -149,9 +149,9 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
           {books.map((book, i) => {
             const bookWriter: WriterInfo = tab === "mine"
-              ? (currentUser ?? { username: "", display_name: null, bio: null, avatar: null })
-              : (book.bookAuthor ?? { username: "", display_name: null, bio: null, avatar: null });
-            const authorLabel = (bookWriter.display_name ?? bookWriter.username) || undefined;
+              ? (currentUser ?? { display_name: null, bio: null, avatar: null })
+              : (book.bookAuthor ?? { display_name: null, bio: null, avatar: null });
+            const authorLabel = bookWriter.display_name || undefined;
 
             return (
               <div key={book.id} className="flex flex-col items-center anim-fade-up" style={{ animationDelay: `${i * 60}ms` }}>

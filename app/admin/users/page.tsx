@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
 
   const { data: users } = await supabase
     .from("users")
-    .select("id, auth_id, username, display_name, bio, avatar, email, role, status, banned_at, banned_reason, banned_by, onboarding_complete, last_seen, created_at")
+    .select("id, auth_id, display_name, bio, avatar, email, role, status, banned_at, banned_reason, banned_by, onboarding_complete, last_seen, created_at")
     .order("created_at")
     .returns<User[]>();
 

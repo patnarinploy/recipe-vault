@@ -21,7 +21,6 @@ export default async function SettingsPage() {
       ])
     : [{ count: 0 as number | null }, { count: 0 as number | null }];
   const writerInfo: WriterInfo = {
-    username:     user.username,
     display_name: user.display_name,
     bio:          user.bio,
     avatar:       user.avatar,

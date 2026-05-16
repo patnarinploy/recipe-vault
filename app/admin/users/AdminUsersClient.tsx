@@ -35,7 +35,7 @@ function LastSeenLabel({ lastSeen }: { lastSeen: string | null }) {
 }
 
 function Avatar({ user }: { user: User }) {
-  const name = user.display_name ?? user.username;
+  const name = user.display_name ?? user.email ?? "?";
   const status = onlineStatus(user.last_seen);
   return (
     <div className="relative shrink-0">
@@ -60,7 +60,7 @@ function BanModal({ user, onConfirm, onClose }: { user: User; onConfirm: (reason
           <h3 className="text-base font-semibold text-stone-800">แบนผู้ใช้</h3>
         </div>
         <p className="text-sm text-stone-500 mb-4">
-          คุณกำลังจะแบน <strong>{user.display_name ?? user.username}</strong>
+          คุณกำลังจะแบน <strong>{user.display_name ?? user.email ?? ""}</strong>
         </p>
         <textarea
           value={reason}
@@ -149,14 +149,12 @@ export default function AdminUsersClient({
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
     return !q
-      || u.username.toLowerCase().includes(q)
       || (u.display_name ?? "").toLowerCase().includes(q)
       || (u.email ?? "").toLowerCase().includes(q);
   });
 
   const previewInfo: WriterInfo | null = previewUser
     ? {
-        username:     previewUser.username,
         display_name: previewUser.display_name,
         bio:          previewUser.bio,
         avatar:       previewUser.avatar,
@@ -222,7 +220,7 @@ export default function AdminUsersClient({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <button type="button" onClick={() => setPreviewUser(u)} className="text-sm font-semibold text-stone-800 hover:text-orange-500 transition-colors truncate">
-                        {u.display_name ?? u.username}
+                        {u.display_name ?? u.email ?? ""}
                       </button>
                       {isAdmin && (
                         <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Admin</span>
@@ -234,7 +232,7 @@ export default function AdminUsersClient({
                         <span className="text-[10px] bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded-full font-semibold shrink-0">คุณ</span>
                       )}
                     </div>
-                    <p className="text-xs text-stone-400 truncate">{u.email ?? `@${u.username}`}</p>
+                    <p className="text-xs text-stone-400 truncate">{u.email ?? ""}</p>
                     <p className="text-xs mt-0.5">
                       <LastSeenLabel lastSeen={u.last_seen} />
                     </p>

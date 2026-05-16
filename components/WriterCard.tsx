@@ -10,7 +10,7 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
 
 export default function WriterCard({ info, onClose }: { info: WriterInfo; onClose?: () => void }) {
   const isUrl   = isAvatarUrl(info.avatar);
-  const initial = (info.display_name ?? info.username)[0].toUpperCase();
+  const initial = info.display_name?.[0]?.toUpperCase() ?? "?";
   const badge   = info.role ? ROLE_BADGE[info.role] : null;
   const hasStats = info.book_count !== undefined || info.recipe_count !== undefined || info.public_count !== undefined;
   const showPresence = "last_seen" in info;
@@ -53,7 +53,7 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
 
       {/* Name */}
       <h3 className="text-xl font-bold text-stone-800 leading-tight">
-        {info.display_name ?? info.username}
+        {info.display_name ?? ""}
       </h3>
 
       {/* Online status label */}

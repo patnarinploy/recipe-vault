@@ -1347,15 +1347,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*, users(username, display_name, bio, avatar, role)").eq("id", bookId).single(),
+      sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
       const u = (bk.data as any).users;
-      setAuthorName(u?.display_name ?? u?.username ?? "");
-      if (u?.username) {
-        setWriterInfo({ username: u.username, display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
+      setAuthorName(u?.display_name ?? "");
+      if (u) {
+        setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
         // Fire-and-forget: enrich writer card with author stats after main load
         const authorId: string = (bk.data as any).user_id;
         void (async () => {

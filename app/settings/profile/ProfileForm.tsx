@@ -13,12 +13,10 @@ const BUCKET = "recipe-images";
 const MAX_MB = 5;
 
 export default function ProfileForm({
-  currentUsername,
   currentDisplayName,
   currentBio,
   currentAvatar,
 }: {
-  currentUsername: string;
   currentDisplayName: string | null;
   currentBio: string | null;
   currentAvatar: string | null;
@@ -89,7 +87,7 @@ export default function ProfileForm({
                 <img src={selected} alt="avatar" draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
               ) : (
                 <span className="text-3xl font-bold text-white">
-                  {(currentDisplayName ?? currentUsername)[0].toUpperCase()}
+                  {currentDisplayName?.[0]?.toUpperCase() ?? "?"}
                 </span>
               )}
             </div>

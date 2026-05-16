@@ -5,7 +5,6 @@ export default async function ProfilePage() {
   const user = await requireSession();
   return (
     <ProfileForm
-      currentUsername={user.username}
       currentDisplayName={user.display_name}
       currentBio={user.bio}
       currentAvatar={user.avatar}
