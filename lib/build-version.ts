@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 31;
-export const BUILD_TIMESTAMP = "2026-05-16T06:23:35.000Z";
-export const BUILD_TOOLTIP   = "refactor(admin): unify writer card data — stats, status badge, async e";
+export const BUILD_NUMBER    = 32;
+export const BUILD_TIMESTAMP = "2026-05-16T08:53:46.000Z";
+export const BUILD_TOOLTIP   = "feat: centralize role labels — Admin / Writer everywhere";
