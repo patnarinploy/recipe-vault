@@ -6,4 +6,4 @@
 
 export const BUILD_NUMBER    = 41;
 export const BUILD_TIMESTAMP = "2026-05-16T17:07:52.000Z";
-export const BUILD_TOOLTIP   = "fix(nav): swap Shield → LayoutDashboard for การจัดกา�";
+export const BUILD_TOOLTIP   = "fix(nav): swap Shield to LayoutDashboard for system management icon";
