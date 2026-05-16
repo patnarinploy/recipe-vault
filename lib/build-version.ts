@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 28;
-export const BUILD_TIMESTAMP = "2026-05-15T10:56:08.000Z";
-export const BUILD_TOOLTIP   = "chore: enable Google OAuth provider gate";
+export const BUILD_NUMBER    = 29;
+export const BUILD_TIMESTAMP = "2026-05-16T00:35:46.000Z";
+export const BUILD_TOOLTIP   = "refactor: remove username column from all code (pre-drop cleanup)";
