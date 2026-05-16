@@ -1,5 +1,12 @@
 [
   {
+    "build": 45,
+    "timestamp": "2026-05-16T22:08:55.000Z",
+    "subject": "refactor(version-history): auto-only architecture — remove lib/updates",
+    "hash": "c260352",
+    "category": "refactor"
+  },
+  {
     "build": 44,
     "timestamp": "2026-05-16T21:36:45.000Z",
     "subject": "feat(version-history): git-powered build timeline, zero manual maintenan",
