@@ -9,23 +9,10 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { isAvatarUrl } from "@/lib/avatar";
 import WriterCard from "@/components/WriterCard";
+import OnlineIndicator from "@/components/OnlineIndicator";
 import { createClient } from "@/lib/supabase/client";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
-
-function onlineStatus(lastSeen: string | null): "online" | "away" | "offline" {
-  if (!lastSeen) return "offline";
-  const diff = Date.now() - new Date(lastSeen).getTime();
-  if (diff < 2 * 60 * 1000) return "online";
-  if (diff < 15 * 60 * 1000) return "away";
-  return "offline";
-}
-
-const STATUS_DOT: Record<string, string> = {
-  online:  "bg-green-400",
-  away:    "bg-yellow-400",
-  offline: "bg-stone-300",
-};
 
 function sortKey(u: User) {
   return (u.display_name ?? u.email ?? "").toLowerCase();
@@ -45,8 +32,7 @@ function LastSeenLabel({ lastSeen }: { lastSeen: string | null }) {
 }
 
 function UserAvatar({ user }: { user: User }) {
-  const name   = user.display_name ?? user.email ?? "?";
-  const status = onlineStatus(user.last_seen);
+  const name = user.display_name ?? user.email ?? "?";
   return (
     <div className="relative shrink-0">
       <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center"
@@ -55,7 +41,9 @@ function UserAvatar({ user }: { user: User }) {
           ? <img src={user.avatar!} alt={name} className="w-full h-full object-cover" draggable={false} />
           : <span className="text-white text-sm font-bold">{name[0].toUpperCase()}</span>}
       </div>
-      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${STATUS_DOT[status]}`} />
+      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white shadow flex items-center justify-center shrink-0">
+        <OnlineIndicator lastSeen={user.last_seen} size="sm" />
+      </div>
     </div>
   );
 }
