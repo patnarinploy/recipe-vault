@@ -1,5 +1,12 @@
 [
   {
+    "build": 47,
+    "timestamp": "2026-05-16T22:35:55.000Z",
+    "subject": "feat(infrastructure): dark mode + i18n Phase 1 — foundation without br",
+    "hash": "befd293",
+    "category": "feat"
+  },
+  {
     "build": 46,
     "timestamp": "2026-05-16T22:17:12.000Z",
     "subject": "improve(writer-card): unify badge token system + widen admin modal",
