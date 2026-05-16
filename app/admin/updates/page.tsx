@@ -92,7 +92,7 @@ export default async function AdminUpdatesPage() {
     : [{ build: BUILD_NUMBER, timestamp: new Date().toISOString(), title: "อัปเดตล่าสุด" }, ...UPDATES];
 
   return (
-    <AdminLayout title="อัปเดตระบบ" maxWidth="md">
+    <AdminLayout title="อัปเดตระบบ">
       <p className="text-sm text-stone-500 -mt-4 mb-6">ดูฟีเจอร์ใหม่ การปรับปรุง และประวัติการพัฒนา Recipe Vault</p>
       <div className="space-y-4">
         {entries.map((entry, i) => (

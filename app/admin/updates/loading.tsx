@@ -1,6 +1,6 @@
 export default function AdminUpdatesLoading() {
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="skeleton h-4 w-36 rounded mb-6" />
       <div className="skeleton h-8 w-40 rounded-lg mb-2" />
       <div className="skeleton h-4 w-64 rounded mb-6" />
