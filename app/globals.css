@@ -6,7 +6,32 @@
   :root {
     --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
       "Thonburi", "Helvetica Neue", Arial, sans-serif;
+
+    /* ── Design tokens (light) ──────────────────────────────────────────────
+     * Phase 2 will replace hardcoded bg-white / text-stone-* with these.
+     * Until then, they exist here so dark: variants work correctly once
+     * individual components are migrated.                                   */
+    --color-bg:       #fafaf9; /* stone-50  — page background  */
+    --color-surface:  #ffffff; /* white     — card / modal     */
+    --color-fg:       #1c1917; /* stone-900 — primary text     */
+    --color-fg-2:     #57534e; /* stone-600 — secondary text   */
+    --color-muted:    #a8a29e; /* stone-400 — muted / hint     */
+    --color-border:   #f5f5f4; /* stone-100 — subtle border    */
+    --color-border-2: #e7e5e4; /* stone-200 — default border   */
   }
+
+  /* ── Dark-mode overrides ─────────────────────────────────────────────────
+   * Applied when <html class="dark"> is set by ThemeProvider.             */
+  .dark {
+    --color-bg:       #1c1917; /* stone-900 */
+    --color-surface:  #292524; /* stone-800 */
+    --color-fg:       #fafaf9; /* stone-50  */
+    --color-fg-2:     #d6d3d1; /* stone-300 */
+    --color-muted:    #78716c; /* stone-500 */
+    --color-border:   #44403c; /* stone-700 */
+    --color-border-2: #57534e; /* stone-600 */
+  }
+
   body {
     @apply antialiased;
   }

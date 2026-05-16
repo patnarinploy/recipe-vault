@@ -6,6 +6,8 @@ import { getSession } from "@/lib/session";
 import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
 import { redirect } from "next/navigation";
 import Heartbeat from "@/components/Heartbeat";
+import { ThemeProvider, THEME_SCRIPT } from "@/lib/theme";
+import { LocaleProvider } from "@/lib/locale";
 
 const sarabun = Sarabun({
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -55,6 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (user && user.status === "banned") {
     return (
       <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
+        <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
         <body className="bg-stone-50 min-h-screen font-sans flex items-center justify-center px-4" suppressHydrationWarning>
           <div className="max-w-sm w-full bg-white rounded-2xl border border-red-100 shadow-sm p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -83,18 +86,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
       <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
-        <Navbar user={user} locked={isOnboarding} />
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-          {children}
-        </main>
-        {user && <Heartbeat />}
-        <Toaster
-          position="top-right"
-          toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }}
-          richColors
-          closeButton
-        />
+        <LocaleProvider>
+          <ThemeProvider>
+            <Navbar user={user} locked={isOnboarding} />
+            <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+              {children}
+            </main>
+            {user && <Heartbeat />}
+            <Toaster
+              position="top-right"
+              toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }}
+              richColors
+              closeButton
+            />
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

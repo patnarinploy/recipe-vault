@@ -47,7 +47,7 @@ export default async function SettingsPage() {
     {
       label: "การใช้งาน",
       items: [
-        { href: "/settings/reading",  icon: BookOpen, label: "การตั้งค่าการอ่าน",   sub: "รูปแบบการพลิกหน้า" },
+        { href: "/settings/reading",  icon: BookOpen, label: "การตั้งค่าการอ่าน",   sub: "ธีม, ภาษา, รูปแบบการพลิกหน้า" },
       ],
     },
   ];
