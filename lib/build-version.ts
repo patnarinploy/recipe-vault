@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 32;
-export const BUILD_TIMESTAMP = "2026-05-16T08:53:46.000Z";
-export const BUILD_TOOLTIP   = "feat: centralize role labels — Admin / Writer everywhere";
+export const BUILD_NUMBER    = 33;
+export const BUILD_TIMESTAMP = "2026-05-16T08:59:48.000Z";
+export const BUILD_TOOLTIP   = "fix: status dot always renders as perfect circle";
