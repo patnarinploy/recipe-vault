@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 30;
-export const BUILD_TIMESTAMP = "2026-05-16T00:41:51.000Z";
-export const BUILD_TOOLTIP   = "feat(admin): split self-section, alpha sort, role confirm modal, loading";
+export const BUILD_NUMBER    = 31;
+export const BUILD_TIMESTAMP = "2026-05-16T06:23:35.000Z";
+export const BUILD_TOOLTIP   = "refactor(admin): unify writer card data — stats, status badge, async e";
