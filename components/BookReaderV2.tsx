@@ -1299,7 +1299,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [dataVersion, setDataVersion] = useState(0);
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
   const [authorName,  setAuthorName]  = useState("");
-  const [writerInfo,  setWriterInfo]  = useState<WriterInfo | null>(null);
+  const [writerInfo,       setWriterInfo]       = useState<WriterInfo | null>(null);
+  const [writerStatsLoading, setWriterStatsLoading] = useState(false);
   const [writerCardOpen, setWriterCardOpen] = useState(false);
   const [fontsReady,    setFontsReady]    = useState(false);
 
@@ -1356,6 +1357,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       setAuthorName(u?.display_name ?? "");
       if (u) {
         setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
+        setWriterStatsLoading(true);
         // Fire-and-forget: enrich writer card with author stats after main load
         const authorId: string = (bk.data as any).user_id;
         void (async () => {
@@ -1376,6 +1378,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               public_count: publicRes.count ?? 0,
             } : null);
           } catch {}
+          setWriterStatsLoading(false);
         })();
       }
     }
@@ -1708,7 +1711,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       {writerInfo && (
         <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-[30rem]">
           <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerInfo} onClose={() => setWriterCardOpen(false)} />
+            <WriterCard info={writerInfo} statsLoading={writerStatsLoading} onClose={() => setWriterCardOpen(false)} />
           </div>
         </Modal>
       )}

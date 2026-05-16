@@ -4,7 +4,7 @@ import type { WriterInfo } from "@/lib/types";
 import OnlineIndicator from "./OnlineIndicator";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
 
-export default function WriterCard({ info, onClose }: { info: WriterInfo; onClose?: () => void }) {
+export default function WriterCard({ info, onClose, statsLoading = false }: { info: WriterInfo; onClose?: () => void; statsLoading?: boolean }) {
   const isUrl   = isAvatarUrl(info.avatar);
   const initial = info.display_name?.[0]?.toUpperCase() ?? "?";
   const roleLabel = info.role ? ROLE_LABELS[info.role] : null;
@@ -68,8 +68,14 @@ export default function WriterCard({ info, onClose }: { info: WriterInfo; onClos
         <p className="text-sm text-stone-600 leading-relaxed mb-4">{info.bio}</p>
       )}
 
-      {/* Badges */}
-      {(isBanned || roleLabel || hasStats) && (
+      {/* Badges — skeleton while async stats are in-flight, real badges once all data resolves */}
+      {statsLoading ? (
+        <div className="flex flex-wrap justify-center gap-2">
+          <div className="skeleton h-6 w-16 rounded-full" />
+          <div className="skeleton h-6 w-20 rounded-full" />
+          <div className="skeleton h-6 w-24 rounded-full" />
+        </div>
+      ) : (isBanned || roleLabel || hasStats) && (
         <div className="flex flex-wrap justify-center gap-2">
           {isBanned && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600 border border-red-200">

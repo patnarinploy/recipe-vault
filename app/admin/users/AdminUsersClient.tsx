@@ -342,7 +342,7 @@ export default function AdminUsersClient({
           onClick={() => setPreviewUser(null)}
         >
           <div className="w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <WriterCard info={previewInfo} onClose={() => setPreviewUser(null)} />
+            <WriterCard info={previewInfo} statsLoading={previewStats === null} onClose={() => setPreviewUser(null)} />
           </div>
         </div>
       )}
