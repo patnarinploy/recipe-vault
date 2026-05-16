@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Users, Trophy, ScrollText, Settings2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight } from "lucide-react";
 
 export const revalidate = 0;
 
@@ -27,6 +27,14 @@ export default async function AdminPage() {
       icon:        Trophy,
       title:       "จัดการ Achievement",
       description: "ดูฉายา Badge และเงื่อนไขของระบบ Achievement ทั้งหมด",
+      meta:        null,
+      enabled:     true,
+    },
+    {
+      href:        "/admin/updates",
+      icon:        Sparkles,
+      title:       "อัปเดตระบบ",
+      description: "ประวัติการพัฒนา ฟีเจอร์ใหม่ การปรับปรุง และ Bug Fix",
       meta:        null,
       enabled:     true,
     },

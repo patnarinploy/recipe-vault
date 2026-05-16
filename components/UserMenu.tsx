@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
-import { Settings, Users, LogOut, ChevronDown, Sparkles } from "lucide-react";
+import { Settings, Shield, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/lib/types";
 import { isAvatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
@@ -72,16 +72,10 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
                 ตั้งค่า
               </Link>
 
-              <Link href="/updates" onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
-                <Sparkles className="w-4 h-4 text-stone-400" />
-                อัปเดตระบบ
-              </Link>
-
               {user.role === "admin" && (
                 <Link href="/admin" onClick={() => setOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
-                  <Users className="w-4 h-4 text-stone-400" />
+                  <Shield className="w-4 h-4 text-stone-400" />
                   การจัดการระบบ
                 </Link>
               )}
