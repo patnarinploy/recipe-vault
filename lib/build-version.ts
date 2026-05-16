@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 37;
-export const BUILD_TIMESTAMP = "2026-05-16T15:52:30.000Z";
-export const BUILD_TOOLTIP   = "Refactor admin into scalable system management hub at /admin";
+export const BUILD_NUMBER    = 38;
+export const BUILD_TIMESTAMP = "2026-05-16T16:12:49.000Z";
+export const BUILD_TOOLTIP   = "Add public /updates changelog page, remove build tracker from Settings";
