@@ -315,6 +315,7 @@ export default function AdminUsersClient({
         role:         previewUser.role,
         status:       previewUser.status,
         last_seen:    previewUser.last_seen,
+        created_at:   previewUser.created_at,
         ...previewStats,
       }
     : null;

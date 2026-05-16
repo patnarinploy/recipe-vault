@@ -49,6 +49,7 @@ export type WriterInfo = {
   recipe_count?: number;
   public_count?: number;
   last_seen?: string | null;
+  created_at?: string;
 };
 
 export type User = {

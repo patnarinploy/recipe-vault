@@ -38,7 +38,7 @@ async function BookLibraryData({ userId }: { userId: string | null }) {
   type PublicBookRaw = Book & { users: Omit<WriterInfo, "book_count" | "recipe_count" | "public_count"> };
   const { data: publicBooksRaw } = publicBookIds.length
     ? await supabase.from("books")
-        .select("*, users(display_name, bio, avatar, role, last_seen)")
+        .select("*, users(display_name, bio, avatar, role, last_seen, created_at)")
         .in("id", publicBookIds).order("created_at", { ascending: true }).returns<PublicBookRaw[]>()
     : { data: [] };
 
@@ -74,7 +74,7 @@ export default async function HomePage() {
   const user = await getSession();
 
   const currentUser: WriterInfo | null = user
-    ? { display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role, last_seen: user.last_seen }
+    ? { display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role, last_seen: user.last_seen, created_at: user.created_at }
     : null;
 
   return (

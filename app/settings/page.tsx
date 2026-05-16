@@ -28,6 +28,7 @@ export default async function SettingsPage() {
     book_count:   bkIds.length,
     recipe_count: recipeRes.count ?? 0,
     public_count: publicRes.count ?? 0,
+    created_at:   user.created_at,
   };
 
   const buildDate    = new Date(BUILD_TIMESTAMP).toLocaleString("en-GB", {
