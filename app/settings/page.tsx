@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
-import { BUILD_NUMBER, BUILD_TIMESTAMP, BUILD_TOOLTIP } from "@/lib/build-version";
 import type { WriterInfo } from "@/lib/types";
 
 export default async function SettingsPage() {
@@ -30,15 +29,6 @@ export default async function SettingsPage() {
     public_count: publicRes.count ?? 0,
     created_at:   user.created_at,
   };
-
-  const buildDate    = new Date(BUILD_TIMESTAMP).toLocaleString("en-GB", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    timeZone: "Asia/Bangkok",
-  }).replace(", ", " · ");
-  const buildLabel   = `Build #${BUILD_NUMBER} · ${buildDate}`;
-  const tooltipDetail = BUILD_TOOLTIP.trim().length >= 4 ? BUILD_TOOLTIP.slice(0, 72) : "Production Build";
-  const buildTooltip  = `Build #${BUILD_NUMBER} · ${tooltipDetail}`;
 
   const navGroups = [
     {
@@ -114,19 +104,6 @@ export default async function SettingsPage() {
         ))}
       </div>
 
-      {/* Production build tracker — tooltip matches DbStatus pattern */}
-      <div className="mt-10 pt-6 border-t border-stone-100 flex justify-center">
-        <div className="group relative inline-flex cursor-default select-none">
-          <p className="text-[11px] font-mono text-stone-300 tracking-wide">
-            {buildLabel}
-          </p>
-          {/* Tooltip — CSS-only, same structure as DbStatus */}
-          <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-stone-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-            {buildTooltip}
-            <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-800" />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
