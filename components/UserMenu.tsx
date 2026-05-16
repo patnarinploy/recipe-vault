@@ -73,10 +73,10 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
               </Link>
 
               {user.role === "admin" && (
-                <Link href="/admin/users" onClick={() => setOpen(false)}
+                <Link href="/admin" onClick={() => setOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors">
                   <Users className="w-4 h-4 text-stone-400" />
-                  จัดการผู้ใช้
+                  การจัดการระบบ
                 </Link>
               )}
             </>

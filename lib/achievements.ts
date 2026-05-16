@@ -48,6 +48,48 @@ const SHARE_TITLES: Array<{ min: number; label: string; emoji: string; tier: 1 |
   { min: 1,  label: "ผู้กล้าแบ่งปัน",        emoji: "🤝", tier: 1 },
 ];
 
+// ─── Admin catalog (for display in /admin/achievements) ─────────────────────
+
+export type CatalogEntry = {
+  emoji: string;
+  label: string;
+  tier: 1 | 2 | 3 | 4 | 5 | "special";
+  category: "book" | "recipe" | "share" | "special";
+  condition: string;
+};
+
+export const ACHIEVEMENT_CATALOG: { book: CatalogEntry[]; recipe: CatalogEntry[]; share: CatalogEntry[]; special: CatalogEntry[] } = {
+  book: [
+    { emoji: "🖊️",  label: "นักเขียนมือสมัครเล่น",   tier: 1, category: "book",   condition: "มีหนังสือ 1 เล่ม" },
+    { emoji: "📝",  label: "รักการเขียน",            tier: 2, category: "book",   condition: "มีหนังสือ 2–3 เล่ม" },
+    { emoji: "✍️",  label: "นักประพันธ์",             tier: 3, category: "book",   condition: "มีหนังสือ 4–5 เล่ม" },
+    { emoji: "🏛️",  label: "ปรมาจารย์อักษร",          tier: 4, category: "book",   condition: "มีหนังสือ 6–9 เล่ม" },
+    { emoji: "📚",  label: "ศาสดาแห่งชั้นหนังสือ",    tier: 5, category: "book",   condition: "มีหนังสือ 10 เล่มขึ้นไป" },
+  ],
+  recipe: [
+    { emoji: "🍳",  label: "พ่อครัวฝึกหัด",           tier: 1, category: "recipe", condition: "มีสูตรอาหาร 1–5 สูตร" },
+    { emoji: "🥘",  label: "เข้าครัวจริงจัง",          tier: 2, category: "recipe", condition: "มีสูตรอาหาร 6–15 สูตร" },
+    { emoji: "🍜",  label: "จอมปรุงรส",                tier: 3, category: "recipe", condition: "มีสูตรอาหาร 16–30 สูตร" },
+    { emoji: "👨‍🍳", label: "เชฟประจำห้องเครื่อง",     tier: 4, category: "recipe", condition: "มีสูตรอาหาร 31–50 สูตร" },
+    { emoji: "🔥",  label: "มหาปรมาจารย์แห่งเตาไฟ",   tier: 5, category: "recipe", condition: "มีสูตรอาหาร 51 สูตรขึ้นไป" },
+  ],
+  share: [
+    { emoji: "🤝",  label: "ผู้กล้าแบ่งปัน",           tier: 1, category: "share",  condition: "แชร์สูตรสาธารณะ 1 สูตร" },
+    { emoji: "📢",  label: "นักเผยแพร่รสชาติ",          tier: 2, category: "share",  condition: "แชร์สูตรสาธารณะ 2–5 สูตร" },
+    { emoji: "💫",  label: "ขวัญใจมหาชน",              tier: 3, category: "share",  condition: "แชร์สูตรสาธารณะ 6–15 สูตร" },
+    { emoji: "🏆",  label: "ตำนานโต๊ะอาหาร",           tier: 4, category: "share",  condition: "แชร์สูตรสาธารณะ 16–30 สูตร" },
+    { emoji: "🌟",  label: "ผู้ปลุกยุคแห่งรสชาติ",      tier: 5, category: "share",  condition: "แชร์สูตรสาธารณะ 31 สูตรขึ้นไป" },
+  ],
+  special: [
+    { emoji: "⚡",  label: "ครบเครื่อง",    tier: "special", category: "special", condition: "มีหนังสือ + สูตร + แชร์สาธารณะอย่างน้อย 1 อย่างแต่ละประเภท" },
+    { emoji: "🌑",  label: "นักเขียนเงา",   tier: "special", category: "special", condition: "มีหนังสือ 3 เล่มขึ้นไป และยังไม่เคยแชร์สาธารณะ" },
+    { emoji: "🕵️", label: "เชฟลับ",        tier: "special", category: "special", condition: "มีสูตรอาหาร 15 สูตรขึ้นไป โดยไม่มีหนังสือ" },
+    { emoji: "🚀",  label: "หน้าใหม่ไฟแรง", tier: "special", category: "special", condition: "แชร์สูตรสาธารณะภายใน 7 วันแรกหลังสมัคร" },
+  ],
+};
+
+// ─── Runtime calculator ──────────────────────────────────────────────────────
+
 export function getAchievements(stats: {
   book_count?: number;
   recipe_count?: number;
