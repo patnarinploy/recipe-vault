@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { banUser, unbanUser, promoteUser, demoteUser } from "@/app/actions/auth";
 import type { User, WriterInfo } from "@/lib/types";
-import { Shield, ShieldOff, Crown, UserMinus, Search, X, AlertTriangle } from "lucide-react";
+import { Shield, ShieldOff, Crown, UserMinus, Search, X, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { isAvatarUrl } from "@/lib/avatar";
 import WriterCard from "@/components/WriterCard";
+
+// ─── helpers ────────────────────────────────────────────────────────────────
 
 function onlineStatus(lastSeen: string | null): "online" | "away" | "offline" {
   if (!lastSeen) return "offline";
@@ -23,29 +25,111 @@ const STATUS_DOT: Record<string, string> = {
   offline: "bg-stone-300",
 };
 
+function sortKey(u: User) {
+  return (u.display_name ?? u.email ?? "").toLowerCase();
+}
+
+// ─── sub-components ──────────────────────────────────────────────────────────
+
 function LastSeenLabel({ lastSeen }: { lastSeen: string | null }) {
   if (!lastSeen) return <span className="text-stone-300">ไม่เคยออนไลน์</span>;
   const diff = Date.now() - new Date(lastSeen).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 2) return <span className="text-green-500 font-medium">ออนไลน์อยู่</span>;
+  if (mins < 2)  return <span className="text-green-500 font-medium">ออนไลน์อยู่</span>;
   if (mins < 60) return <span className="text-yellow-600">{mins} นาทีที่แล้ว</span>;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return <span className="text-stone-400">{hrs} ชั่วโมงที่แล้ว</span>;
+  if (hrs < 24)  return <span className="text-stone-400">{hrs} ชั่วโมงที่แล้ว</span>;
   return <span className="text-stone-300">{Math.floor(hrs / 24)} วันที่แล้ว</span>;
 }
 
-function Avatar({ user }: { user: User }) {
-  const name = user.display_name ?? user.email ?? "?";
+function UserAvatar({ user }: { user: User }) {
+  const name   = user.display_name ?? user.email ?? "?";
   const status = onlineStatus(user.last_seen);
   return (
     <div className="relative shrink-0">
-      <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center" style={{ background: isAvatarUrl(user.avatar) ? "#f5f5f4" : "#f97316" }}>
+      <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center"
+           style={{ background: isAvatarUrl(user.avatar) ? "#f5f5f4" : "#f97316" }}>
         {isAvatarUrl(user.avatar)
           ? <img src={user.avatar!} alt={name} className="w-full h-full object-cover" draggable={false} />
-          : <span className="text-white text-sm font-bold">{name[0].toUpperCase()}</span>
-        }
+          : <span className="text-white text-sm font-bold">{name[0].toUpperCase()}</span>}
       </div>
       <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${STATUS_DOT[status]}`} />
+    </div>
+  );
+}
+
+interface UserRowProps {
+  u: User;
+  isSelf: boolean;
+  showActions: boolean;
+  banPending: boolean;
+  rolePending: boolean;
+  onPreview: () => void;
+  onBan: () => void;
+  onUnban: () => void;
+  onPromote: () => void;
+  onDemote: () => void;
+}
+
+function UserRow({ u, isSelf, showActions, banPending, rolePending, onPreview, onBan, onUnban, onPromote, onDemote }: UserRowProps) {
+  const isBanned = u.status === "banned";
+  const isAdmin  = u.role === "admin";
+  return (
+    <div className={`flex items-center gap-3 px-5 py-3.5 ${isBanned ? "bg-red-50/60" : ""}`}>
+      <button type="button" onClick={onPreview} className="shrink-0 hover:opacity-80 transition-opacity">
+        <UserAvatar user={u} />
+      </button>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onClick={onPreview}
+            className="text-sm font-semibold text-stone-800 hover:text-orange-500 transition-colors truncate">
+            {u.display_name ?? u.email ?? ""}
+          </button>
+          {isAdmin && (
+            <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Admin</span>
+          )}
+          {isBanned && (
+            <span className="text-[10px] bg-red-100 text-red-500 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Banned</span>
+          )}
+          {isSelf && (
+            <span className="text-[10px] bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded-full font-semibold shrink-0">คุณ</span>
+          )}
+        </div>
+        <p className="text-xs text-stone-400 truncate">{u.email ?? ""}</p>
+        <p className="text-xs mt-0.5"><LastSeenLabel lastSeen={u.last_seen} /></p>
+        {isBanned && u.banned_reason && (
+          <p className="text-xs text-red-400 mt-0.5 truncate">เหตุผล: {u.banned_reason}</p>
+        )}
+      </div>
+
+      {showActions && (
+        <div className="flex items-center gap-1 shrink-0">
+          {isBanned ? (
+            <button onClick={onUnban} disabled={banPending} title="ยกเลิกแบน"
+              className="p-1.5 rounded-lg text-green-500 hover:bg-green-50 transition-colors disabled:opacity-40">
+              <ShieldOff className="w-4 h-4" />
+            </button>
+          ) : (
+            <button onClick={onBan} disabled={banPending} title="แบน"
+              className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40">
+              <Shield className="w-4 h-4" />
+            </button>
+          )}
+
+          {isAdmin ? (
+            <button onClick={onDemote} disabled={rolePending} title="ลดเป็น Writer"
+              className="p-1.5 rounded-lg text-stone-400 hover:bg-stone-50 transition-colors disabled:opacity-40">
+              <UserMinus className="w-4 h-4" />
+            </button>
+          ) : (
+            <button onClick={onPromote} disabled={rolePending} title="เลื่อนเป็น Admin"
+              className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-50 transition-colors disabled:opacity-40">
+              <Crown className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -70,10 +154,12 @@ function BanModal({ user, onConfirm, onClose }: { user: User; onConfirm: (reason
           className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-400 focus:outline-none resize-none mb-4"
         />
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-xl border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 transition-colors">
+          <button onClick={onClose}
+            className="flex-1 py-2 rounded-xl border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 transition-colors">
             ยกเลิก
           </button>
-          <button onClick={() => onConfirm(reason)} className="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors">
+          <button onClick={() => onConfirm(reason)}
+            className="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors">
             แบน
           </button>
         </div>
@@ -81,6 +167,55 @@ function BanModal({ user, onConfirm, onClose }: { user: User; onConfirm: (reason
     </div>
   );
 }
+
+function RoleModal({
+  target, direction, onConfirm, onClose, pending,
+}: {
+  target: User;
+  direction: "promote" | "demote";
+  onConfirm: () => void;
+  onClose: () => void;
+  pending: boolean;
+}) {
+  const isPromote = direction === "promote";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <div className="flex items-center gap-2 mb-3">
+          {isPromote
+            ? <Crown className="w-5 h-5 text-amber-400" />
+            : <UserMinus className="w-5 h-5 text-stone-400" />}
+          <h3 className="text-base font-semibold text-stone-800">
+            {isPromote ? "เลื่อนเป็น Admin?" : "ลดเป็น Writer?"}
+          </h3>
+        </div>
+        <p className="text-sm text-stone-500 mb-1">
+          {isPromote
+            ? "ผู้ใช้นี้จะได้รับสิทธิ์การดูแลระบบแบบเต็ม"
+            : "ผู้ใช้นี้จะสูญเสียสิทธิ์การดูแลระบบทั้งหมด"}
+        </p>
+        <p className="text-sm font-semibold text-stone-700 mb-5">
+          {target.display_name ?? target.email ?? ""}
+        </p>
+        <div className="flex gap-2">
+          <button onClick={onClose} disabled={pending}
+            className="flex-1 py-2 rounded-xl border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 transition-colors disabled:opacity-50">
+            ยกเลิก
+          </button>
+          <button onClick={onConfirm} disabled={pending}
+            className={`flex-1 py-2 rounded-xl text-white text-sm font-semibold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 ${
+              isPromote ? "bg-amber-500 hover:bg-amber-600" : "bg-stone-500 hover:bg-stone-600"
+            }`}>
+            {pending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            ยืนยัน
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── main export ─────────────────────────────────────────────────────────────
 
 export default function AdminUsersClient({
   users: initialUsers,
@@ -90,11 +225,13 @@ export default function AdminUsersClient({
   currentAdminId: string;
 }) {
   const router = useRouter();
-  const [users, setUsers] = useState(initialUsers);
-  const [search, setSearch] = useState("");
-  const [banTarget, setBanTarget] = useState<User | null>(null);
+  const [users, setUsers]       = useState(initialUsers);
+  const [search, setSearch]     = useState("");
+  const [banTarget, setBanTarget]   = useState<User | null>(null);
+  const [roleTarget, setRoleTarget] = useState<{ user: User; direction: "promote" | "demote" } | null>(null);
   const [previewUser, setPreviewUser] = useState<User | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [banPending,  startBanTransition]  = useTransition();
+  const [rolePending, startRoleTransition] = useTransition();
 
   function optimisticUpdate(id: string, patch: Partial<User>) {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...patch } : u));
@@ -104,7 +241,7 @@ export default function AdminUsersClient({
     if (!banTarget) return;
     const target = banTarget;
     setBanTarget(null);
-    startTransition(async () => {
+    startBanTransition(async () => {
       const res = await banUser(target.id, reason);
       if ("error" in res) { toast.error(res.error); return; }
       optimisticUpdate(target.id, {
@@ -116,42 +253,43 @@ export default function AdminUsersClient({
     });
   }
 
-  function handleUnban(user: User) {
-    startTransition(async () => {
-      const res = await unbanUser(user.id);
+  function handleUnban(u: User) {
+    startBanTransition(async () => {
+      const res = await unbanUser(u.id);
       if ("error" in res) { toast.error(res.error); return; }
-      optimisticUpdate(user.id, { status: "active", banned_at: null, banned_reason: null, banned_by: null });
+      optimisticUpdate(u.id, { status: "active", banned_at: null, banned_reason: null, banned_by: null });
       toast.success("ยกเลิกแบนแล้ว");
       router.refresh();
     });
   }
 
-  function handlePromote(user: User) {
-    startTransition(async () => {
-      const res = await promoteUser(user.id);
-      if ("error" in res) { toast.error(res.error); return; }
-      optimisticUpdate(user.id, { role: "admin" });
-      toast.success("เลื่อนเป็น Admin แล้ว");
+  function handleRoleConfirm() {
+    if (!roleTarget) return;
+    const { user: target, direction } = roleTarget;
+    startRoleTransition(async () => {
+      const res = direction === "promote" ? await promoteUser(target.id) : await demoteUser(target.id);
+      if ("error" in res) {
+        toast.error(res.error);
+        setRoleTarget(null);
+        return;
+      }
+      optimisticUpdate(target.id, { role: direction === "promote" ? "admin" : "user" });
+      toast.success(direction === "promote" ? "เลื่อนเป็น Admin แล้ว" : "ลดเป็น Writer แล้ว");
+      setRoleTarget(null);
       router.refresh();
     });
   }
 
-  function handleDemote(user: User) {
-    startTransition(async () => {
-      const res = await demoteUser(user.id);
-      if ("error" in res) { toast.error(res.error); return; }
-      optimisticUpdate(user.id, { role: "user" });
-      toast.success("ลดเป็น User แล้ว");
-      router.refresh();
-    });
-  }
+  // Split self out; sort + filter only other users
+  const selfUser   = users.find(u => u.id === currentAdminId) ?? null;
+  const otherUsers = users.filter(u => u.id !== currentAdminId);
 
-  const filtered = users.filter(u => {
-    const q = search.toLowerCase();
-    return !q
+  const q = search.toLowerCase().trim();
+  const filtered = [...otherUsers]
+    .filter(u => !q
       || (u.display_name ?? "").toLowerCase().includes(q)
-      || (u.email ?? "").toLowerCase().includes(q);
-  });
+      || (u.email ?? "").toLowerCase().includes(q))
+    .sort((a, b) => sortKey(a).localeCompare(sortKey(b), "th"));
 
   const previewInfo: WriterInfo | null = previewUser
     ? {
@@ -165,12 +303,26 @@ export default function AdminUsersClient({
 
   return (
     <>
+      {/* Modals */}
       {banTarget && (
         <BanModal user={banTarget} onConfirm={handleBanConfirm} onClose={() => setBanTarget(null)} />
       )}
 
+      {roleTarget && (
+        <RoleModal
+          target={roleTarget.user}
+          direction={roleTarget.direction}
+          onConfirm={handleRoleConfirm}
+          onClose={() => { if (!rolePending) setRoleTarget(null); }}
+          pending={rolePending}
+        />
+      )}
+
       {previewUser && previewInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setPreviewUser(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setPreviewUser(null)}
+        >
           <div className="w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <WriterCard info={previewInfo} onClose={() => setPreviewUser(null)} />
           </div>
@@ -183,7 +335,7 @@ export default function AdminUsersClient({
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="ค้นหาชื่อผู้ใช้ หรืออีเมล…"
+          placeholder="ค้นหานามแฝง หรืออีเมล…"
           className="w-full border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white"
         />
         {search && (
@@ -193,103 +345,62 @@ export default function AdminUsersClient({
         )}
       </div>
 
-      {/* Users list */}
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-700">ผู้ใช้ทั้งหมด</h2>
-          <span className="text-xs text-stone-400">{filtered.length} / {users.length}</span>
+      {/* Your Account */}
+      {selfUser && (
+        <div className="mb-5">
+          <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest px-1 mb-2">
+            บัญชีของคุณ
+          </p>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+            <UserRow
+              u={selfUser}
+              isSelf
+              showActions={false}
+              banPending={banPending}
+              rolePending={rolePending}
+              onPreview={() => setPreviewUser(selfUser)}
+              onBan={() => {}}
+              onUnban={() => {}}
+              onPromote={() => {}}
+              onDemote={() => {}}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* All other users */}
+      <div>
+        <div className="flex items-center justify-between px-1 mb-2">
+          <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest">
+            ผู้ใช้ทั้งหมด
+          </p>
+          <span className="text-xs text-stone-400">{filtered.length} / {otherUsers.length}</span>
         </div>
 
-        {filtered.length === 0 ? (
-          <p className="text-center text-sm text-stone-400 py-10">ไม่พบผู้ใช้</p>
-        ) : (
-          <ul className="divide-y divide-stone-100">
-            {filtered.map(u => {
-              const isSelf    = u.id === currentAdminId;
-              const isBanned  = u.status === "banned";
-              const isAdmin   = u.role === "admin";
-
-              return (
-                <li key={u.id} className={`flex items-center gap-3 px-5 py-3.5 ${isBanned ? "bg-red-50/60" : ""}`}>
-                  {/* Avatar + click to preview */}
-                  <button type="button" onClick={() => setPreviewUser(u)} className="shrink-0 hover:opacity-80 transition-opacity">
-                    <Avatar user={u} />
-                  </button>
-
-                  {/* Identity */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <button type="button" onClick={() => setPreviewUser(u)} className="text-sm font-semibold text-stone-800 hover:text-orange-500 transition-colors truncate">
-                        {u.display_name ?? u.email ?? ""}
-                      </button>
-                      {isAdmin && (
-                        <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Admin</span>
-                      )}
-                      {isBanned && (
-                        <span className="text-[10px] bg-red-100 text-red-500 px-1.5 py-0.5 rounded-full font-semibold shrink-0">Banned</span>
-                      )}
-                      {isSelf && (
-                        <span className="text-[10px] bg-stone-100 text-stone-400 px-1.5 py-0.5 rounded-full font-semibold shrink-0">คุณ</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-stone-400 truncate">{u.email ?? ""}</p>
-                    <p className="text-xs mt-0.5">
-                      <LastSeenLabel lastSeen={u.last_seen} />
-                    </p>
-                    {isBanned && u.banned_reason && (
-                      <p className="text-xs text-red-400 mt-0.5 truncate">เหตุผล: {u.banned_reason}</p>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  {!isSelf && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      {isBanned ? (
-                        <button
-                          onClick={() => handleUnban(u)}
-                          disabled={pending}
-                          title="ยกเลิกแบน"
-                          className="p-1.5 rounded-lg text-green-500 hover:bg-green-50 transition-colors disabled:opacity-40"
-                        >
-                          <ShieldOff className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setBanTarget(u)}
-                          disabled={pending}
-                          title="แบน"
-                          className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
-                        >
-                          <Shield className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {isAdmin ? (
-                        <button
-                          onClick={() => handleDemote(u)}
-                          disabled={pending}
-                          title="ลดเป็น User"
-                          className="p-1.5 rounded-lg text-stone-400 hover:bg-stone-50 transition-colors disabled:opacity-40"
-                        >
-                          <UserMinus className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handlePromote(u)}
-                          disabled={pending}
-                          title="เลื่อนเป็น Admin"
-                          className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-50 transition-colors disabled:opacity-40"
-                        >
-                          <Crown className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+          {filtered.length === 0 ? (
+            <p className="text-center text-sm text-stone-400 py-10">ไม่พบผู้ใช้</p>
+          ) : (
+            <ul className="divide-y divide-stone-100">
+              {filtered.map(u => (
+                <li key={u.id}>
+                  <UserRow
+                    u={u}
+                    isSelf={false}
+                    showActions
+                    banPending={banPending}
+                    rolePending={rolePending}
+                    onPreview={() => setPreviewUser(u)}
+                    onBan={() => setBanTarget(u)}
+                    onUnban={() => handleUnban(u)}
+                    onPromote={() => setRoleTarget({ user: u, direction: "promote" })}
+                    onDemote={() => setRoleTarget({ user: u, direction: "demote" })}
+                  />
                 </li>
-              );
-            })}
-          </ul>
-        )}
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </>
   );
