@@ -33,8 +33,8 @@ export default async function AdminPage() {
     {
       href:        "/admin/updates",
       icon:        Sparkles,
-      title:       "อัปเดตระบบ",
-      description: "ประวัติการพัฒนา ฟีเจอร์ใหม่ การปรับปรุง และ Bug Fix",
+      title:       "Version History",
+      description: "ประวัติ Build, ฟีเจอร์ใหม่, การปรับปรุง และ Bug Fix ทุก Release",
       meta:        null,
       enabled:     true,
     },

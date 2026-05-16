@@ -11,6 +11,59 @@ export type UpdateEntry = {
 // Add a new entry at the TOP of this array for each meaningful release.
 export const UPDATES: UpdateEntry[] = [
   {
+    build: 42,
+    timestamp: "2026-05-16T20:51:06.000Z",
+    title: "แก้ไข Build File เสียหายจาก Non-ASCII Commit Subject",
+    fixes: [
+      "ไฟล์ lib/build-version.ts เสียหายจาก commit subject ที่มีอักขระ non-ASCII (→, ภาษาไทย) — git แจ้ง encoding warning ทำให้ pre-push hook เขียน garbled bytes ลงใน BUILD_TOOLTIP",
+      "Turbopack พาร์ส lib/build-version.ts ไม่ได้: 'invalid utf-8 sequence of 2 bytes from index 550' → Deploy #41 ค้างที่ ERROR state",
+      "แก้ไข BUILD_TOOLTIP เป็น ASCII ล้วนและ commit ด้วย pure ASCII message เพื่อป้องกันปัญหาซ้ำ",
+    ],
+  },
+  {
+    build: 41,
+    timestamp: "2026-05-16T17:07:52.000Z",
+    title: "เปลี่ยนไอคอน Shield → LayoutDashboard ใน Dropdown",
+    fixes: [
+      "ไอคอน Shield บ่งบอก Security เท่านั้น ไม่สื่อถึง System Management โดยรวม",
+      "เปลี่ยนเป็น LayoutDashboard ที่สื่อถึง Control Center ได้ชัดเจนกว่า",
+    ],
+  },
+  {
+    build: 40,
+    timestamp: "2026-05-16T16:59:57.000Z",
+    title: "แก้ไขความกว้าง Container ของหน้า Version History",
+    fixes: [
+      "หน้า /admin/updates ใช้ maxWidth='md' (448px) ทำให้แคบกว่าหน้า Admin อื่นๆ",
+      "เปลี่ยนเป็น default 'lg' (max-w-2xl, 672px) ให้สม่ำเสมอทั้ง Admin Section",
+    ],
+  },
+  {
+    build: 39,
+    timestamp: "2026-05-16T16:53:23.000Z",
+    title: "ย้าย Version History เข้า Admin Hub + ปรับไอคอน",
+    improvements: [
+      "ย้ายหน้า Version History จาก /updates ไปอยู่ภายใต้ /admin/updates",
+      "ลบ Nav Link 'อัปเดตระบบ' ออกจาก UserMenu Dropdown",
+      "เพิ่มการ์ด Version History เป็น Section ที่ 3 ใน Admin Hub",
+      "เปลี่ยนไอคอน การจัดการระบบ ใน UserMenu จาก Users เป็น Shield (เตรียมเปลี่ยนเป็น LayoutDashboard ใน Build ถัดไป)",
+    ],
+  },
+  {
+    build: 38,
+    timestamp: "2026-05-16T16:12:49.000Z",
+    title: "หน้า Version History (อัปเดตระบบ) + ลบ Build Tracker จาก Settings",
+    features: [
+      "สร้างหน้า /updates แสดงประวัติ Build ทั้งหมดตั้งแต่ Build #1",
+      "แต่ละ Build แสดง Features / Improvements / Fixes",
+      "Build ล่าสุดมี Badge 'ล่าสุด' และ Gradient Border สีส้ม",
+    ],
+    improvements: [
+      "ลบ Build Tracker (Build #, Timestamp, Tooltip) ออกจากหน้า Settings",
+      "ข้อมูล Build ย้ายมาอยู่ที่ lib/updates.ts เป็น Static Changelog Array",
+    ],
+  },
+  {
     build: 37,
     timestamp: "2026-05-16T15:52:00.000Z",
     title: "ระบบ Admin Hub & การจัดการระบบ",
