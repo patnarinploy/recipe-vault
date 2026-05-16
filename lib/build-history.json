@@ -1,0 +1,296 @@
+[
+  {
+    "build": 43,
+    "timestamp": "2026-05-16T21:03:08.000Z",
+    "subject": "feat(admin): rename to Version History, add missing builds #38-#42",
+    "hash": "26fe72a",
+    "category": "feat"
+  },
+  {
+    "build": 42,
+    "timestamp": "2026-05-16T20:51:06.000Z",
+    "subject": "fix: repair corrupted build-version.ts caused by non-ASCII commit subjec",
+    "hash": "d209bad",
+    "category": "fix"
+  },
+  {
+    "build": 41,
+    "timestamp": "2026-05-16T17:07:52.000Z",
+    "subject": "fix(nav): swap Shield → LayoutDashboard for การจัดกาà¸",
+    "hash": "c9dfdf0",
+    "category": "fix"
+  },
+  {
+    "build": 40,
+    "timestamp": "2026-05-16T16:59:57.000Z",
+    "subject": "fix(admin/updates): match container width with other admin pages",
+    "hash": "dae731f",
+    "category": "fix"
+  },
+  {
+    "build": 39,
+    "timestamp": "2026-05-16T16:53:23.000Z",
+    "subject": "Move อัปเดตระบบ under การจัดการร",
+    "hash": "50a1d29",
+    "category": "internal"
+  },
+  {
+    "build": 38,
+    "timestamp": "2026-05-16T16:12:49.000Z",
+    "subject": "Add public /updates changelog page, remove build tracker from Settings",
+    "hash": "0c277ef",
+    "category": "feat"
+  },
+  {
+    "build": 37,
+    "timestamp": "2026-05-16T15:52:30.000Z",
+    "subject": "Refactor admin into scalable system management hub at /admin",
+    "hash": "1a09415",
+    "category": "refactor"
+  },
+  {
+    "build": 36,
+    "timestamp": "2026-05-16T15:44:00.000Z",
+    "subject": "Refactor badge system: achievement-first identity, remove raw stat pills",
+    "hash": "6dec161",
+    "category": "refactor"
+  },
+  {
+    "build": 35,
+    "timestamp": "2026-05-16T14:46:34.000Z",
+    "subject": "Add writer achievement system with tiered title badges",
+    "hash": "486f6c4",
+    "category": "feat"
+  },
+  {
+    "build": 34,
+    "timestamp": "2026-05-16T12:03:39.000Z",
+    "subject": "fix(writer-card): skeleton badge row eliminates pop-in during stats load",
+    "hash": "18d1cca",
+    "category": "fix"
+  },
+  {
+    "build": 33,
+    "timestamp": "2026-05-16T08:59:48.000Z",
+    "subject": "fix: status dot always renders as perfect circle",
+    "hash": "14906fd",
+    "category": "fix"
+  },
+  {
+    "build": 32,
+    "timestamp": "2026-05-16T08:53:46.000Z",
+    "subject": "feat: centralize role labels — Admin / Writer everywhere",
+    "hash": "d63eda6",
+    "category": "feat"
+  },
+  {
+    "build": 31,
+    "timestamp": "2026-05-16T06:23:35.000Z",
+    "subject": "refactor(admin): unify writer card data — stats, status badge, async e",
+    "hash": "9a30dc9",
+    "category": "refactor"
+  },
+  {
+    "build": 30,
+    "timestamp": "2026-05-16T00:41:51.000Z",
+    "subject": "feat(admin): split self-section, alpha sort, role confirm modal, loading",
+    "hash": "2969603",
+    "category": "feat"
+  },
+  {
+    "build": 29,
+    "timestamp": "2026-05-16T00:35:46.000Z",
+    "subject": "refactor: remove username column from all code (pre-drop cleanup)",
+    "hash": "f168b61",
+    "category": "refactor"
+  },
+  {
+    "build": 28,
+    "timestamp": "2026-05-15T10:56:09.000Z",
+    "subject": "chore: enable Google OAuth provider gate",
+    "hash": "e103145",
+    "category": "chore"
+  },
+  {
+    "build": 27,
+    "timestamp": "2026-05-14T22:34:25.000Z",
+    "subject": "feat: OAuth-only auth — Google/Microsoft with env-var gates, account-l",
+    "hash": "69aedb2",
+    "category": "feat"
+  },
+  {
+    "build": 26,
+    "timestamp": "2026-05-14T22:19:53.000Z",
+    "subject": "fix: remove broken OAuth buttons, add Thai error message mapping in Auth",
+    "hash": "4647be8",
+    "category": "fix"
+  },
+  {
+    "build": 25,
+    "timestamp": "2026-05-14T17:05:47.000Z",
+    "subject": "fix: writer card modal — true center alignment + 30rem width",
+    "hash": "8176976",
+    "category": "fix"
+  },
+  {
+    "build": 24,
+    "timestamp": "2026-05-14T15:48:16.000Z",
+    "subject": "fix: add updated_at columns to DB and wire explicit writes in all mutati",
+    "hash": "21f7cae",
+    "category": "fix"
+  },
+  {
+    "build": 23,
+    "timestamp": "2026-05-14T15:35:07.000Z",
+    "subject": "fix: book cover timestamp excludes recipe.created_at from MAX calculatio",
+    "hash": "771facd",
+    "category": "fix"
+  },
+  {
+    "build": 22,
+    "timestamp": "2026-05-14T12:19:28.000Z",
+    "subject": "fix: redesign mobile ingredient row layout with per-field micro-labels",
+    "hash": "16f3889",
+    "category": "fix"
+  },
+  {
+    "build": 21,
+    "timestamp": "2026-05-14T12:12:41.000Z",
+    "subject": "feat: book cover uses true activity timestamp (max of book + all recipe",
+    "hash": "9ffbdb8",
+    "category": "feat"
+  },
+  {
+    "build": 20,
+    "timestamp": "2026-05-14T11:56:09.000Z",
+    "subject": "refactor: unify metadata + writer card stats across all surfaces",
+    "hash": "d0842d0",
+    "category": "refactor"
+  },
+  {
+    "build": 19,
+    "timestamp": "2026-05-14T10:11:26.000Z",
+    "subject": "feat: writer card X button + stats badges, safe editor modals, recipe ti",
+    "hash": "88f3798",
+    "category": "feat"
+  },
+  {
+    "build": 18,
+    "timestamp": "2026-05-14T09:51:38.000Z",
+    "subject": "Fix YouTube placement for portrait/embedded-instructions case",
+    "hash": "d06c8c0",
+    "category": "fix"
+  },
+  {
+    "build": 17,
+    "timestamp": "2026-05-14T08:56:40.000Z",
+    "subject": "Fix YouTube fit check overcounting and thumbnail centering",
+    "hash": "9997920",
+    "category": "fix"
+  },
+  {
+    "build": 16,
+    "timestamp": "2026-05-14T08:39:56.000Z",
+    "subject": "fix(book-reader): two-phase YouTube placement, dedicated slot, step-imag",
+    "hash": "c0a422e",
+    "category": "fix"
+  },
+  {
+    "build": 15,
+    "timestamp": "2026-05-14T08:21:00.000Z",
+    "subject": "fix(book-reader): correct pagination regression, YouTube layout, ESC sta",
+    "hash": "652d414",
+    "category": "fix"
+  },
+  {
+    "build": 14,
+    "timestamp": "2026-05-14T07:54:49.000Z",
+    "subject": "fix(book-reader): eliminate double YouTube block, fix budget, fix click",
+    "hash": "fa91f62",
+    "category": "fix"
+  },
+  {
+    "build": 13,
+    "timestamp": "2026-05-13T21:22:08.000Z",
+    "subject": "feat(recipe-ux): mobile ingredient layout, natural step images, YouTube",
+    "hash": "968b017",
+    "category": "feat"
+  },
+  {
+    "build": 12,
+    "timestamp": "2026-05-13T20:41:21.000Z",
+    "subject": "feat(recipe): unit combobox, mobile ingredient layout, step images (Phas",
+    "hash": "0c28422",
+    "category": "feat"
+  },
+  {
+    "build": 11,
+    "timestamp": "2026-05-13T20:18:56.000Z",
+    "subject": "feat(ux): dimension-aware book skeleton matches exact spread/portrait la",
+    "hash": "acca362",
+    "category": "feat"
+  },
+  {
+    "build": 10,
+    "timestamp": "2026-05-13T20:04:03.000Z",
+    "subject": "fix(badge): restore SharedBadge, PageCoverFront badge, and BookCover bad",
+    "hash": "f0afb0a",
+    "category": "fix"
+  },
+  {
+    "build": 9,
+    "timestamp": "2026-05-13T19:18:52.000Z",
+    "subject": "fix(ux): shared badge, modal skeleton, settings skeletons, book defaults",
+    "hash": "39e7b38",
+    "category": "fix"
+  },
+  {
+    "build": 8,
+    "timestamp": "2026-05-08T20:12:14.000Z",
+    "subject": "feat(ux): modern loading architecture — Sonner, Framer Motion, Suspens",
+    "hash": "f1032b7",
+    "category": "feat"
+  },
+  {
+    "build": 7,
+    "timestamp": "2026-05-08T18:40:21.000Z",
+    "subject": "fix(ribbon): portrait side bug + vmin-based proportional sizing",
+    "hash": "6947f0f",
+    "category": "fix"
+  },
+  {
+    "build": 6,
+    "timestamp": "2026-05-08T18:14:42.000Z",
+    "subject": "feat(cover): responsive typography for PageCoverFront + BookCover",
+    "hash": "873e6ca",
+    "category": "feat"
+  },
+  {
+    "build": 5,
+    "timestamp": "2026-05-08T17:59:03.000Z",
+    "subject": "feat(toc): responsive typography matching recipe-page scaling",
+    "hash": "8626ec2",
+    "category": "feat"
+  },
+  {
+    "build": 4,
+    "timestamp": "2026-05-08T17:36:02.000Z",
+    "subject": "fix(pagination): canvas.measureText for 2-col ingredient layout",
+    "hash": "86c5880",
+    "category": "fix"
+  },
+  {
+    "build": 3,
+    "timestamp": "2026-05-07T22:24:07.000Z",
+    "subject": "fix(build): display build timestamp in Asia/Bangkok timezone",
+    "hash": "9f50bf7",
+    "category": "fix"
+  },
+  {
+    "build": 2,
+    "timestamp": "2026-05-07T22:20:46.000Z",
+    "subject": "feat(build): global production build tracker",
+    "hash": "6a9a44a",
+    "category": "feat"
+  }
+]
