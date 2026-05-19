@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 47;
-export const BUILD_TIMESTAMP = "2026-05-16T22:35:55.000Z";
-export const BUILD_TOOLTIP   = "feat(infrastructure): dark mode + i18n Phase 1 — foundation without br";
+export const BUILD_NUMBER    = 48;
+export const BUILD_TIMESTAMP = "2026-05-19T11:44:11.000Z";
+export const BUILD_TOOLTIP   = "feat(personalization): system-wide dark mode, i18n, reading fonts Phase ";

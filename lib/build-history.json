@@ -1,5 +1,12 @@
 [
   {
+    "build": 48,
+    "timestamp": "2026-05-19T11:44:11.000Z",
+    "subject": "feat(personalization): system-wide dark mode, i18n, reading fonts Phase ",
+    "hash": "8c67375",
+    "category": "feat"
+  },
+  {
     "build": 47,
     "timestamp": "2026-05-16T22:35:55.000Z",
     "subject": "feat(infrastructure): dark mode + i18n Phase 1 — foundation without br",
