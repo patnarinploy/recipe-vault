@@ -1,5 +1,12 @@
 [
   {
+    "build": 55,
+    "timestamp": "2026-05-19T19:53:01.000Z",
+    "subject": "improve: set Noto Sans Thai as default reading font; replace ban icon",
+    "hash": "903b4e2",
+    "category": "improve"
+  },
+  {
     "build": 54,
     "timestamp": "2026-05-19T19:50:17.000Z",
     "subject": "fix: admin/users page title and back label were hardcoded Thai (server-s",
