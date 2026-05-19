@@ -12,7 +12,7 @@ type Props = {
 export default function AdminLayout({
   title,
   backHref = "/admin",
-  backLabel = "การจัดการระบบ",
+  backLabel = "",
   maxWidth = "lg",
   children,
 }: Props) {

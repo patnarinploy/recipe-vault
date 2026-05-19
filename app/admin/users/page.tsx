@@ -3,12 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/lib/types";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminUsersClient from "./AdminUsersClient";
+import { getServerLocale } from "@/lib/locale/server";
 
 export const revalidate = 0;
 
 export default async function AdminUsersPage() {
   const admin = await requireAdmin();
   const supabase = await createClient();
+  const { t } = await getServerLocale();
 
   const { data: users } = await supabase
     .from("users")
@@ -17,7 +19,7 @@ export default async function AdminUsersPage() {
     .returns<User[]>();
 
   return (
-    <AdminLayout title="จัดการผู้ใช้">
+    <AdminLayout title={t.admin.users.title} backLabel={t.admin.back}>
       <AdminUsersClient users={users ?? []} currentAdminId={admin.id} />
     </AdminLayout>
   );
