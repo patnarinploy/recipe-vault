@@ -1,5 +1,12 @@
 [
   {
+    "build": 50,
+    "timestamp": "2026-05-19T16:48:28.000Z",
+    "subject": "feat(polish): dark mode + i18n across book reader, forms, badges, settin",
+    "hash": "3e768c9",
+    "category": "feat"
+  },
+  {
     "build": 49,
     "timestamp": "2026-05-19T11:46:08.000Z",
     "subject": "chore: add .claude/ to .gitignore",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 49;
-export const BUILD_TIMESTAMP = "2026-05-19T11:46:08.000Z";
-export const BUILD_TOOLTIP   = "chore: add .claude/ to .gitignore";
+export const BUILD_NUMBER    = 50;
+export const BUILD_TIMESTAMP = "2026-05-19T16:48:28.000Z";
+export const BUILD_TOOLTIP   = "feat(polish): dark mode + i18n across book reader, forms, badges, settin";
