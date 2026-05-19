@@ -1,5 +1,12 @@
 [
   {
+    "build": 54,
+    "timestamp": "2026-05-19T19:50:17.000Z",
+    "subject": "fix: admin/users page title and back label were hardcoded Thai (server-s",
+    "hash": "dcd4f78",
+    "category": "fix"
+  },
+  {
     "build": 53,
     "timestamp": "2026-05-19T19:44:36.000Z",
     "subject": "feat: final i18n + dark mode consistency pass",
