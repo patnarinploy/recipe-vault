@@ -1,14 +1,18 @@
+"use client";
+
 import { X } from "lucide-react";
 import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
 import OnlineIndicator from "./OnlineIndicator";
 import WriterAchievements from "./user/WriterAchievements";
+import { useLocale } from "@/lib/locale";
 
 export default function WriterCard({ info, onClose, statsLoading = false }: {
   info: WriterInfo;
   onClose?: () => void;
   statsLoading?: boolean;
 }) {
+  const { t } = useLocale();
   const isUrl        = isAvatarUrl(info.avatar);
   const initial      = info.display_name?.[0]?.toUpperCase() ?? "?";
   const showPresence = "last_seen" in info;
@@ -21,7 +25,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
           type="button"
           onClick={onClose}
           className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 text-muted hover:text-foreground transition-colors"
-          aria-label="ปิด"
+          aria-label={t.common.close}
         >
           <X className="w-4 h-4" />
         </button>
@@ -31,7 +35,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
       <div className="flex justify-center mb-4">
         <div className="relative">
           <div
-            className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white shadow-md overflow-hidden"
+            className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white dark:border-white/20 shadow-md overflow-hidden"
             style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
           >
             {isUrl ? (
@@ -41,7 +45,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
             )}
           </div>
           {showPresence && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white shadow flex items-center justify-center shrink-0">
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-stone-800 shadow flex items-center justify-center shrink-0">
               <OnlineIndicator lastSeen={info.last_seen} size="md" />
             </div>
           )}

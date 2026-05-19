@@ -73,7 +73,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
         <div>
           <p className="text-[11px] tracking-[0.35em] text-muted uppercase mb-3">{lib.subtitle}</p>
           <h1 className="text-3xl font-bold text-foreground">
-            {tab === "mine" ? `${lib.myShelf} ${displayName}` : lib.publicTitle}
+            {tab === "mine" ? lib.myShelfTpl.replace("{name}", displayName) : lib.publicTitle}
           </h1>
           <p className="text-sm text-secondary mt-1">
             {tab === "mine"

@@ -3,20 +3,26 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CATEGORIES, type Recipe } from "@/lib/types";
+import { type Recipe } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
 import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
 import { ReactSortable } from "react-sortablejs";
+import { useLocale } from "@/lib/locale";
 
-const UNITS = [
+// Static TH units used for parsing stored ingredient strings (backward compat).
+// Display units come from t.recipe.units (locale-aware).
+const PARSE_UNITS = [
   "กรัม", "กิโลกรัม", "ขีด",
   "มิลลิลิตร", "ลิตร",
   "ช้อนชา", "ช้อนโต๊ะ", "ถ้วย",
   "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
   "ฟอง", "เม็ด", "แว่น",
+  "g", "kg", "100g", "ml", "L", "tsp", "tbsp", "cup",
+  "piece", "pod", "stalk", "leaf", "head", "ball", "clove", "slice",
+  "egg", "seed", "round",
 ];
 
 const NUM_RE = /^[\d.,\/½¼¾⅓⅔⅛⅜⅝⅞]+$/;
@@ -32,7 +38,7 @@ interface IngredientRow { id: string; name: string; amount: string; unit: string
 interface InstructionStep { id: string; text: string; image_url: string | null; }
 
 // ─── Generic searchable + creatable combobox ──────────────────────
-function Combobox({ value, onChange, options, placeholder = "ไม่ระบุ", className = "", wrapperClass = "" }: {
+function Combobox({ value, onChange, options, placeholder = "", className = "", wrapperClass = "" }: {
   value: string;
   onChange: (v: string) => void;
   options: readonly string[];
@@ -40,6 +46,7 @@ function Combobox({ value, onChange, options, placeholder = "ไม่ระบ�
   className?: string;
   wrapperClass?: string;
 }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -83,7 +90,7 @@ function Combobox({ value, onChange, options, placeholder = "ไม่ระบ�
       {open && (filtered.length > 0 || showCreate) && (
         <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto"
              style={{ maxHeight: "12rem" }}>
-          {!query && (
+          {!query && placeholder && (
             <button type="button" onClick={() => select("")}
               className="w-full text-left px-3 py-2 text-sm text-muted hover:bg-elevated">
               {placeholder}
@@ -91,15 +98,15 @@ function Combobox({ value, onChange, options, placeholder = "ไม่ระบ�
           )}
           {filtered.map(u => (
             <button key={u} type="button" onClick={() => select(u)}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors
-                ${u === value ? "font-semibold text-orange-600 bg-orange-50/50" : "text-secondary"}`}>
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 transition-colors
+                ${u === value ? "font-semibold text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/20" : "text-secondary"}`}>
               {u}
             </button>
           ))}
           {showCreate && (
             <button type="button" onClick={() => select(query.trim())}
-              className="w-full text-left px-3 py-2 text-sm text-orange-600 font-medium hover:bg-orange-50 border-t border-border transition-colors">
-              สร้าง &ldquo;{query.trim()}&rdquo;
+              className="w-full text-left px-3 py-2 text-sm text-orange-600 dark:text-orange-400 font-medium hover:bg-orange-50 dark:hover:bg-orange-950/20 border-t border-border transition-colors">
+              {t.recipe.createOption} &ldquo;{query.trim()}&rdquo;
             </button>
           )}
         </div>
@@ -130,6 +137,7 @@ function YtPreview({ url }: { url: string }) {
 
 // ─── Compact image upload for instruction steps ───────────────────
 function StepImageUpload({ value, onChange }: { value: string | null; onChange: (url: string | null) => void }) {
+  const { t } = useLocale();
   const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -137,12 +145,12 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("ไฟล์ต้องไม่เกิน 5 MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error(t.recipe.fileSizeError.replace("{mb}", "5")); return; }
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `step-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("recipe-images").upload(path, file, { upsert: true });
-    if (error) { toast.error("อัปโหลดรูปไม่สำเร็จ"); setUploading(false); return; }
+    if (error) { toast.error(t.recipe.uploadError); setUploading(false); return; }
     const { data } = supabase.storage.from("recipe-images").getPublicUrl(path);
     onChange(data.publicUrl);
     setUploading(false);
@@ -173,7 +181,7 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
         <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
           className="flex items-center gap-1.5 text-xs text-muted hover:text-orange-500 transition-colors disabled:opacity-50">
           <ImageIcon className="w-3.5 h-3.5 shrink-0" />
-          {uploading ? "กำลังอัปโหลด…" : "เพิ่มรูปประกอบขั้นตอน"}
+          {uploading ? t.common.loading : t.recipe.stepUpload}
         </button>
       )}
       <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleFile} />
@@ -193,7 +201,7 @@ function parseIngredients(text: string): IngredientRow[] {
     const secondToLast = parts.length >= 2 ? parts[parts.length - 2] : null;
 
     // Known unit at end
-    const knownUnit = UNITS.find(u => last === u);
+    const knownUnit = PARSE_UNITS.find(u => last === u);
     if (knownUnit) {
       if (parts.length >= 3) return { id: uid(), name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
       if (parts.length === 2) return { id: uid(), name: "", amount: parts[0], unit: knownUnit };
@@ -266,6 +274,8 @@ export default function RecipeForm({
   inModal,
   showDelete,
 }: Props) {
+  const { t } = useLocale();
+  const r = t.recipe;
   const router = useRouter();
   const isEdit = !!recipe;
   const [isPending, startTransition] = useTransition();
@@ -317,11 +327,11 @@ export default function RecipeForm({
 
     const validSteps = instructionSteps.filter(s => s.text.trim());
     if (!form.title.trim() || !ingredientsText || validSteps.length === 0) {
-      toast.error("กรุณากรอกชื่อ, ส่วนผสม และวิธีทำ");
+      toast.error(r.requiredError);
       return;
     }
 
-    if (!isEdit && !bookId) { toast.error("ไม่มี book_id"); return; }
+    if (!isEdit && !bookId) { toast.error("missing book_id"); return; }
 
     const instructionsJson = JSON.stringify(
       validSteps.map(s => ({
@@ -350,7 +360,7 @@ export default function RecipeForm({
 
       if ("error" in res) { toast.error(res.error); return; }
 
-      toast.success(isEdit ? "แก้ไขสำเร็จ" : "เพิ่มสูตรอาหารแล้ว");
+      toast.success(isEdit ? r.editSuccess : r.addSuccess);
       if (onSuccess) {
         onSuccess(res.id);
         router.refresh();
@@ -368,7 +378,7 @@ export default function RecipeForm({
     startTransition(async () => {
       const res = await deleteRecipe(recipe.id);
       if ("error" in res) { toast.error(res.error); return; }
-      toast.success("ลบสูตรอาหารแล้ว");
+      toast.success(r.deleteSuccess);
       if (onDeleted) onDeleted(); else router.push("/");
     });
   }
@@ -390,46 +400,46 @@ export default function RecipeForm({
         <ImageUpload value={imageUrl} onChange={setImageUrl} />
 
         <div>
-          <label className={labelCls}>ชื่อสูตรอาหาร <span className="text-red-400">*</span></label>
-          <input value={form.title} onChange={set("title")} placeholder="เช่น ต้มยำกุ้ง" className={inputCls} required />
+          <label className={labelCls}>{r.titleLabel} <span className="text-red-400">*</span></label>
+          <input value={form.title} onChange={set("title")} placeholder={r.titlePlaceholder} className={inputCls} required />
         </div>
 
         <div>
-          <label className={labelCls}>คำอธิบาย</label>
-          <textarea value={form.description} onChange={set("description")} rows={2} placeholder="อธิบายสั้นๆ" className={inputCls + " resize-none"} />
+          <label className={labelCls}>{r.descLabel}</label>
+          <textarea value={form.description} onChange={set("description")} rows={2} placeholder={r.descLabel} className={inputCls + " resize-none"} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className={labelCls}>หมวดหมู่</label>
+            <label className={labelCls}>{r.categoryLabel}</label>
             <Combobox
               value={form.category}
               onChange={v => setForm(p => ({ ...p, category: v }))}
-              options={CATEGORIES}
-              placeholder="เลือกหมวดหมู่"
+              options={r.categories as unknown as readonly string[]}
+              placeholder={r.categoryPlaceholder}
               className={inputCls}
             />
           </div>
           <div>
-            <label className={labelCls}>เวลาทำ (นาที)</label>
+            <label className={labelCls}>{r.cookTimeLabel}</label>
             <input type="number" min="1" value={form.cook_time_minutes} onChange={set("cook_time_minutes")} placeholder="30" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>จำนวนที่เสิร์ฟ</label>
+            <label className={labelCls}>{r.servingsLabel}</label>
             <input type="number" min="1" value={form.servings} onChange={set("servings")} placeholder="1" className={inputCls} />
           </div>
         </div>
 
         {/* ── Ingredients ─────────────────────────────────── */}
         <div>
-          <label className={labelCls}>ส่วนผสม <span className="text-red-400">*</span></label>
+          <label className={labelCls}>{r.ingredientsLabel} <span className="text-red-400">*</span></label>
 
           {/* Column headers — desktop only */}
           <div className="hidden sm:grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
             <span />
-            <span className="text-xs text-muted">วัตถุดิบ</span>
-            <span className="text-xs text-muted">ปริมาณ</span>
-            <span className="text-xs text-muted">หน่วย</span>
+            <span className="text-xs text-muted">{r.ingredientName}</span>
+            <span className="text-xs text-muted">{r.ingredientAmount}</span>
+            <span className="text-xs text-muted">{r.ingredientUnit}</span>
             <span />
           </div>
 
@@ -450,25 +460,25 @@ export default function RecipeForm({
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
-                      <p className="text-[10px] font-medium text-muted mb-1">วัตถุดิบ</p>
+                      <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientName}</p>
                       <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                        placeholder="เช่น กุ้ง" className={inputCls} />
+                        placeholder={r.ingredientName} className={inputCls} />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
-                        <p className="text-[10px] font-medium text-muted mb-1">ปริมาณ</p>
+                        <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientAmount}</p>
                         <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                           placeholder="0" className={inputCls} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-medium text-muted mb-1">หน่วย</p>
-                        <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} wrapperClass="w-full" />
+                        <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientUnit}</p>
+                        <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={r.units as unknown as readonly string[]} placeholder={r.unspecifiedUnit} className={inputCls} wrapperClass="w-full" />
                       </div>
                     </div>
                   </div>
                   <div className="mt-[1.85rem] shrink-0">
                     <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -477,12 +487,12 @@ export default function RecipeForm({
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
                   <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
                   <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                    placeholder="เช่น กุ้ง" className={inputCls} />
+                    placeholder={r.ingredientName} className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
-                  <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} />
+                  <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={r.units as unknown as readonly string[]} placeholder={r.unspecifiedUnit} className={inputCls} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -493,13 +503,13 @@ export default function RecipeForm({
           <button type="button" onClick={addRow}
             className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
             <Plus className="w-4 h-4" />
-            เพิ่มส่วนผสม
+            {r.addIngredient}
           </button>
         </div>
 
         {/* ── Instructions ────────────────────────────────── */}
         <div>
-          <label className={labelCls}>วิธีทำ <span className="text-red-400">*</span></label>
+          <label className={labelCls}>{r.instructionsLabel} <span className="text-red-400">*</span></label>
           <ReactSortable
             list={instructionSteps}
             setList={setInstructionSteps}
@@ -516,15 +526,15 @@ export default function RecipeForm({
                   <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="text-xs text-muted flex-1">ขั้นตอนที่ {i + 1}</span>
+                  <span className="text-xs text-muted flex-1">{r.stepLabel} {i + 1}</span>
                   <button type="button" onClick={() => removeStep(i)} disabled={instructionSteps.length === 1}
-                    className="w-6 h-6 flex items-center justify-center rounded text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                    className="w-6 h-6 flex items-center justify-center rounded text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 {/* Step text */}
                 <textarea value={step.text} onChange={e => updateStep(i, "text", e.target.value)}
-                  placeholder={`อธิบายขั้นตอนที่ ${i + 1}`} rows={2}
+                  placeholder={r.stepPlaceholder.replace("{n}", String(i + 1))} rows={2}
                   className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-surface text-foreground placeholder:text-muted border-0" />
                 {/* Step image */}
                 <StepImageUpload
@@ -537,13 +547,13 @@ export default function RecipeForm({
           <button type="button" onClick={addStep}
             className="mt-3 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
             <Plus className="w-4 h-4" />
-            เพิ่มขั้นตอน
+            {r.addStep}
           </button>
         </div>
 
         {/* ── Recipe-level YouTube ─────────────────────────── */}
         <div>
-          <label className={labelCls}>วิดีโอ YouTube ประกอบสูตร</label>
+          <label className={labelCls}>{r.youtubeLabel}</label>
           <div className="border border-outline rounded-xl overflow-hidden bg-surface">
             <div className="flex items-center gap-2 px-3 py-2.5 bg-elevated/60">
               <div className="w-4 h-4 rounded bg-red-600 flex items-center justify-center shrink-0">
@@ -552,7 +562,7 @@ export default function RecipeForm({
               <input
                 value={form.recipe_youtube}
                 onChange={set("recipe_youtube")}
-                placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
+                placeholder={r.youtubePlaceholder}
                 className="flex-1 text-sm bg-transparent focus:outline-none text-secondary placeholder:text-muted"
               />
               {form.recipe_youtube && (
@@ -572,22 +582,22 @@ export default function RecipeForm({
             <input type="checkbox" checked={form.is_public}
               onChange={(e) => setForm((p) => ({ ...p, is_public: e.target.checked }))}
               className="sr-only peer" />
-            <div className="w-10 h-6 bg-stone-200 rounded-full peer peer-checked:bg-orange-500 transition-colors" />
-            <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+            <div className="w-10 h-6 bg-stone-200 dark:bg-stone-700 rounded-full peer peer-checked:bg-orange-500 transition-colors" />
+            <div className="absolute top-1 left-1 w-4 h-4 bg-white dark:bg-stone-300 rounded-full shadow transition-transform peer-checked:translate-x-4" />
           </div>
-          <span className="text-sm font-medium text-stone-700">แชร์เป็นสูตรสาธารณะ</span>
+          <span className="text-sm font-medium text-secondary">{r.publicToggle}</span>
         </label>
 
         <div className="flex gap-3 pt-2">
           {showDelete && isEdit && (
             confirmDelete ? (
-              <LoadingButton type="button" onClick={handleDelete} pending={isPending} pendingLabel="กำลังลบ…" variant="danger">
-                ยืนยันลบ
+              <LoadingButton type="button" onClick={handleDelete} pending={isPending} pendingLabel={t.common.saving} variant="danger">
+                {t.common.confirm}
               </LoadingButton>
             ) : (
               <button type="button" onClick={() => setConfirmDelete(true)}
-                className="border border-red-200 text-red-500 rounded-xl px-3.5 py-2.5 text-sm hover:bg-red-50 flex items-center"
-                title="ลบสูตร">
+                className="border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 rounded-xl px-3.5 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center transition-colors"
+                title={r.deleteBtn}>
                 <Trash2 className="w-4 h-4" />
               </button>
             )
@@ -595,11 +605,11 @@ export default function RecipeForm({
           <button type="button"
             onClick={() => confirmDelete ? setConfirmDelete(false) : cancel()}
             className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated transition-colors">
-            {confirmDelete ? "ไม่ลบ" : "ยกเลิก"}
+            {confirmDelete ? r.cancelDelete : t.common.cancel}
           </button>
           {!confirmDelete && (
-            <LoadingButton type="submit" pending={isPending} pendingLabel="กำลังบันทึก…" className="flex-1">
-              {isEdit ? "บันทึกการแก้ไข" : "เพิ่มสูตรอาหาร"}
+            <LoadingButton type="submit" pending={isPending} pendingLabel={t.common.saving} className="flex-1">
+              {isEdit ? r.saveEdit : r.saveNew}
             </LoadingButton>
           )}
         </div>

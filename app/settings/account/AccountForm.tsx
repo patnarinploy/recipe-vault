@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import LoadingButton from "@/components/ui/LoadingButton";
+import { useLocale } from "@/lib/locale";
 
 const COUNTRY_LIST = [
   "Thailand", "Japan", "South Korea", "United States", "United Kingdom",
@@ -28,13 +29,16 @@ export default function AccountForm({
   currentLanguage: string | null;
   currentSocialLinks: Record<string, string> | null;
 }) {
+  const { t } = useLocale();
+  const a = t.settings.account;
+
   const [state, action, pending] = useActionState(updatePrivateInfo, undefined);
 
   useEffect(() => {
     if (!state) return;
-    if ("success" in state) toast.success("บันทึกข้อมูลส่วนตัวสำเร็จ");
+    if ("success" in state) toast.success(a.saveSuccess);
     else if ("error" in state) toast.error(state.error);
-  }, [state]);
+  }, [state, a.saveSuccess]);
 
   const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted";
   const labelCls = "block text-sm font-semibold text-secondary mb-1";
@@ -46,18 +50,18 @@ export default function AccountForm({
         className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        ตั้งค่า
+        {t.settings.title}
       </Link>
 
-      <h1 className="text-2xl font-bold text-foreground mb-1">ข้อมูลส่วนตัว</h1>
-      <p className="text-sm text-muted mb-6">ข้อมูลนี้เป็นส่วนตัว ไม่แสดงต่อสาธารณะ</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">{a.label}</h1>
+      <p className="text-sm text-muted mb-6">{a.subtitle}</p>
 
       <form action={action} className="space-y-5">
 
         {/* Email — read-only, managed by Supabase Auth */}
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-          <label className={labelCls}>อีเมล</label>
-          <p className="text-xs text-muted mb-2">จัดการผ่านการเข้าสู่ระบบ ไม่สามารถแก้ไขได้ที่นี่</p>
+          <label className={labelCls}>{a.emailLabel}</label>
+          <p className="text-xs text-muted mb-2">{a.emailDesc}</p>
           <input
             type="email"
             value={currentEmail ?? ""}
@@ -68,31 +72,31 @@ export default function AccountForm({
 
         {/* Contact */}
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-secondary">ติดต่อ</p>
+          <p className="text-sm font-semibold text-secondary">{a.contactHeader}</p>
           <div>
-            <label className={labelCls}>เบอร์โทรศัพท์</label>
+            <label className={labelCls}>{a.phoneLabel}</label>
             <input name="tel" type="tel" defaultValue={currentTel ?? ""} placeholder="08x-xxx-xxxx" className={inputCls} />
           </div>
         </div>
 
         {/* Personal */}
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-secondary">ข้อมูลส่วนบุคคล</p>
+          <p className="text-sm font-semibold text-secondary">{a.personalHeader}</p>
           <div>
-            <label className={labelCls}>วันเกิด</label>
+            <label className={labelCls}>{a.dobLabel}</label>
             <input name="dob" type="date" defaultValue={currentDob ?? ""} className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>ประเทศ</label>
+            <label className={labelCls}>{a.countryLabel}</label>
             <select name="country" defaultValue={currentCountry ?? ""} className={inputCls}>
-              <option value="">— ไม่ระบุ —</option>
+              <option value="">{a.unspecified}</option>
               {COUNTRY_LIST.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>ภาษาหลัก</label>
+            <label className={labelCls}>{a.languageLabel}</label>
             <select name="language" defaultValue={currentLanguage ?? ""} className={inputCls}>
-              <option value="">— ไม่ระบุ —</option>
+              <option value="">{a.unspecified}</option>
               {LANGUAGE_LIST.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
@@ -100,12 +104,12 @@ export default function AccountForm({
 
         {/* Social links */}
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-secondary">ลิงก์โซเชียล</p>
+          <p className="text-sm font-semibold text-secondary">{a.socialHeader}</p>
           {[
             { name: "social_twitter",   label: "X / Twitter",  placeholder: "https://x.com/username" },
             { name: "social_instagram", label: "Instagram",    placeholder: "https://instagram.com/username" },
             { name: "social_youtube",   label: "YouTube",      placeholder: "https://youtube.com/@channel" },
-            { name: "social_website",   label: "เว็บไซต์",    placeholder: "https://yoursite.com" },
+            { name: "social_website",   label: a.websiteLabel, placeholder: "https://yoursite.com" },
           ].map(({ name, label, placeholder }) => (
             <div key={name}>
               <label className={labelCls}>{label}</label>
@@ -120,8 +124,8 @@ export default function AccountForm({
           ))}
         </div>
 
-        <LoadingButton type="submit" pending={pending} pendingLabel="กำลังบันทึก…" className="w-full py-3 text-sm font-semibold">
-          บันทึกข้อมูลส่วนตัว
+        <LoadingButton type="submit" pending={pending} pendingLabel={t.common.saving} className="w-full py-3 text-sm font-semibold">
+          {a.saveBtn}
         </LoadingButton>
       </form>
     </div>

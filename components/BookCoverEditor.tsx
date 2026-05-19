@@ -8,6 +8,7 @@ import { BOOK_COLORS, type Book } from "@/lib/types";
 import BookCover from "./BookCover";
 import { Trash2 } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
+import { useLocale } from "@/lib/locale";
 
 interface Props {
   book?: Book;
@@ -18,12 +19,14 @@ interface Props {
 }
 
 export default function BookCoverEditor({ book, author, onSuccess, onCancel, inModal }: Props) {
+  const { t } = useLocale();
+  const b = t.book;
   const router = useRouter();
   const isEdit = !!book;
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const defaultTitle = author ? `หนังสือของ${author}` : "";
+  const defaultTitle = author ? t.library.myShelfTpl.replace("{name}", author) : "";
   const [form, setForm] = useState({
     title:       book?.title    ?? defaultTitle,
     subtitle:    book?.subtitle ?? "",
@@ -44,7 +47,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim()) {
-      toast.error("กรุณาใส่ชื่อหนังสือ");
+      toast.error(b.titleRequired);
       return;
     }
     const payload = {
@@ -58,7 +61,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
         ? await updateBook(book.id, payload)
         : await createBook(payload);
       if ("error" in res) { toast.error(res.error); return; }
-      toast.success(isEdit ? "บันทึกการแก้ไขแล้ว" : "สร้างหนังสือใหม่แล้ว");
+      toast.success(isEdit ? b.saveSuccess : b.createSuccess);
       const resultId = isEdit ? book.id : ("id" in res ? res.id : "");
       if (onSuccess) onSuccess(resultId);
       router.refresh();
@@ -70,7 +73,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
     startTransition(async () => {
       const res = await deleteBook(book.id);
       if ("error" in res) { toast.error(res.error); return; }
-      toast.success("ลบหนังสือแล้ว");
+      toast.success(b.deleteSuccess);
       onCancel?.();
       router.refresh();
     });
@@ -98,7 +101,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
 
           <div className="flex-1 space-y-4 w-full">
             <div>
-              <label className={labelCls}>Tagline (ด้านบน)</label>
+              <label className={labelCls}>{b.taglineLabel}</label>
               <input
                 value={form.tagline}
                 onChange={(e) => setForm((p) => ({ ...p, tagline: e.target.value }))}
@@ -108,11 +111,11 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
             </div>
 
             <div>
-              <label className={labelCls}>ชื่อหนังสือ *</label>
+              <label className={labelCls}>{b.titleLabel} *</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                placeholder={defaultTitle || "ชื่อหนังสือ"}
+                placeholder={defaultTitle || b.titlePlaceholder}
                 maxLength={30}
                 required
                 className={inputCls}
@@ -120,7 +123,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
             </div>
 
             <div>
-              <label className={labelCls}>Subtitle (ด้านล่าง)</label>
+              <label className={labelCls}>{b.subtitleLabel}</label>
               <input
                 value={form.subtitle}
                 onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
@@ -133,7 +136,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
 
         {/* Color picker */}
         <div className="mb-6">
-          <label className={labelCls}>สีปก</label>
+          <label className={labelCls}>{b.colorLabel}</label>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
             {BOOK_COLORS.map((c) => (
               <button
@@ -162,25 +165,25 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
                   onClick={() => setConfirmDelete(false)}
                   className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated"
                 >
-                  ยกเลิกลบ
+                  {t.common.cancel}
                 </button>
                 <LoadingButton
                   type="button"
                   onClick={handleDelete}
                   pending={isPending}
-                  pendingLabel="กำลังลบ…"
+                  pendingLabel={b.deletePending}
                   variant="danger"
                   className="flex-1"
                 >
-                  ยืนยันลบ
+                  {b.confirmDelete}
                 </LoadingButton>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="border border-red-200 text-red-500 rounded-xl px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-1.5"
-                title="ลบหนังสือ"
+                className="border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 rounded-xl px-4 py-2.5 text-sm hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-1.5 transition-colors"
+                title={b.deleteBook}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -191,17 +194,17 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               <button
                 type="button"
                 onClick={cancel}
-                className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated"
+                className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated transition-colors"
               >
-                ยกเลิก
+                {t.common.cancel}
               </button>
               <LoadingButton
                 type="submit"
                 pending={isPending}
-                pendingLabel="กำลังบันทึก…"
+                pendingLabel={t.common.saving}
                 className="flex-1"
               >
-                {isEdit ? "บันทึก" : "สร้างหนังสือ"}
+                {isEdit ? b.saveBtn : b.createBtn}
               </LoadingButton>
             </>
           )}

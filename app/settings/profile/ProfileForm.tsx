@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowLeft, Camera, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import LoadingButton from "@/components/ui/LoadingButton";
+import { useLocale } from "@/lib/locale";
 
 const BUCKET = "recipe-images";
 const MAX_MB = 5;
@@ -21,6 +22,9 @@ export default function ProfileForm({
   currentBio: string | null;
   currentAvatar: string | null;
 }) {
+  const { t } = useLocale();
+  const p = t.settings.profile;
+
   const [state, action, pending] = useActionState(updatePublicProfile, undefined);
   const [selected, setSelected] = useState<string>(currentAvatar ?? "");
   const [uploading, setUploading] = useState(false);
@@ -28,15 +32,15 @@ export default function ProfileForm({
 
   useEffect(() => {
     if (!state) return;
-    if ("success" in state) toast.success("บันทึกโปรไฟล์สำเร็จ");
+    if ("success" in state) toast.success(p.saveSuccess);
     else if ("error" in state) toast.error(state.error);
-  }, [state]);
+  }, [state, p.saveSuccess]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_MB * 1024 * 1024) {
-      toast.error(`ไฟล์ต้องไม่เกิน ${MAX_MB} MB`);
+      toast.error(p.fileSizeError.replace("{mb}", String(MAX_MB)));
       return;
     }
     setUploading(true);
@@ -45,7 +49,7 @@ export default function ProfileForm({
     const sb   = createClient();
     const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert: true });
     if (error) {
-      toast.error("อัปโหลดไม่สำเร็จ: " + error.message);
+      toast.error(`${p.uploadError}: ${error.message}`);
       setUploading(false);
       return;
     }
@@ -65,22 +69,22 @@ export default function ProfileForm({
         className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        ตั้งค่า
+        {t.settings.title}
       </Link>
 
-      <h1 className="text-2xl font-bold text-foreground mb-1">โปรไฟล์นักเขียน</h1>
-      <p className="text-sm text-muted mb-6">ข้อมูลที่คนอื่นจะเห็นเมื่อดูหนังสือของคุณ</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">{p.label}</h1>
+      <p className="text-sm text-muted mb-6">{p.subtitle}</p>
 
       <form action={action} className="space-y-5">
 
         {/* Avatar */}
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
-          <p className="text-sm font-semibold text-secondary mb-0.5">Avatar</p>
-          <p className="text-xs text-muted mb-5">เลือกสัตว์น่ารักหรืออัปโหลดรูปของคุณเอง</p>
+          <p className="text-sm font-semibold text-secondary mb-0.5">{p.avatarLabel}</p>
+          <p className="text-xs text-muted mb-5">{p.avatarDesc}</p>
 
           <div className="flex justify-center mb-6">
             <div
-              className="w-24 h-24 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden"
+              className="w-24 h-24 rounded-full flex items-center justify-center border-4 border-white dark:border-white/20 shadow-lg overflow-hidden"
               style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
             >
               {isUrl ? (
@@ -100,16 +104,16 @@ export default function ProfileForm({
               onClick={() => fileRef.current?.click()}
               onMouseDown={(e) => e.preventDefault()}
               disabled={uploading}
-              className="relative aspect-square rounded-full border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none focus-visible:outline-none select-none"
+              className="relative aspect-square rounded-full border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none focus-visible:outline-none select-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
-              title="อัปโหลดรูปของคุณ"
+              title={p.uploadTitle}
             >
               {uploading ? (
-                <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
+                <Loader2 className="w-4 h-4 text-muted animate-spin" />
               ) : (
                 <>
                   <Camera className="w-4 h-4 text-muted" />
-                  <span className="text-[9px] text-muted">อัปโหลด</span>
+                  <span className="text-[9px] text-muted">{p.uploadBtn}</span>
                 </>
               )}
             </button>
@@ -155,9 +159,9 @@ export default function ProfileForm({
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
           <div>
             <label className="block text-sm font-semibold text-secondary mb-1">
-              นามแฝง <span className="text-red-400">*</span>
+              {p.penNameLabel} <span className="text-red-400">*</span>
             </label>
-            <p className="text-xs text-muted mb-2">ชื่อที่แสดงบนปกหนังสือและในเว็บ</p>
+            <p className="text-xs text-muted mb-2">{p.penNameDesc}</p>
             <input
               name="display_name"
               type="text"
@@ -165,37 +169,37 @@ export default function ProfileForm({
               minLength={2}
               maxLength={50}
               required
-              placeholder="เช่น กระรอกสายลับ"
+              placeholder={p.penNamePlaceholder}
               className={inputCls}
             />
           </div>
 
           <div>
             <div className="flex items-baseline gap-1.5 mb-1">
-              <label className="block text-sm font-semibold text-secondary">คำอธิบายตัวตน</label>
-              <span className="text-[11px] italic text-muted">(ไม่บังคับ)</span>
+              <label className="block text-sm font-semibold text-secondary">{p.bioLabel}</label>
+              <span className="text-[11px] italic text-muted">{p.bioOptional}</span>
             </div>
-            <p className="text-xs text-muted mb-2">แนะนำตัวเองสั้นๆ ให้คนอื่นรู้จักคุณ</p>
+            <p className="text-xs text-muted mb-2">{p.bioDesc}</p>
             <textarea
               name="bio"
               defaultValue={currentBio ?? ""}
               maxLength={200}
               rows={3}
-              placeholder="เช่น สายกินสายทำอาหาร ชอบทดลองสูตรใหม่ๆ..."
+              placeholder={p.bioPlaceholder}
               className={`${inputCls} resize-none`}
             />
-            <p className="text-xs text-muted mt-1">ไม่เกิน 200 ตัวอักษร</p>
+            <p className="text-xs text-muted mt-1">{p.bioMaxChars}</p>
           </div>
         </div>
 
         <LoadingButton
           type="submit"
           pending={pending}
-          pendingLabel="กำลังบันทึก…"
+          pendingLabel={t.common.saving}
           disabled={uploading}
           className="w-full py-3 text-sm font-semibold"
         >
-          บันทึกโปรไฟล์นักเขียน
+          {p.saveBtn}
         </LoadingButton>
       </form>
     </div>

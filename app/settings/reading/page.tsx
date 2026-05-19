@@ -179,7 +179,7 @@ export default function ReadingPage() {
                   className="text-base text-foreground leading-snug"
                   style={{ fontFamily: `var(${f.variable})` }}
                 >
-                  {f.previewText}
+                  {s.font.preview}
                 </span>
               </button>
             ))}
