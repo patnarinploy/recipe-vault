@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 52;
-export const BUILD_TIMESTAMP = "2026-05-19T18:16:19.000Z";
-export const BUILD_TOOLTIP   = "feat(i18n+dark): full localization + dark mode for settings, forms, and ";
+export const BUILD_NUMBER    = 53;
+export const BUILD_TIMESTAMP = "2026-05-19T19:44:36.000Z";
+export const BUILD_TOOLTIP   = "feat: final i18n + dark mode consistency pass";

@@ -1,5 +1,12 @@
 [
   {
+    "build": 53,
+    "timestamp": "2026-05-19T19:44:36.000Z",
+    "subject": "feat: final i18n + dark mode consistency pass",
+    "hash": "4a7102c",
+    "category": "feat"
+  },
+  {
     "build": 52,
     "timestamp": "2026-05-19T18:16:19.000Z",
     "subject": "feat(i18n+dark): full localization + dark mode for settings, forms, and ",
