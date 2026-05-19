@@ -77,28 +77,28 @@ function Combobox({ value, onChange, options, placeholder = "ไม่ระบ�
         className={className}
         style={{ paddingRight: "2rem" }}
       />
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
         <ChevronDown className="w-4 h-4" />
       </div>
       {open && (filtered.length > 0 || showCreate) && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg overflow-y-auto"
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto"
              style={{ maxHeight: "12rem" }}>
           {!query && (
             <button type="button" onClick={() => select("")}
-              className="w-full text-left px-3 py-2 text-sm text-stone-400 hover:bg-stone-50">
+              className="w-full text-left px-3 py-2 text-sm text-muted hover:bg-elevated">
               {placeholder}
             </button>
           )}
           {filtered.map(u => (
             <button key={u} type="button" onClick={() => select(u)}
               className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors
-                ${u === value ? "font-semibold text-orange-600 bg-orange-50/50" : "text-stone-700"}`}>
+                ${u === value ? "font-semibold text-orange-600 bg-orange-50/50" : "text-secondary"}`}>
               {u}
             </button>
           ))}
           {showCreate && (
             <button type="button" onClick={() => select(query.trim())}
-              className="w-full text-left px-3 py-2 text-sm text-orange-600 font-medium hover:bg-orange-50 border-t border-stone-100 transition-colors">
+              className="w-full text-left px-3 py-2 text-sm text-orange-600 font-medium hover:bg-orange-50 border-t border-border transition-colors">
               สร้าง &ldquo;{query.trim()}&rdquo;
             </button>
           )}
@@ -158,9 +158,9 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
   }
 
   return (
-    <div className="px-3 py-2 border-t border-stone-100 bg-stone-50/60">
+    <div className="px-3 py-2 border-t border-border bg-elevated/60">
       {value ? (
-        <div className="relative w-full rounded-xl overflow-hidden group bg-stone-100">
+        <div className="relative w-full rounded-xl overflow-hidden group bg-elevated">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="" className="block w-full h-auto"
             style={{ maxHeight: "12rem", objectFit: "contain" }} />
@@ -171,7 +171,7 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
         </div>
       ) : (
         <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
-          className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-orange-500 transition-colors disabled:opacity-50">
+          className="flex items-center gap-1.5 text-xs text-muted hover:text-orange-500 transition-colors disabled:opacity-50">
           <ImageIcon className="w-3.5 h-3.5 shrink-0" />
           {uploading ? "กำลังอัปโหลด…" : "เพิ่มรูปประกอบขั้นตอน"}
         </button>
@@ -373,16 +373,16 @@ export default function RecipeForm({
     });
   }
 
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
-  const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
+  const labelCls = "block text-sm font-medium text-secondary mb-1.5";
 
   return (
     <form
       onSubmit={handleSubmit}
       className={
         inModal
-          ? "bg-white rounded-b-2xl border border-stone-100 border-t-0 shadow-xl overflow-hidden"
-          : "bg-white rounded-2xl border border-stone-100 shadow-sm"
+          ? "bg-surface rounded-b-2xl border border-border border-t-0 shadow-xl overflow-hidden"
+          : "bg-surface rounded-2xl border border-border shadow-sm"
       }
     >
       <div className={inModal ? "p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto" : "p-6 space-y-5"}>
@@ -427,9 +427,9 @@ export default function RecipeForm({
           {/* Column headers — desktop only */}
           <div className="hidden sm:grid gap-2 mb-1.5 px-0.5" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
             <span />
-            <span className="text-xs text-stone-400">วัตถุดิบ</span>
-            <span className="text-xs text-stone-400">ปริมาณ</span>
-            <span className="text-xs text-stone-400">หน่วย</span>
+            <span className="text-xs text-muted">วัตถุดิบ</span>
+            <span className="text-xs text-muted">ปริมาณ</span>
+            <span className="text-xs text-muted">หน่วย</span>
             <span />
           </div>
 
@@ -446,43 +446,43 @@ export default function RecipeForm({
                 {/* Mobile */}
                 <div className="sm:hidden flex items-start gap-2">
                   <div className="mt-[1.85rem] shrink-0">
-                    <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing touch-none" />
+                    <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
-                      <p className="text-[10px] font-medium text-stone-400 mb-1">วัตถุดิบ</p>
+                      <p className="text-[10px] font-medium text-muted mb-1">วัตถุดิบ</p>
                       <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
                         placeholder="เช่น กุ้ง" className={inputCls} />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
-                        <p className="text-[10px] font-medium text-stone-400 mb-1">ปริมาณ</p>
+                        <p className="text-[10px] font-medium text-muted mb-1">ปริมาณ</p>
                         <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                           placeholder="0" className={inputCls} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-medium text-stone-400 mb-1">หน่วย</p>
+                        <p className="text-[10px] font-medium text-muted mb-1">หน่วย</p>
                         <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} wrapperClass="w-full" />
                       </div>
                     </div>
                   </div>
                   <div className="mt-[1.85rem] shrink-0">
                     <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 {/* Desktop */}
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
-                  <GripVertical className="ing-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing touch-none" />
+                  <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
                   <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
                     placeholder="เช่น กุ้ง" className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
                   <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={UNITS} placeholder="ไม่ระบุ" className={inputCls} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -509,23 +509,23 @@ export default function RecipeForm({
             className="space-y-2.5"
           >
             {instructionSteps.map((step, i) => (
-              <div key={step.id} className="border border-stone-200 rounded-xl overflow-hidden bg-white">
+              <div key={step.id} className="border border-outline rounded-xl overflow-hidden bg-surface">
                 {/* Step header */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-stone-50 border-b border-stone-100">
-                  <GripVertical className="step-drag-handle w-4 h-4 text-stone-300 cursor-grab active:cursor-grabbing shrink-0 touch-none" />
+                <div className="flex items-center gap-2 px-3 py-2 bg-elevated border-b border-border">
+                  <GripVertical className="step-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing shrink-0 touch-none" />
                   <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="text-xs text-stone-400 flex-1">ขั้นตอนที่ {i + 1}</span>
+                  <span className="text-xs text-muted flex-1">ขั้นตอนที่ {i + 1}</span>
                   <button type="button" onClick={() => removeStep(i)} disabled={instructionSteps.length === 1}
-                    className="w-6 h-6 flex items-center justify-center rounded text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
+                    className="w-6 h-6 flex items-center justify-center rounded text-muted hover:text-red-400 hover:bg-red-50 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 {/* Step text */}
                 <textarea value={step.text} onChange={e => updateStep(i, "text", e.target.value)}
                   placeholder={`อธิบายขั้นตอนที่ ${i + 1}`} rows={2}
-                  className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-white border-0" />
+                  className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-surface text-foreground placeholder:text-muted border-0" />
                 {/* Step image */}
                 <StepImageUpload
                   value={step.image_url}
@@ -544,8 +544,8 @@ export default function RecipeForm({
         {/* ── Recipe-level YouTube ─────────────────────────── */}
         <div>
           <label className={labelCls}>วิดีโอ YouTube ประกอบสูตร</label>
-          <div className="border border-stone-200 rounded-xl overflow-hidden bg-white">
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-stone-50/60">
+          <div className="border border-outline rounded-xl overflow-hidden bg-surface">
+            <div className="flex items-center gap-2 px-3 py-2.5 bg-elevated/60">
               <div className="w-4 h-4 rounded bg-red-600 flex items-center justify-center shrink-0">
                 <div style={{ width: 0, height: 0, borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "7px solid white", marginLeft: 1 }} />
               </div>
@@ -553,11 +553,11 @@ export default function RecipeForm({
                 value={form.recipe_youtube}
                 onChange={set("recipe_youtube")}
                 placeholder="ลิ้งค์ YouTube ประกอบ (ไม่บังคับ)"
-                className="flex-1 text-sm bg-transparent focus:outline-none text-stone-600 placeholder:text-stone-300"
+                className="flex-1 text-sm bg-transparent focus:outline-none text-secondary placeholder:text-muted"
               />
               {form.recipe_youtube && (
                 <button type="button" onClick={() => setForm(p => ({ ...p, recipe_youtube: "" }))}
-                  className="text-stone-300 hover:text-stone-500 transition-colors">
+                  className="text-muted hover:text-secondary transition-colors">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -594,7 +594,7 @@ export default function RecipeForm({
           )}
           <button type="button"
             onClick={() => confirmDelete ? setConfirmDelete(false) : cancel()}
-            className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50 transition-colors">
+            className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated transition-colors">
             {confirmDelete ? "ไม่ลบ" : "ยกเลิก"}
           </button>
           {!confirmDelete && (

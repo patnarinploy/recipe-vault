@@ -15,6 +15,7 @@ import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
+import { useLocale, type Dict } from "@/lib/locale";
 
 // ─── Colour helper ────────────────────────────────────────────────
 function darken(hex: string, amt: number) {
@@ -1197,12 +1198,13 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
 PageBackCover.displayName = "PageBackCover";
 
 // ─── TOC Sort Modal ───────────────────────────────────────────────
-function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
+function TocSortModal({ recipes, open, onClose, onSave, coverColor, t }: {
   recipes: Recipe[];
   open: boolean;
   onClose: () => void;
   onSave: (sorted: Recipe[]) => Promise<void>;
   coverColor: string;
+  t: Dict;
 }) {
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
@@ -1224,9 +1226,9 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="เรียงลำดับสูตรอาหาร" disableBackdropClick>
-      <div className="bg-white rounded-b-2xl border border-stone-100 border-t-0 p-4 sm:p-5">
-        <p className="text-xs text-stone-400 mb-3">ลากที่ไอคอน ⠿ หรือกดลูกศร เพื่อเปลี่ยนลำดับ</p>
+    <Modal open={open} onClose={onClose} title={t.library.sortRecipes} disableBackdropClick>
+      <div className="bg-surface rounded-b-2xl border border-border border-t-0 p-4 sm:p-5">
+        <p className="text-xs text-muted mb-3">{t.library.sortHint}</p>
         <div className="space-y-1 max-h-[52vh] overflow-y-auto">
           <ReactSortable
             list={sorted}
@@ -1240,22 +1242,22 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
             {sorted.map((r, i) => (
               <div
                 key={r.id}
-                className="flex items-center gap-2 px-2 py-2 rounded-xl border border-transparent hover:bg-stone-50 hover:border-stone-100 transition-colors select-none"
+                className="flex items-center gap-2 px-2 py-2 rounded-xl border border-transparent hover:bg-elevated hover:border-border transition-colors select-none"
               >
-                <GripVertical className="toc-drag-handle w-4 h-4 text-stone-400 shrink-0 cursor-grab active:cursor-grabbing" />
-                <span className="w-5 text-center text-xs text-stone-300 font-mono shrink-0">{i + 1}</span>
-                <span className="flex-1 text-sm text-stone-700 truncate">{r.title}</span>
+                <GripVertical className="toc-drag-handle w-4 h-4 text-muted shrink-0 cursor-grab active:cursor-grabbing" />
+                <span className="w-5 text-center text-xs text-muted font-mono shrink-0">{i + 1}</span>
+                <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
                 {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.category && (
-                  <span className="text-[10px] text-stone-400 shrink-0 hidden sm:block">{r.category}</span>
+                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{r.category}</span>
                 )}
                 <div className="flex gap-0.5 shrink-0">
                   <button onClick={() => move(i, -1)} disabled={i === 0}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-elevated disabled:opacity-20 text-secondary transition-colors">
                     <ChevronUp className="w-4 h-4" />
                   </button>
                   <button onClick={() => move(i, 1)} disabled={i === sorted.length - 1}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 disabled:opacity-20 text-stone-500 transition-colors">
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-elevated disabled:opacity-20 text-secondary transition-colors">
                     <ChevronDown className="w-4 h-4" />
                   </button>
                 </div>
@@ -1263,14 +1265,14 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor }: {
             ))}
           </ReactSortable>
         </div>
-        <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-stone-100">
+        <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-border">
           <button onClick={onClose}
-                  className="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-xl transition-colors">
-            ยกเลิก
+                  className="px-4 py-2 text-sm text-secondary hover:bg-elevated rounded-xl transition-colors">
+            {t.common.cancel}
           </button>
           <button onClick={handleSave} disabled={saving}
                   className="px-4 py-2 text-sm bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 flex items-center gap-1.5 transition-colors">
-            {saving ? <><div className="spinner" style={{ width: 14, height: 14 }} /> กำลังบันทึก...</> : "บันทึก"}
+            {saving ? <><div className="spinner" style={{ width: 14, height: 14 }} /> {t.common.saving}</> : t.common.save}
           </button>
         </div>
       </div>
@@ -1289,6 +1291,7 @@ interface Props {
 // ─── Main component ───────────────────────────────────────────────
 export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   const router = useRouter();
+  const { t } = useLocale();
   const bookRef = useRef<any>(null);
   const fabRef  = useRef<HTMLDivElement>(null);
   const { pageW, pageH, portrait, ready, vwPx, vhPx } = usePageDimensions();
@@ -1578,53 +1581,53 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
              style={{ bottom: 5, right: 5 }}>
           {fabOpen && (
-            <div ref={fabRef} className="anim-scale-in bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+            <div ref={fabRef} className="anim-scale-in bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
               {/* owner-only actions */}
               {isOwner && (<>
                 {/* เพิ่มสูตร — ทุก context */}
                 <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                  <Plus className="w-4 h-4 text-stone-400" /> เพิ่มสูตรในเล่มนี้
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                  <Plus className="w-4 h-4 text-muted" /> {t.library.addRecipe}
                 </button>
 
                 {/* แก้ไขปก — cover / backcover */}
                 {(ctx === "cover" || ctx === "backcover") && (
                   <button onClick={() => { setFabOpen(false); setCoverEditorOpen(true); }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <Palette className="w-4 h-4 text-stone-400" /> แก้ไขปกหนังสือ
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                    <Palette className="w-4 h-4 text-muted" /> {t.library.editCover}
                   </button>
                 )}
 
                 {/* ดูการ์ดนักเขียน — cover */}
                 {ctx === "cover" && writerInfo && (
                   <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <User className="w-4 h-4 text-stone-400" /> ดูการ์ดนักเขียน
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                    <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
                   </button>
                 )}
 
                 {/* แก้ไขสารบัญ — toc */}
                 {ctx === "toc" && (
                   <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <List className="w-4 h-4 text-stone-400" /> แก้ไขสารบัญ
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                    <List className="w-4 h-4 text-muted" /> {t.library.editToc}
                   </button>
                 )}
 
                 {/* แก้ไขสูตร — recipe */}
                 {ctx === "recipe" && currentRecipe && (
                   <button onClick={() => { setFabOpen(false); setEditRecipeOpen(true); }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <Edit2 className="w-4 h-4 text-stone-400" /> แก้ไขสูตรนี้
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                    <Edit2 className="w-4 h-4 text-muted" /> {t.library.editRecipe}
                   </button>
                 )}
 
                 {/* เปิดสารบัญ — cover / backcover / recipe */}
                 {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
                   <button onClick={() => { setFabOpen(false); goToToC(); }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                    <List className="w-4 h-4 text-stone-400" /> เปิดสารบัญ
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                    <List className="w-4 h-4 text-muted" /> {t.library.openToc}
                   </button>
                 )}
 
@@ -1632,18 +1635,18 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 {(ctx === "cover" || ctx === "backcover") && (
                   <button onClick={() => { setFabOpen(false); onClose(); }}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl">
-                    <X className="w-4 h-4 text-red-400" /> ปิดหนังสือ
+                    <X className="w-4 h-4 text-red-400" /> {t.library.closeBook}
                   </button>
                 )}
 
-                <div className="border-t border-stone-100 my-0.5" />
+                <div className="border-t border-border my-0.5" />
               </>)}
 
               {/* ดูการ์ดนักเขียน — cover (non-owner) */}
               {!isOwner && ctx === "cover" && writerInfo && (
                 <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl">
-                  <User className="w-4 h-4 text-stone-400" /> ดูการ์ดนักเขียน
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                  <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
                 </button>
               )}
 
@@ -1651,16 +1654,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               <button
                 onClick={() => { setFabOpen(false); goToPrev(); }}
                 disabled={currentPage === 0}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl disabled:opacity-30"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl disabled:opacity-30"
               >
-                <ChevronLeft className="w-4 h-4 text-stone-400" /> หน้าก่อนหน้า
+                <ChevronLeft className="w-4 h-4 text-muted" /> {t.library.prevPage}
               </button>
               <button
                 onClick={() => { setFabOpen(false); goToNext(); }}
                 disabled={currentPage >= slots.length - 1}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 rounded-xl disabled:opacity-30"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl disabled:opacity-30"
               >
-                <ChevronRight className="w-4 h-4 text-stone-400" /> หน้าถัดไป
+                <ChevronRight className="w-4 h-4 text-muted" /> {t.library.nextPage}
               </button>
             </div>
           )}
@@ -1679,14 +1682,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       </div>
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
-      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title="เพิ่มสูตรในเล่มนี้" disableBackdropClick>
+      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
         <RecipeForm bookId={bookId} inModal
           onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
           onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
-        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title="แก้ไขสูตรอาหาร" disableBackdropClick>
+        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title={t.library.editRecipeTitle} disableBackdropClick>
           <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete
             onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
             onCancel={() => setEditRecipeOpen(false)}
@@ -1694,7 +1697,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         </Modal>
       )}
 
-      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title="แก้ไขปกหนังสือ" maxWidth="max-w-3xl" disableBackdropClick>
+      <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title={t.library.editCoverTitle} maxWidth="max-w-3xl" disableBackdropClick>
         <BookCoverEditor book={book} inModal
           onSuccess={() => { setCoverEditorOpen(false); refreshAndReset(currentPage); }}
           onCancel={() => setCoverEditorOpen(false)} />
@@ -1706,6 +1709,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         onClose={() => setTocSortOpen(false)}
         onSave={handleSort}
         coverColor={book.cover_color}
+        t={t}
       />
 
       {writerInfo && (

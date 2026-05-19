@@ -1,5 +1,8 @@
+"use client";
+
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
 import { getAchievements, TIER_BADGE_COLORS, SPECIAL_BADGE_COLOR, type AchievementBadge } from "@/lib/achievements";
+import { useLocale } from "@/lib/locale";
 
 export type WriterAchievementsProps = {
   role?: "admin" | "user";
@@ -29,11 +32,12 @@ function ChipLg({ className, children, title }: { className: string; children: R
   return <span className={`${LG} ${className}`} title={title}>{children}</span>;
 }
 
-function AchievBadge({ badge, primary = false }: { badge: AchievementBadge; primary?: boolean }) {
+function AchievBadge({ badge, primary = false, labelOverride }: { badge: AchievementBadge; primary?: boolean; labelOverride?: string }) {
   const color = badge.tier === "special" ? SPECIAL_BADGE_COLOR : TIER_BADGE_COLORS[badge.tier];
+  const label = labelOverride ?? badge.label;
   return primary
-    ? <ChipLg className={color} title={badge.tooltip}>{badge.emoji} {badge.label}</ChipLg>
-    : <ChipSm className={color} title={badge.tooltip}>{badge.emoji} {badge.label}</ChipSm>;
+    ? <ChipLg className={color} title={badge.tooltip}>{badge.emoji} {label}</ChipLg>
+    : <ChipSm className={color} title={badge.tooltip}>{badge.emoji} {label}</ChipSm>;
 }
 
 function RolePill({ role, isBanned }: { role?: "admin" | "user"; isBanned?: boolean }) {
@@ -43,7 +47,7 @@ function RolePill({ role, isBanned }: { role?: "admin" | "user"; isBanned?: bool
   return (
     <div className="flex flex-wrap justify-center gap-2">
       {isBanned && (
-        <ChipSm className="bg-red-100 text-red-600 border-red-200">🚫 Banned</ChipSm>
+        <ChipSm className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-800">🚫 Banned</ChipSm>
       )}
       {roleLabel && roleColor && (
         <ChipSm className={roleColor}>{roleLabel}</ChipSm>
@@ -63,6 +67,9 @@ export default function WriterAchievements({
   createdAt,
   statsLoading = false,
 }: WriterAchievementsProps) {
+  const { t } = useLocale();
+  const achievementLabels = t.achievements as Record<string, string>;
+
   const hasStats = booksCount !== undefined || recipesCount !== undefined || sharedCount !== undefined;
 
   const achievements = hasStats
@@ -101,7 +108,11 @@ export default function WriterAchievements({
       {/* Primary title — one step larger to signal hierarchy */}
       {achievements?.primaryTitle && (
         <div className="flex justify-center">
-          <AchievBadge badge={achievements.primaryTitle} primary />
+          <AchievBadge
+            badge={achievements.primaryTitle}
+            primary
+            labelOverride={achievementLabels[achievements.primaryTitle.id] ?? achievements.primaryTitle.label}
+          />
         </div>
       )}
 
@@ -109,7 +120,11 @@ export default function WriterAchievements({
       {secondaryBadges.length > 0 && (
         <div className="flex flex-wrap justify-center gap-2">
           {secondaryBadges.map((b, i) => (
-            <AchievBadge key={i} badge={b} />
+            <AchievBadge
+              key={i}
+              badge={b}
+              labelOverride={achievementLabels[b.id] ?? b.label}
+            />
           ))}
         </div>
       )}

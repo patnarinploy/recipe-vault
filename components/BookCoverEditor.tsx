@@ -77,16 +77,16 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
   }
 
   const cancel = onCancel ?? (() => router.back());
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white";
-  const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
+  const labelCls = "block text-sm font-medium text-secondary mb-1.5";
 
   return (
     <form
       onSubmit={handleSubmit}
       className={
         inModal
-          ? "bg-white rounded-b-2xl border border-stone-100 border-t-0 shadow-xl overflow-hidden"
-          : "bg-white rounded-2xl border border-stone-100 shadow-sm"
+          ? "bg-surface rounded-b-2xl border border-border border-t-0 shadow-xl overflow-hidden"
+          : "bg-surface rounded-2xl border border-border shadow-sm"
       }
     >
       <div className={inModal ? "p-6 sm:p-8 max-h-[calc(100vh-8rem)] overflow-y-auto" : "p-6"}>
@@ -160,7 +160,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(false)}
-                  className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50"
+                  className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated"
                 >
                   ยกเลิกลบ
                 </button>
@@ -191,7 +191,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
               <button
                 type="button"
                 onClick={cancel}
-                className="flex-1 border border-stone-200 text-stone-600 rounded-xl py-2.5 text-sm hover:bg-stone-50"
+                className="flex-1 border border-outline text-secondary rounded-xl py-2.5 text-sm hover:bg-elevated"
               >
                 ยกเลิก
               </button>

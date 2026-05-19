@@ -36,39 +36,39 @@ export default function AccountForm({
     else if ("error" in state) toast.error(state.error);
   }, [state]);
 
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white";
-  const labelCls = "block text-sm font-semibold text-stone-700 mb-1";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted";
+  const labelCls = "block text-sm font-semibold text-secondary mb-1";
 
   return (
     <div className="max-w-lg mx-auto">
       <Link
         href="/settings"
-        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         ตั้งค่า
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-1">ข้อมูลส่วนตัว</h1>
-      <p className="text-sm text-stone-400 mb-6">ข้อมูลนี้เป็นส่วนตัว ไม่แสดงต่อสาธารณะ</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">ข้อมูลส่วนตัว</h1>
+      <p className="text-sm text-muted mb-6">ข้อมูลนี้เป็นส่วนตัว ไม่แสดงต่อสาธารณะ</p>
 
       <form action={action} className="space-y-5">
 
         {/* Email — read-only, managed by Supabase Auth */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
           <label className={labelCls}>อีเมล</label>
-          <p className="text-xs text-stone-400 mb-2">จัดการผ่านการเข้าสู่ระบบ ไม่สามารถแก้ไขได้ที่นี่</p>
+          <p className="text-xs text-muted mb-2">จัดการผ่านการเข้าสู่ระบบ ไม่สามารถแก้ไขได้ที่นี่</p>
           <input
             type="email"
             value={currentEmail ?? ""}
             disabled
-            className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm bg-stone-50 text-stone-400 cursor-not-allowed"
+            className="w-full border border-outline rounded-xl px-4 py-2.5 text-sm bg-elevated text-muted cursor-not-allowed"
           />
         </div>
 
         {/* Contact */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-stone-700">ติดต่อ</p>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-secondary">ติดต่อ</p>
           <div>
             <label className={labelCls}>เบอร์โทรศัพท์</label>
             <input name="tel" type="tel" defaultValue={currentTel ?? ""} placeholder="08x-xxx-xxxx" className={inputCls} />
@@ -76,8 +76,8 @@ export default function AccountForm({
         </div>
 
         {/* Personal */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-stone-700">ข้อมูลส่วนบุคคล</p>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-secondary">ข้อมูลส่วนบุคคล</p>
           <div>
             <label className={labelCls}>วันเกิด</label>
             <input name="dob" type="date" defaultValue={currentDob ?? ""} className={inputCls} />
@@ -99,8 +99,8 @@ export default function AccountForm({
         </div>
 
         {/* Social links */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
-          <p className="text-sm font-semibold text-stone-700">ลิงก์โซเชียล</p>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
+          <p className="text-sm font-semibold text-secondary">ลิงก์โซเชียล</p>
           {[
             { name: "social_twitter",   label: "X / Twitter",  placeholder: "https://x.com/username" },
             { name: "social_instagram", label: "Instagram",    placeholder: "https://instagram.com/username" },

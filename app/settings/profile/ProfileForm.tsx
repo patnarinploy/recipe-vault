@@ -56,27 +56,27 @@ export default function ProfileForm({
 
   const isUrl = isAvatarUrl(selected);
 
-  const inputCls = "w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted";
 
   return (
     <div className="max-w-lg mx-auto">
       <Link
         href="/settings"
-        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         ตั้งค่า
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-1">โปรไฟล์นักเขียน</h1>
-      <p className="text-sm text-stone-400 mb-6">ข้อมูลที่คนอื่นจะเห็นเมื่อดูหนังสือของคุณ</p>
+      <h1 className="text-2xl font-bold text-foreground mb-1">โปรไฟล์นักเขียน</h1>
+      <p className="text-sm text-muted mb-6">ข้อมูลที่คนอื่นจะเห็นเมื่อดูหนังสือของคุณ</p>
 
       <form action={action} className="space-y-5">
 
         {/* Avatar */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6">
-          <p className="text-sm font-semibold text-stone-700 mb-0.5">Avatar</p>
-          <p className="text-xs text-stone-400 mb-5">เลือกสัตว์น่ารักหรืออัปโหลดรูปของคุณเอง</p>
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6">
+          <p className="text-sm font-semibold text-secondary mb-0.5">Avatar</p>
+          <p className="text-xs text-muted mb-5">เลือกสัตว์น่ารักหรืออัปโหลดรูปของคุณเอง</p>
 
           <div className="flex justify-center mb-6">
             <div
@@ -100,7 +100,7 @@ export default function ProfileForm({
               onClick={() => fileRef.current?.click()}
               onMouseDown={(e) => e.preventDefault()}
               disabled={uploading}
-              className="relative aspect-square rounded-full border-2 border-dashed border-stone-300 hover:border-orange-400 bg-stone-50 hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none focus-visible:outline-none select-none"
+              className="relative aspect-square rounded-full border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 flex flex-col items-center justify-center gap-1 transition-all focus:outline-none focus-visible:outline-none select-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
               title="อัปโหลดรูปของคุณ"
             >
@@ -108,8 +108,8 @@ export default function ProfileForm({
                 <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
               ) : (
                 <>
-                  <Camera className="w-4 h-4 text-stone-400" />
-                  <span className="text-[9px] text-stone-400">อัปโหลด</span>
+                  <Camera className="w-4 h-4 text-muted" />
+                  <span className="text-[9px] text-muted">อัปโหลด</span>
                 </>
               )}
             </button>
@@ -152,12 +152,12 @@ export default function ProfileForm({
         </div>
 
         {/* Public info fields */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-stone-700 mb-1">
+            <label className="block text-sm font-semibold text-secondary mb-1">
               นามแฝง <span className="text-red-400">*</span>
             </label>
-            <p className="text-xs text-stone-400 mb-2">ชื่อที่แสดงบนปกหนังสือและในเว็บ</p>
+            <p className="text-xs text-muted mb-2">ชื่อที่แสดงบนปกหนังสือและในเว็บ</p>
             <input
               name="display_name"
               type="text"
@@ -172,10 +172,10 @@ export default function ProfileForm({
 
           <div>
             <div className="flex items-baseline gap-1.5 mb-1">
-              <label className="block text-sm font-semibold text-stone-700">คำอธิบายตัวตน</label>
-              <span className="text-[11px] italic text-stone-300">(ไม่บังคับ)</span>
+              <label className="block text-sm font-semibold text-secondary">คำอธิบายตัวตน</label>
+              <span className="text-[11px] italic text-muted">(ไม่บังคับ)</span>
             </div>
-            <p className="text-xs text-stone-400 mb-2">แนะนำตัวเองสั้นๆ ให้คนอื่นรู้จักคุณ</p>
+            <p className="text-xs text-muted mb-2">แนะนำตัวเองสั้นๆ ให้คนอื่นรู้จักคุณ</p>
             <textarea
               name="bio"
               defaultValue={currentBio ?? ""}
@@ -184,7 +184,7 @@ export default function ProfileForm({
               placeholder="เช่น สายกินสายทำอาหาร ชอบทดลองสูตรใหม่ๆ..."
               className={`${inputCls} resize-none`}
             />
-            <p className="text-xs text-stone-400 mt-1">ไม่เกิน 200 ตัวอักษร</p>
+            <p className="text-xs text-muted mt-1">ไม่เกิน 200 ตัวอักษร</p>
           </div>
         </div>
 

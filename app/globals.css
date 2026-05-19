@@ -120,6 +120,12 @@ button, a {
     radial-gradient(ellipse at 0% 0%,   rgba(251,191,36,0.06) 0%, transparent 60%),
     radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.04) 0%, transparent 60%);
 }
+.dark .book-paper {
+  background-color: #1e1a17;
+  background-image:
+    radial-gradient(ellipse at 0% 0%,   rgba(251,191,36,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, rgba(249,115,22,0.02) 0%, transparent 60%);
+}
 
 /* ─── Skeleton shimmer (Facebook-style) ────────────────────── */
 @keyframes skeleton-shimmer {

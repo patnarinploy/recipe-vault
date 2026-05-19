@@ -1,4 +1,5 @@
 export type AchievementBadge = {
+  id: string;
   label: string;
   emoji: string;
   tooltip: string;
@@ -15,37 +16,37 @@ export type AchievementResult = {
 };
 
 export const TIER_BADGE_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: "bg-stone-100 text-stone-600 border border-stone-200",
-  2: "bg-sky-100 text-sky-700 border border-sky-200",
-  3: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  4: "bg-violet-100 text-violet-700 border border-violet-200",
-  5: "bg-amber-100 text-amber-700 border border-amber-200",
+  1: "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700",
+  2: "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800",
+  3: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
+  4: "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800",
+  5: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
 };
 
-export const SPECIAL_BADGE_COLOR = "bg-rose-100 text-rose-700 border border-rose-200";
+export const SPECIAL_BADGE_COLOR = "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800";
 
-const BOOK_TITLES: Array<{ min: number; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
-  { min: 10, label: "ศาสดาแห่งชั้นหนังสือ", emoji: "📚", tier: 5 },
-  { min: 6,  label: "ปรมาจารย์อักษร",       emoji: "🏛️",  tier: 4 },
-  { min: 4,  label: "นักประพันธ์",            emoji: "✍️",  tier: 3 },
-  { min: 2,  label: "รักการเขียน",            emoji: "📝",  tier: 2 },
-  { min: 1,  label: "นักเขียนมือสมัครเล่น",   emoji: "🖊️",  tier: 1 },
+const BOOK_TITLES: Array<{ min: number; id: string; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
+  { min: 10, id: "book-5", label: "ศาสดาแห่งชั้นหนังสือ", emoji: "📚", tier: 5 },
+  { min: 6,  id: "book-4", label: "ปรมาจารย์อักษร",       emoji: "🏛️",  tier: 4 },
+  { min: 4,  id: "book-3", label: "นักประพันธ์",            emoji: "✍️",  tier: 3 },
+  { min: 2,  id: "book-2", label: "รักการเขียน",            emoji: "📝",  tier: 2 },
+  { min: 1,  id: "book-1", label: "นักเขียนมือสมัครเล่น",   emoji: "🖊️",  tier: 1 },
 ];
 
-const RECIPE_TITLES: Array<{ min: number; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
-  { min: 51, label: "มหาปรมาจารย์แห่งเตาไฟ", emoji: "🔥", tier: 5 },
-  { min: 31, label: "เชฟประจำห้องเครื่อง",    emoji: "👨‍🍳", tier: 4 },
-  { min: 16, label: "จอมปรุงรส",               emoji: "🍜", tier: 3 },
-  { min: 6,  label: "เข้าครัวจริงจัง",         emoji: "🥘", tier: 2 },
-  { min: 1,  label: "พ่อครัวฝึกหัด",           emoji: "🍳", tier: 1 },
+const RECIPE_TITLES: Array<{ min: number; id: string; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
+  { min: 51, id: "recipe-5", label: "มหาปรมาจารย์แห่งเตาไฟ", emoji: "🔥", tier: 5 },
+  { min: 31, id: "recipe-4", label: "เชฟประจำห้องเครื่อง",    emoji: "👨‍🍳", tier: 4 },
+  { min: 16, id: "recipe-3", label: "จอมปรุงรส",               emoji: "🍜", tier: 3 },
+  { min: 6,  id: "recipe-2", label: "เข้าครัวจริงจัง",         emoji: "🥘", tier: 2 },
+  { min: 1,  id: "recipe-1", label: "พ่อครัวฝึกหัด",           emoji: "🍳", tier: 1 },
 ];
 
-const SHARE_TITLES: Array<{ min: number; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
-  { min: 31, label: "ผู้ปลุกยุคแห่งรสชาติ", emoji: "🌟", tier: 5 },
-  { min: 16, label: "ตำนานโต๊ะอาหาร",       emoji: "🏆", tier: 4 },
-  { min: 6,  label: "ขวัญใจมหาชน",          emoji: "💫", tier: 3 },
-  { min: 2,  label: "นักเผยแพร่รสชาติ",     emoji: "📢", tier: 2 },
-  { min: 1,  label: "ผู้กล้าแบ่งปัน",        emoji: "🤝", tier: 1 },
+const SHARE_TITLES: Array<{ min: number; id: string; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
+  { min: 31, id: "share-5", label: "ผู้ปลุกยุคแห่งรสชาติ", emoji: "🌟", tier: 5 },
+  { min: 16, id: "share-4", label: "ตำนานโต๊ะอาหาร",       emoji: "🏆", tier: 4 },
+  { min: 6,  id: "share-3", label: "ขวัญใจมหาชน",          emoji: "💫", tier: 3 },
+  { min: 2,  id: "share-2", label: "นักเผยแพร่รสชาติ",     emoji: "📢", tier: 2 },
+  { min: 1,  id: "share-1", label: "ผู้กล้าแบ่งปัน",        emoji: "🤝", tier: 1 },
 ];
 
 // ─── Admin catalog (for display in /admin/achievements) ─────────────────────
@@ -102,7 +103,7 @@ export function getAchievements(stats: {
   let bookTitle: AchievementBadge | null = null;
   for (const t of BOOK_TITLES) {
     if (book_count >= t.min) {
-      bookTitle = { label: t.label, emoji: t.emoji, tier: t.tier, category: "book",
+      bookTitle = { id: t.id, label: t.label, emoji: t.emoji, tier: t.tier, category: "book",
                     tooltip: `สร้างหนังสือแล้ว ${book_count} เล่ม` };
       break;
     }
@@ -112,7 +113,7 @@ export function getAchievements(stats: {
   let recipeTitle: AchievementBadge | null = null;
   for (const t of RECIPE_TITLES) {
     if (recipe_count >= t.min) {
-      recipeTitle = { label: t.label, emoji: t.emoji, tier: t.tier, category: "recipe",
+      recipeTitle = { id: t.id, label: t.label, emoji: t.emoji, tier: t.tier, category: "recipe",
                       tooltip: `สร้างสูตรแล้ว ${recipe_count} สูตร` };
       break;
     }
@@ -122,7 +123,7 @@ export function getAchievements(stats: {
   let shareTitle: AchievementBadge | null = null;
   for (const t of SHARE_TITLES) {
     if (public_count >= t.min) {
-      shareTitle = { label: t.label, emoji: t.emoji, tier: t.tier, category: "share",
+      shareTitle = { id: t.id, label: t.label, emoji: t.emoji, tier: t.tier, category: "share",
                      tooltip: `แชร์สูตรสาธารณะแล้ว ${public_count} สูตร` };
       break;
     }
@@ -132,19 +133,19 @@ export function getAchievements(stats: {
   const specialAchievements: AchievementBadge[] = [];
   if (book_count > 0 && recipe_count > 0 && public_count > 0) {
     specialAchievements.push({
-      label: "ครบเครื่อง", emoji: "⚡", tier: "special", category: "special",
+      id: "special-complete", label: "ครบเครื่อง", emoji: "⚡", tier: "special", category: "special",
       tooltip: `มีหนังสือ ${book_count} เล่ม สูตร ${recipe_count} สูตร และแชร์แล้ว ${public_count} สูตร`,
     });
   }
   if (book_count >= 3 && public_count === 0) {
     specialAchievements.push({
-      label: "นักเขียนเงา", emoji: "🌑", tier: "special", category: "special",
+      id: "special-shadow", label: "นักเขียนเงา", emoji: "🌑", tier: "special", category: "special",
       tooltip: `มีหนังสือ ${book_count} เล่มแต่ยังไม่เคยแชร์สาธารณะ`,
     });
   }
   if (recipe_count >= 15 && book_count === 0) {
     specialAchievements.push({
-      label: "เชฟลับ", emoji: "🕵️", tier: "special", category: "special",
+      id: "special-secret-chef", label: "เชฟลับ", emoji: "🕵️", tier: "special", category: "special",
       tooltip: `มีสูตร ${recipe_count} สูตรโดยไม่มีหนังสือ`,
     });
   }
@@ -152,7 +153,7 @@ export function getAchievements(stats: {
     const ageDays = (Date.now() - new Date(created_at).getTime()) / 86_400_000;
     if (ageDays <= 7) {
       specialAchievements.push({
-        label: "หน้าใหม่ไฟแรง", emoji: "🚀", tier: "special", category: "special",
+        id: "special-early-bird", label: "หน้าใหม่ไฟแรง", emoji: "🚀", tier: "special", category: "special",
         tooltip: `แชร์สูตรแล้ว ${public_count} สูตรภายใน 7 วันแรกของการสมัคร`,
       });
     }
