@@ -79,6 +79,11 @@ export const th = {
     sortRecipes: "เรียงลำดับสูตรอาหาร",
     sortHint: "ลากที่ไอคอน ⠿ หรือกดลูกศร เพื่อเปลี่ยนลำดับ",
     editRecipeTitle: "แก้ไขสูตรอาหาร",
+    toc: "สารบัญ",
+    tocCont: "สารบัญ (ต่อ)",
+    noRecipes: "ยังไม่มีสูตรอาหาร",
+    videoRef: "วิดีโอประกอบ",
+    recipeWatermark: "ตำรับอาหาร",
   },
   settings: {
     title: "ตั้งค่า",

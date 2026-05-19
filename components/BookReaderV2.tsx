@@ -669,7 +669,7 @@ PageCoverFront.displayName = "PageCoverFront";
 
 const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    <div className="w-full h-full bg-[#fef9f0]" style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }} />
+    <div className="w-full h-full book-paper" style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }} />
   </div>
 ));
 PageInsideCover.displayName = "PageInsideCover";
@@ -678,6 +678,7 @@ const PageToC = forwardRef<
   HTMLDivElement,
   { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string; density: "soft" | "hard" }
 >(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor, density }, ref) => {
+  const { t } = useLocale();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -700,21 +701,21 @@ const PageToC = forwardRef<
 
   return (
     <div ref={ref} data-density={density}>
-      <div className="w-full h-full bg-[#fef9f0] flex flex-col relative"
+      <div className="w-full h-full book-paper flex flex-col relative"
            style={{ padding: "clamp(20px,2.5vw,40px)", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <Tape />
-        <p className="tracking-[.38em] text-[#8a7354] uppercase font-semibold"
-           style={{ fontSize: "clamp(8px,1.4vmin,11px)", marginTop: "clamp(8px,1.8vmin,20px)", marginBottom: "clamp(3px,0.5vmin,7px)" }}>
-          {isCont ? "Table of Contents (cont.)" : "Table of Contents"}
+        <p className="tracking-[.38em] uppercase font-semibold"
+           style={{ fontSize: "clamp(8px,1.4vmin,11px)", marginTop: "clamp(8px,1.8vmin,20px)", marginBottom: "clamp(3px,0.5vmin,7px)", color: "var(--book-ink-2)" }}>
+          {isCont ? t.library.tocCont : t.library.toc}
         </p>
-        <h2 className="font-bold text-stone-700 leading-tight"
-            style={{ fontSize: "clamp(16px,3.5vmin,28px)", marginBottom: "clamp(8px,1.8vmin,20px)" }}>
-          {isCont ? "สารบัญ (ต่อ)" : "สารบัญ"}
+        <h2 className="font-bold leading-tight"
+            style={{ fontSize: "clamp(16px,3.5vmin,28px)", marginBottom: "clamp(8px,1.8vmin,20px)", color: "var(--book-ink)" }}>
+          {isCont ? t.library.tocCont : t.library.toc}
         </h2>
         <nav ref={navRef} className="flex-1 flex flex-col overflow-hidden"
              style={{ gap: "clamp(1px,0.2vmin,3px)" }}>
           {recipes.length === 0
-            ? <p className="text-sm text-stone-400 italic">ยังไม่มีสูตรอาหาร</p>
+            ? <p className="text-sm italic" style={{ color: "var(--book-ink-2)" }}>{t.library.noRecipes}</p>
             : pageRecipes.map((r, localIdx) => {
                 const ri      = start + localIdx;
                 const slotIdx = recipeSlotMap[ri] ?? 0;
@@ -722,14 +723,14 @@ const PageToC = forwardRef<
                   <button
                     key={r.id}
                     onClick={() => onNavigate(slotIdx)}
-                    className="w-full flex items-center gap-1 px-2 rounded-lg hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+                    className="w-full flex items-center gap-1 px-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 active:bg-amber-100 dark:active:bg-amber-950/30 transition-colors text-left"
                     style={{ fontSize: "clamp(11px,2.2vmin,15px)", paddingTop: "clamp(4px,0.9vmin,7px)", paddingBottom: "clamp(4px,0.9vmin,7px)" }}
                   >
-                    <span className="shrink-0 text-stone-700 truncate max-w-[55%]">{r.title}</span>
+                    <span className="shrink-0 truncate max-w-[55%]" style={{ color: "var(--book-ink)" }}>{r.title}</span>
                     {r.is_public && <ShareBadge coverColor={coverColor} />}
-                    <span className="border-b border-dotted border-stone-300 flex-1 mx-2" />
-                    <span className="shrink-0 font-mono text-stone-400"
-                          style={{ fontSize: "clamp(9px,1.3vmin,11px)" }}>
+                    <span className="border-b border-dotted border-stone-300 dark:border-stone-600 flex-1 mx-2" />
+                    <span className="shrink-0 font-mono"
+                          style={{ fontSize: "clamp(9px,1.3vmin,11px)", color: "var(--book-ink-2)" }}>
                       {String(slotIdx).padStart(2, "0")}
                     </span>
                   </button>
@@ -748,7 +749,7 @@ function IngItem({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-1.5 min-w-0">
       <span className="shrink-0 rounded-full" style={{ width: 4, height: 4, minWidth: 4, background: "#e67e22", marginTop: "clamp(4px,0.65vw,6px)" }} />
-      <span className="text-[#2c1e14] leading-snug" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>{text}</span>
+      <span className="leading-snug" style={{ fontSize: "clamp(11px,1.8vmin,16px)", color: "var(--book-ink)" }}>{text}</span>
     </div>
   );
 }
@@ -757,8 +758,8 @@ function IngItem({ text }: { text: string }) {
 function PageSectionHead({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 shrink-0">
-      <span className="shrink-0 font-bold text-[#2c1e14]"
-            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(15px,3vmin,28px)" }}>
+      <span className="shrink-0 font-bold"
+            style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(15px,3vmin,28px)", color: "var(--book-ink)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,#d4af37 0%,rgba(212,175,55,0.15) 70%,transparent 100%)" }} />
@@ -780,7 +781,7 @@ function InstructionStep({ line, fallbackNum, stepImage }: { line: string; fallb
             {num}
           </span>
         )}
-        <span className="text-[#2c1e14] flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.8vmin,16px)" }}>
+        <span className="flex-1 leading-relaxed" style={{ fontSize: "clamp(11px,1.8vmin,16px)", color: "var(--book-ink)" }}>
           {body}
         </span>
       </div>
@@ -868,6 +869,7 @@ const PageRecipeFirst = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
 >(({ recipe: r, pn, coverColor, density }, ref) => {
+  const { t }        = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef       = useRef<number>(0);
@@ -933,7 +935,7 @@ const PageRecipeFirst = forwardRef<
           <div className="flex items-center flex-wrap mb-[clamp(10px,3.5vmin,40px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
                   style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.5vmin,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
-              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : null]
+              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
             {r.is_public && <ShareBadge coverColor={coverColor} solid />}
@@ -984,6 +986,7 @@ const PageRecipeCont = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
 >(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo }, ref) => {
+  const { t }     = useLocale();
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -993,8 +996,8 @@ const PageRecipeCont = forwardRef<
 
   return (
     <div ref={ref} data-density={density}>
-      <div className="w-full h-full flex flex-col relative overflow-hidden"
-           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
+      <div className="w-full h-full flex flex-col relative overflow-hidden book-paper"
+           style={{ boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
 
         {/* Bookmark ribbon — first right page of recipe only */}
         {showRibbon && (
@@ -1015,22 +1018,22 @@ const PageRecipeCont = forwardRef<
             <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1.2vmin,10px)" }}>
               {([
                 { lbl: "CATEGORY", val: r.category ?? "—" },
-                { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} นาที` : "—" },
-                { lbl: "SERVINGS", val: r.servings ? `${r.servings} ที่` : "—" },
+                { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : "—" },
+                { lbl: "SERVINGS", val: r.servings ? `${r.servings} ${t.recipe.servings}` : "—" },
               ] as const).map(({ lbl, val }) => (
                 <div key={lbl} className="flex flex-col items-center text-center" style={{ gap: "clamp(1px,0.3vw,3px)" }}>
-                  <span className="uppercase text-stone-400"
+                  <span className="uppercase text-stone-400 dark:text-stone-500"
                         style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(10px,2vmin,18px)", letterSpacing: "0.22em" }}>
                     {lbl}
                   </span>
-                  <span className="font-bold text-[#2c1e14] leading-tight"
-                        style={{ fontSize: "clamp(9px,1.8vmin,16px)" }}>
+                  <span className="font-bold leading-tight"
+                        style={{ fontSize: "clamp(9px,1.8vmin,16px)", color: "var(--book-ink)" }}>
                     {val}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="h-px bg-stone-200 mb-3 shrink-0" />
+            <div className="h-px bg-stone-200 dark:bg-stone-700 mb-3 shrink-0" />
           </>
         )}
 
@@ -1045,7 +1048,7 @@ const PageRecipeCont = forwardRef<
 
         {/* Section heading */}
         <div className="mb-[clamp(5px,1vw,9px)] shrink-0">
-          <PageSectionHead>{variant === "ing" ? "Ingredients" : "Instructions"}</PageSectionHead>
+          <PageSectionHead>{variant === "ing" ? t.recipe.ingredientsLabel : t.recipe.instructionsLabel}</PageSectionHead>
         </div>
 
         {/* ── Ingredients ─────────────────────────────────── */}
@@ -1072,7 +1075,7 @@ const PageRecipeCont = forwardRef<
         {variant === "ing" && instFirstChunk && (
           <>
             <div className="my-[clamp(4px,0.8vw,8px)] shrink-0">
-              <PageSectionHead>Instructions</PageSectionHead>
+              <PageSectionHead>{t.recipe.instructionsLabel}</PageSectionHead>
             </div>
             <div className="flex-1 overflow-hidden flex flex-col" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
               {instFirstChunk.split("\n").filter(l => l.trim()).map((line, i) => {
@@ -1084,7 +1087,7 @@ const PageRecipeCont = forwardRef<
               {youtubeUrl && (
                 <>
                   <div className="shrink-0" style={{ marginTop: "clamp(4px,0.8vw,8px)" }}>
-                    <PageSectionHead>Video Reference</PageSectionHead>
+                    <PageSectionHead>{t.library.videoRef}</PageSectionHead>
                   </div>
                   <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
                 </>
@@ -1124,12 +1127,12 @@ PageRecipeCont.displayName = "PageRecipeCont";
 const PageRecipeWatermark = forwardRef<HTMLDivElement, { recipe: Recipe; isRight: boolean; density: "soft" | "hard" }>(
   ({ recipe: r, density }, ref) => (
     <div ref={ref} data-density={density}>
-      <div className="w-full h-full flex items-center justify-center relative overflow-hidden"
-           style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+      <div className="w-full h-full flex items-center justify-center relative overflow-hidden book-paper"
+           style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
         <div className="text-center select-none pointer-events-none px-8"
              style={{ opacity: 0.07, transform: "rotate(-10deg)" }}>
-          <p className="font-black text-[#2c1e14] break-words leading-tight"
-             style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.4rem,5.5vw,3rem)" }}>
+          <p className="font-black break-words leading-tight"
+             style={{ fontFamily: "var(--font-playfair,'Playfair Display',Georgia,serif)", fontSize: "clamp(1.4rem,5.5vw,3rem)", color: "var(--book-ink)" }}>
             {r.title}
           </p>
         </div>
@@ -1143,37 +1146,43 @@ PageRecipeWatermark.displayName = "PageRecipeWatermark";
 const PageRecipeYoutube = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; youtubeUrl: string; isRight: boolean; pn: number; density: "soft" | "hard"; onPlayVideo?: (url: string) => void }
->(({ recipe: r, youtubeUrl, isRight, pn, density, onPlayVideo }, ref) => (
-  <div ref={ref} data-density={density}>
-    <div className="w-full h-full flex flex-col relative overflow-hidden"
-         style={{ background: "#fffaf0", boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
-      <div className="shrink-0" style={{ height: "clamp(12px,3vmin,28px)" }} />
-      <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
-         style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8px,1.4vmin,12px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
-        {r.title}
-      </p>
-      <div className="mb-[clamp(5px,1vw,9px)] shrink-0">
-        <PageSectionHead>Video Reference</PageSectionHead>
+>(({ recipe: r, youtubeUrl, isRight, pn, density, onPlayVideo }, ref) => {
+  const { t } = useLocale();
+  return (
+    <div ref={ref} data-density={density}>
+      <div className="w-full h-full flex flex-col relative overflow-hidden book-paper"
+           style={{ boxShadow: PAGE_BORDER, borderRadius: 2, padding: "clamp(12px,2vmin,22px)" }}>
+        <div className="shrink-0" style={{ height: "clamp(12px,3vmin,28px)" }} />
+        <p className="truncate mb-[clamp(3px,0.7vw,6px)] shrink-0 uppercase"
+           style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(8px,1.4vmin,12px)", color: "#c4a46e", letterSpacing: "0.25em" }}>
+          {r.title}
+        </p>
+        <div className="mb-[clamp(5px,1vw,9px)] shrink-0">
+          <PageSectionHead>{t.library.videoRef}</PageSectionHead>
+        </div>
+        <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
+        <Pn n={pn} right={isRight} />
       </div>
-      <YoutubeBlock url={youtubeUrl} onPlay={onPlayVideo} />
-      <Pn n={pn} right={isRight} />
     </div>
-  </div>
-));
+  );
+});
 PageRecipeYoutube.displayName = "PageRecipeYoutube";
 
-const PageFiller = forwardRef<HTMLDivElement, { density: "soft" | "hard" }>(({ density }, ref) => (
-  <div ref={ref} data-density={density}>
-    <div className="w-full h-full bg-[#fef9f0] flex items-center justify-center"
-         style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
-      <div className="text-center select-none pointer-events-none">
-        <div className="w-12 h-px bg-stone-200 mx-auto mb-3" />
-        <p className="text-[9px] tracking-[.32em] text-stone-200 uppercase">ตำรับอาหาร</p>
-        <div className="w-12 h-px bg-stone-200 mx-auto mt-3" />
+const PageFiller = forwardRef<HTMLDivElement, { density: "soft" | "hard" }>(({ density }, ref) => {
+  const { t } = useLocale();
+  return (
+    <div ref={ref} data-density={density}>
+      <div className="w-full h-full book-paper flex items-center justify-center"
+           style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }}>
+        <div className="text-center select-none pointer-events-none">
+          <div className="w-12 h-px bg-stone-200 dark:bg-stone-700 mx-auto mb-3" />
+          <p className="text-[9px] tracking-[.32em] text-stone-300 dark:text-stone-600 uppercase">{t.library.recipeWatermark}</p>
+          <div className="w-12 h-px bg-stone-200 dark:bg-stone-700 mx-auto mt-3" />
+        </div>
       </div>
     </div>
-  </div>
-));
+  );
+});
 PageFiller.displayName = "PageFiller";
 
 const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref) => {

@@ -79,6 +79,11 @@ export const en = {
     sortRecipes: "Sort Recipes",
     sortHint: "Drag ⠿ or use arrows to reorder",
     editRecipeTitle: "Edit Recipe",
+    toc: "Table of Contents",
+    tocCont: "Table of Contents (cont.)",
+    noRecipes: "No recipes yet",
+    videoRef: "Video Reference",
+    recipeWatermark: "RECIPE",
   },
   settings: {
     title: "Settings",
