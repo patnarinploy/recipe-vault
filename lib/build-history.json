@@ -1,5 +1,12 @@
 [
   {
+    "build": 51,
+    "timestamp": "2026-05-19T17:17:59.000Z",
+    "subject": "fix(reader): dark mode paper pages + i18n for book reader content",
+    "hash": "5d1b7d4",
+    "category": "fix"
+  },
+  {
     "build": 50,
     "timestamp": "2026-05-19T16:48:28.000Z",
     "subject": "feat(polish): dark mode + i18n across book reader, forms, badges, settin",
