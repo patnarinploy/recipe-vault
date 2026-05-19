@@ -2,7 +2,6 @@ import { requireAdmin } from "@/lib/session";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { ACHIEVEMENT_CATALOG, TIER_BADGE_COLORS, SPECIAL_BADGE_COLOR, type CatalogEntry } from "@/lib/achievements";
 import { getServerLocale } from "@/lib/locale/server";
-
 export const revalidate = 0;
 
 const TIER_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
@@ -13,16 +12,21 @@ const TIER_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
   5: "Tier 5",
 };
 
-function BadgePill({ entry }: { entry: CatalogEntry }) {
+function BadgePill({ entry, label }: { entry: CatalogEntry; label: string }) {
   const color = entry.tier === "special" ? SPECIAL_BADGE_COLOR : TIER_BADGE_COLORS[entry.tier];
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${color}`}>
-      {entry.emoji} {entry.label}
+      {entry.emoji} {label}
     </span>
   );
 }
 
-function TierRow({ entry, specialLabel }: { entry: CatalogEntry; specialLabel: string }) {
+function TierRow({ entry, label, condition, specialLabel }: {
+  entry: CatalogEntry;
+  label: string;
+  condition: string;
+  specialLabel: string;
+}) {
   const tierLabel = entry.tier === "special" ? specialLabel : TIER_LABELS[entry.tier];
   const tierColor = entry.tier === "special"
     ? "text-rose-600 bg-rose-50 dark:bg-rose-900/20"
@@ -41,8 +45,8 @@ function TierRow({ entry, specialLabel }: { entry: CatalogEntry; specialLabel: s
         {tierLabel}
       </span>
       <div className="flex-1 min-w-0">
-        <BadgePill entry={entry} />
-        <p className="text-xs text-muted mt-1">{entry.condition}</p>
+        <BadgePill entry={entry} label={label} />
+        <p className="text-xs text-muted mt-1">{condition}</p>
       </div>
     </div>
   );
@@ -50,10 +54,12 @@ function TierRow({ entry, specialLabel }: { entry: CatalogEntry; specialLabel: s
 
 type SectionCategory = "book" | "recipe" | "share" | "special";
 
-function AchievSection({ category, meta, specialLabel }: {
+function AchievSection({ category, meta, specialLabel, achievLabels, achievConditions }: {
   category: SectionCategory;
   meta: { title: string; emoji: string; desc: string };
   specialLabel: string;
+  achievLabels: Record<string, string>;
+  achievConditions: Record<string, string>;
 }) {
   const entries = ACHIEVEMENT_CATALOG[category];
   return (
@@ -66,8 +72,14 @@ function AchievSection({ category, meta, specialLabel }: {
         </div>
       </div>
       <div className="bg-surface rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
-        {entries.map((entry, i) => (
-          <TierRow key={i} entry={entry} specialLabel={specialLabel} />
+        {entries.map((entry) => (
+          <TierRow
+            key={entry.id}
+            entry={entry}
+            label={achievLabels[entry.id] ?? entry.label}
+            condition={achievConditions[entry.id] ?? entry.condition}
+            specialLabel={specialLabel}
+          />
         ))}
       </div>
     </div>
@@ -78,6 +90,9 @@ export default async function AdminAchievementsPage() {
   await requireAdmin();
   const { t } = await getServerLocale();
   const adm = t.admin.achievements;
+
+  const achievLabels = t.achievements as Record<string, string>;
+  const achievConditions = adm.conditions as Record<string, string>;
 
   const sections: { category: SectionCategory; meta: { title: string; emoji: string; desc: string } }[] = [
     { category: "book",    meta: { title: adm.sections.book.title,    emoji: adm.sections.book.emoji,    desc: adm.sections.book.desc    } },
@@ -102,14 +117,21 @@ export default async function AdminAchievementsPage() {
           </span>
         </div>
         <p className="text-xs text-muted mt-3 leading-relaxed">
-          {adm.tierNote.replace(">", ">")}
+          {adm.tierNote}
         </p>
       </div>
 
       {/* Achievement sections */}
       <div className="space-y-6">
         {sections.map(({ category, meta }) => (
-          <AchievSection key={category} category={category} meta={meta} specialLabel={adm.special} />
+          <AchievSection
+            key={category}
+            category={category}
+            meta={meta}
+            specialLabel={adm.special}
+            achievLabels={achievLabels}
+            achievConditions={achievConditions}
+          />
         ))}
       </div>
     </AdminLayout>

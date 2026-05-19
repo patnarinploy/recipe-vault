@@ -22,14 +22,16 @@ function sortKey(u: User) {
 // ─── sub-components ──────────────────────────────────────────────────────────
 
 function LastSeenLabel({ lastSeen }: { lastSeen: string | null }) {
-  if (!lastSeen) return <span className="text-muted">ไม่เคยออนไลน์</span>;
+  const { t } = useLocale();
+  const adm = t.admin.users;
+  if (!lastSeen) return <span className="text-muted">{adm.neverOnline}</span>;
   const diff = Date.now() - new Date(lastSeen).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 2)  return <span className="text-green-500 font-medium">ออนไลน์อยู่</span>;
-  if (mins < 60) return <span className="text-yellow-600">{mins} นาทีที่แล้ว</span>;
+  if (mins < 2)  return <span className="text-green-500 font-medium">{adm.onlineNow}</span>;
+  if (mins < 60) return <span className="text-yellow-600">{adm.minsAgo.replace("{n}", String(mins))}</span>;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24)  return <span className="text-muted">{hrs} ชั่วโมงที่แล้ว</span>;
-  return <span className="text-muted">{Math.floor(hrs / 24)} วันที่แล้ว</span>;
+  if (hrs < 24)  return <span className="text-muted">{adm.hrsAgo.replace("{n}", String(hrs))}</span>;
+  return <span className="text-muted">{adm.daysAgo.replace("{n}", String(Math.floor(hrs / 24)))}</span>;
 }
 
 function UserAvatar({ user }: { user: User }) {
@@ -56,6 +58,7 @@ interface UserRowProps {
   banPending: boolean;
   rolePending: boolean;
   youLabel: string;
+  bannedReasonLabel: string;
   banTitle: string;
   unbanTitle: string;
   promoteTitle: string;
@@ -67,7 +70,7 @@ interface UserRowProps {
   onDemote: () => void;
 }
 
-function UserRow({ u, isSelf, showActions, banPending, rolePending, youLabel, banTitle, unbanTitle, promoteTitle, demoteTitle, onPreview, onBan, onUnban, onPromote, onDemote }: UserRowProps) {
+function UserRow({ u, isSelf, showActions, banPending, rolePending, youLabel, bannedReasonLabel, banTitle, unbanTitle, promoteTitle, demoteTitle, onPreview, onBan, onUnban, onPromote, onDemote }: UserRowProps) {
   const isBanned = u.status === "banned";
   const isAdmin  = u.role === "admin";
   return (
@@ -97,7 +100,7 @@ function UserRow({ u, isSelf, showActions, banPending, rolePending, youLabel, ba
         <p className="text-xs text-muted truncate">{u.email ?? ""}</p>
         <p className="text-xs mt-0.5"><LastSeenLabel lastSeen={u.last_seen} /></p>
         {isBanned && u.banned_reason && (
-          <p className="text-xs text-red-400 mt-0.5 truncate">เหตุผล: {u.banned_reason}</p>
+          <p className="text-xs text-red-400 mt-0.5 truncate">{bannedReasonLabel}: {u.banned_reason}</p>
         )}
       </div>
 
@@ -277,7 +280,7 @@ export default function AdminUsersClient({
         status: "banned", banned_at: new Date().toISOString(),
         banned_reason: reason || null, banned_by: currentAdminId,
       });
-      toast.success("แบนผู้ใช้แล้ว");
+      toast.success(adm.bannedToast);
       router.refresh();
     });
   }
@@ -287,7 +290,7 @@ export default function AdminUsersClient({
       const res = await unbanUser(u.id);
       if ("error" in res) { toast.error(res.error); return; }
       optimisticUpdate(u.id, { status: "active", banned_at: null, banned_reason: null, banned_by: null });
-      toast.success("ยกเลิกแบนแล้ว");
+      toast.success(adm.unbannedToast);
       router.refresh();
     });
   }
@@ -303,7 +306,7 @@ export default function AdminUsersClient({
         return;
       }
       optimisticUpdate(target.id, { role: direction === "promote" ? "admin" : "user" });
-      toast.success(direction === "promote" ? "เลื่อนเป็น Admin แล้ว" : "ลดเป็น Writer แล้ว");
+      toast.success(direction === "promote" ? adm.promotedToast : adm.demotedToast);
       setRoleTarget(null);
       router.refresh();
     });
@@ -409,6 +412,7 @@ export default function AdminUsersClient({
               banPending={banPending}
               rolePending={rolePending}
               youLabel={adm.you}
+              bannedReasonLabel={t.common.bannedReason}
               banTitle={adm.banUser}
               unbanTitle={adm.unbanUser}
               promoteTitle={adm.promote}
@@ -446,6 +450,7 @@ export default function AdminUsersClient({
                     banPending={banPending}
                     rolePending={rolePending}
                     youLabel={adm.you}
+                    bannedReasonLabel={t.common.bannedReason}
                     banTitle={adm.banUser}
                     unbanTitle={adm.unbanUser}
                     promoteTitle={adm.promote}

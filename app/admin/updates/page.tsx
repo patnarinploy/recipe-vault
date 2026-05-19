@@ -37,8 +37,8 @@ const CATEGORY_CONFIG: Record<BuildCategory, {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("th-TH", {
+function formatDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleString(locale === "en" ? "en-US" : "th-TH", {
     day:      "numeric",
     month:    "long",
     year:     "numeric",
@@ -60,7 +60,7 @@ function CategoryBadge({ category }: { category: BuildCategory }) {
   );
 }
 
-function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }) {
+function BuildCard({ entry, isLatest, latestLabel, locale }: { entry: BuildEntry; isLatest: boolean; latestLabel: string; locale: string }) {
   return (
     <div className={`relative bg-surface rounded-2xl border shadow-sm overflow-hidden ${
       isLatest ? "border-orange-200" : "border-border"
@@ -82,12 +82,12 @@ function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }
             </span>
             {isLatest && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white">
-                ล่าสุด
+                {latestLabel}
               </span>
             )}
             <CategoryBadge category={entry.category} />
           </div>
-          <time className="text-xs text-muted shrink-0 pt-0.5">{formatDate(entry.timestamp)}</time>
+          <time className="text-xs text-muted shrink-0 pt-0.5">{formatDate(entry.timestamp, locale)}</time>
         </div>
 
         {/* Row 2: commit subject */}
@@ -110,7 +110,7 @@ function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }
 
 export default async function AdminUpdatesPage() {
   await requireAdmin();
-  const { t } = await getServerLocale();
+  const { t, locale } = await getServerLocale();
   const upd = t.admin.updates;
 
   return (
@@ -120,7 +120,7 @@ export default async function AdminUpdatesPage() {
       </p>
       <div className="space-y-4">
         {BUILD_HISTORY.map((entry, i) => (
-          <BuildCard key={entry.build} entry={entry} isLatest={i === 0} />
+          <BuildCard key={entry.build} entry={entry} isLatest={i === 0} latestLabel={upd.latest} locale={locale} />
         ))}
       </div>
     </AdminLayout>
