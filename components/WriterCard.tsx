@@ -14,13 +14,13 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
   const showPresence = "last_seen" in info;
 
   return (
-    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100 text-center">
+    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-amber-950/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/30 text-center">
 
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-orange-100 text-stone-400 hover:text-stone-600 transition-colors"
+          className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 text-muted hover:text-foreground transition-colors"
           aria-label="ปิด"
         >
           <X className="w-4 h-4" />
@@ -49,7 +49,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
       </div>
 
       {/* Name */}
-      <h3 className="text-xl font-bold text-stone-800 leading-tight">
+      <h3 className="text-xl font-bold text-foreground leading-tight">
         {info.display_name ?? ""}
       </h3>
 
@@ -60,11 +60,11 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
         </div>
       )}
 
-      <div className="w-10 h-px bg-orange-200 mx-auto mt-4 mb-4" />
+      <div className="w-10 h-px bg-orange-200 dark:bg-orange-800/40 mx-auto mt-4 mb-4" />
 
       {/* Bio */}
       {info.bio && (
-        <p className="text-sm text-stone-600 leading-relaxed mb-4">{info.bio}</p>
+        <p className="text-sm text-secondary leading-relaxed mb-4">{info.bio}</p>
       )}
 
       {/* Role + Achievements */}

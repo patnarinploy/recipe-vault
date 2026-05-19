@@ -4,10 +4,13 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
 import type { WriterInfo } from "@/lib/types";
+import { getServerLocale } from "@/lib/locale/server";
 
 export default async function SettingsPage() {
   const user     = await requireSession();
   const supabase = await createClient();
+  const { t }    = await getServerLocale();
+  const s        = t.settings;
 
   // Fetch current user's own stats for the writer card preview
   const { data: myBooksData } = await supabase
@@ -32,22 +35,22 @@ export default async function SettingsPage() {
 
   const navGroups = [
     {
-      label: "โปรไฟล์",
+      label: s.sections.profile,
       items: [
-        { href: "/settings/profile",  icon: User,        label: "โปรไฟล์นักเขียน",    sub: "นามแฝง, Avatar และคำอธิบายตัวตน" },
-        { href: "/settings/account",  icon: ShieldCheck, label: "ข้อมูลส่วนตัว",      sub: "เบอร์โทร, วันเกิด, ประเทศ, โซเชียล" },
+        { href: "/settings/profile",  icon: User,        label: s.profile.label, sub: s.profile.sub },
+        { href: "/settings/account",  icon: ShieldCheck, label: s.account.label, sub: s.account.sub },
       ],
     },
     {
-      label: "บัญชี",
+      label: s.sections.account,
       items: [
-        { href: "/settings/password", icon: KeyRound, label: "ความปลอดภัย",          sub: "บัญชีจัดการโดย Google / Microsoft" },
+        { href: "/settings/password", icon: KeyRound, label: s.security.label, sub: s.security.sub },
       ],
     },
     {
-      label: "การใช้งาน",
+      label: s.sections.usage,
       items: [
-        { href: "/settings/reading",  icon: BookOpen, label: "การตั้งค่าการอ่าน",   sub: "ธีม, ภาษา, รูปแบบการพลิกหน้า" },
+        { href: "/settings/reading",  icon: BookOpen, label: s.display.label, sub: s.display.sub },
       ],
     },
   ];
@@ -56,20 +59,20 @@ export default async function SettingsPage() {
     <div className="max-w-lg mx-auto">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        กลับหน้าหลัก
+        {s.backHome}
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-6">ตั้งค่า</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{s.title}</h1>
 
       {/* Writer card preview */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2 px-1">
-          <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest">การ์ดนักเขียน</p>
+          <p className="text-[11px] font-semibold text-muted uppercase tracking-widest">{s.writerCard}</p>
           <Link href="/settings/profile" className="text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors">
-            แก้ไข
+            {s.edit}
           </Link>
         </div>
         <WriterCard info={writerInfo} />
@@ -79,24 +82,24 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         {navGroups.map((group) => (
           <div key={group.label}>
-            <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest px-1 mb-2">
+            <p className="text-[11px] font-semibold text-muted uppercase tracking-widest px-1 mb-2">
               {group.label}
             </p>
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100 overflow-hidden">
+            <div className="bg-surface rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
               {group.items.map(({ href, icon: Icon, label, sub }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3.5 px-5 py-4 hover:bg-stone-50 transition-colors"
+                  className="flex items-center gap-3.5 px-5 py-4 hover:bg-elevated transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-stone-800">{label}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">{sub}</p>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted mt-0.5">{sub}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-stone-300 shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-muted shrink-0" />
                 </Link>
               ))}
             </div>

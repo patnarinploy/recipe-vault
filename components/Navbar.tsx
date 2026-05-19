@@ -15,14 +15,14 @@ export default function Navbar({ user, locked }: { user: User | null; locked?: b
   );
 
   return (
-    <header className="bg-white border-b border-stone-100 sticky top-0 z-40 shadow-sm">
+    <header className="bg-surface border-b border-border sticky top-0 z-40 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {locked ? (
-          <span className="inline-flex items-center gap-2 font-extrabold text-stone-800 text-xl shrink-0 cursor-default select-none">
+          <span className="inline-flex items-center gap-2 font-extrabold text-foreground text-xl shrink-0 cursor-default select-none">
             {logoInner}
           </span>
         ) : (
-          <Link href="/" className="inline-flex items-center gap-2 font-extrabold text-stone-800 text-xl hover:text-orange-500 transition-colors shrink-0">
+          <Link href="/" className="inline-flex items-center gap-2 font-extrabold text-foreground text-xl hover:text-orange-500 transition-colors shrink-0">
             {logoInner}
           </Link>
         )}

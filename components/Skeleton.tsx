@@ -23,7 +23,7 @@ function SkeletonField({ wide = false }: { wide?: boolean }) {
 // Skeleton for any create/edit form — 3 fields + submit button
 export function SkeletonForm() {
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 p-6 space-y-5">
+    <div className="bg-surface rounded-2xl border border-border p-6 space-y-5">
       <div className="skeleton h-5 w-36 rounded mb-2" />
       <SkeletonField wide />
       <SkeletonField />
@@ -39,7 +39,7 @@ export function SkeletonForm() {
 // Skeleton for settings nav rows
 export function SkeletonSettingsRows({ count = 3 }: { count?: number }) {
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100 overflow-hidden">
+    <div className="bg-surface rounded-2xl border border-border shadow-sm divide-y divide-border overflow-hidden">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex items-center gap-3.5 px-5 py-4">
           <div className="skeleton w-8 h-8 rounded-xl shrink-0" />

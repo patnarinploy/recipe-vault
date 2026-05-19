@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/session";
 import { Sparkles, Wrench, Bug, Rocket, Settings2, GitCommitHorizontal } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import buildHistoryJson from "@/lib/build-history.json";
+import { getServerLocale } from "@/lib/locale/server";
 
 export const revalidate = 0;
 
@@ -26,12 +27,12 @@ const CATEGORY_CONFIG: Record<BuildCategory, {
   Icon:  React.ComponentType<{ className?: string }>;
   color: string;
 }> = {
-  feat:     { label: "New Feature",  Icon: Rocket,    color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  fix:      { label: "Bug Fix",      Icon: Bug,       color: "text-rose-600 bg-rose-50 border-rose-200"          },
-  improve:  { label: "Improvement",  Icon: Sparkles,  color: "text-sky-600 bg-sky-50 border-sky-200"             },
-  refactor: { label: "Refactor",     Icon: Wrench,    color: "text-violet-600 bg-violet-50 border-violet-200"    },
-  chore:    { label: "Internal",     Icon: Settings2, color: "text-stone-500 bg-stone-50 border-stone-200"       },
-  internal: { label: "Internal",     Icon: Settings2, color: "text-stone-500 bg-stone-50 border-stone-200"       },
+  feat:     { label: "New Feature",  Icon: Rocket,    color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/40" },
+  fix:      { label: "Bug Fix",      Icon: Bug,       color: "text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800/40"                },
+  improve:  { label: "Improvement",  Icon: Sparkles,  color: "text-sky-600 bg-sky-50 border-sky-200 dark:bg-sky-900/20 dark:border-sky-800/40"                    },
+  refactor: { label: "Refactor",     Icon: Wrench,    color: "text-violet-600 bg-violet-50 border-violet-200 dark:bg-violet-900/20 dark:border-violet-800/40"      },
+  chore:    { label: "Internal",     Icon: Settings2, color: "text-muted bg-elevated border-border"                                                               },
+  internal: { label: "Internal",     Icon: Settings2, color: "text-muted bg-elevated border-border"                                                               },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -61,8 +62,8 @@ function CategoryBadge({ category }: { category: BuildCategory }) {
 
 function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }) {
   return (
-    <div className={`relative bg-white rounded-2xl border shadow-sm overflow-hidden ${
-      isLatest ? "border-orange-200" : "border-stone-100"
+    <div className={`relative bg-surface rounded-2xl border shadow-sm overflow-hidden ${
+      isLatest ? "border-orange-200" : "border-border"
     }`}>
       {isLatest && (
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-amber-400" />
@@ -74,8 +75,8 @@ function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`font-mono text-xs font-bold px-2.5 py-1 rounded-lg border ${
               isLatest
-                ? "bg-orange-50 text-orange-600 border-orange-200"
-                : "bg-stone-50 text-stone-500 border-stone-200"
+                ? "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800/40"
+                : "bg-elevated text-muted border-border"
             }`}>
               Build #{entry.build}
             </span>
@@ -86,16 +87,16 @@ function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }
             )}
             <CategoryBadge category={entry.category} />
           </div>
-          <time className="text-xs text-stone-400 shrink-0 pt-0.5">{formatDate(entry.timestamp)}</time>
+          <time className="text-xs text-muted shrink-0 pt-0.5">{formatDate(entry.timestamp)}</time>
         </div>
 
         {/* Row 2: commit subject */}
-        <h2 className="text-sm font-semibold text-stone-800 mb-2 leading-snug">{entry.subject}</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-2 leading-snug">{entry.subject}</h2>
 
         {/* Row 3: commit hash */}
         <div className="flex items-center gap-1.5">
-          <GitCommitHorizontal className="w-3.5 h-3.5 text-stone-300 shrink-0" />
-          <code className="text-[10px] text-stone-400 bg-stone-50 border border-stone-100 px-1.5 py-0.5 rounded font-mono">
+          <GitCommitHorizontal className="w-3.5 h-3.5 text-muted shrink-0" />
+          <code className="text-[10px] text-muted bg-elevated border border-border px-1.5 py-0.5 rounded font-mono">
             {entry.hash}
           </code>
         </div>
@@ -109,11 +110,13 @@ function BuildCard({ entry, isLatest }: { entry: BuildEntry; isLatest: boolean }
 
 export default async function AdminUpdatesPage() {
   await requireAdmin();
+  const { t } = await getServerLocale();
+  const upd = t.admin.updates;
 
   return (
-    <AdminLayout title="Version History">
-      <p className="text-sm text-stone-500 -mt-4 mb-6">
-        ดูประวัติ Build, ฟีเจอร์ใหม่, การปรับปรุง และการแก้ไขระบบของ Recipe Vault
+    <AdminLayout title={upd.title} backLabel={t.admin.back}>
+      <p className="text-sm text-secondary -mt-4 mb-6">
+        {upd.subtitle}
       </p>
       <div className="space-y-4">
         {BUILD_HISTORY.map((entry, i) => (

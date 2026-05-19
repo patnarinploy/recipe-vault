@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Modal from "./Modal";
 import { ChefHat } from "lucide-react";
+import { useLocale } from "@/lib/locale";
 
 interface Props {
   open: boolean;
@@ -39,6 +40,8 @@ type LoadingState = Provider | null;
 export default function AuthModal({ open, onClose }: Props) {
   const [loading, setLoading]   = useState<LoadingState>(null);
   const [error, setError]       = useState<string | null>(null);
+  const { t } = useLocale();
+  const auth = t.auth;
 
   const supabase = createClient();
 
@@ -60,15 +63,15 @@ export default function AuthModal({ open, onClose }: Props) {
 
   return (
     <Modal open={open} onClose={() => { setError(null); setLoading(null); onClose(); }} maxWidth="max-w-sm">
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-xl overflow-hidden">
+      <div className="bg-surface rounded-2xl border border-border shadow-xl overflow-hidden">
 
         {/* Header */}
         <div className="px-6 pt-7 pb-5 text-center">
-          <div className="inline-flex items-center justify-center w-13 h-13 bg-orange-100 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-13 h-13 bg-orange-100 dark:bg-orange-900/20 rounded-2xl mb-4">
             <ChefHat className="w-6 h-6 text-orange-500" />
           </div>
-          <h2 className="text-xl font-bold text-stone-800">เข้าสู่ระบบ / สมัครสมาชิก</h2>
-          <p className="text-sm text-stone-400 mt-1">เลือกบัญชีที่คุณต้องการใช้</p>
+          <h2 className="text-xl font-bold text-foreground">{auth.signIn}</h2>
+          <p className="text-sm text-muted mt-1">{auth.subtitle}</p>
         </div>
 
         <div className="px-6 pb-7 space-y-3">
@@ -79,6 +82,7 @@ export default function AuthModal({ open, onClose }: Props) {
             loading={loading === "google"}
             anyLoading={loading !== null}
             onClick={() => handleOAuth("google")}
+            connectingLabel={auth.connecting}
             icon={
               <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -88,7 +92,7 @@ export default function AuthModal({ open, onClose }: Props) {
               </svg>
             }
             label="Continue with Google"
-            disabledLabel="Google — ยังไม่พร้อมใช้งาน"
+            disabledLabel={auth.googleUnavailable}
           />
 
           {/* Microsoft */}
@@ -97,6 +101,7 @@ export default function AuthModal({ open, onClose }: Props) {
             loading={loading === "azure"}
             anyLoading={loading !== null}
             onClick={() => handleOAuth("azure")}
+            connectingLabel={auth.connecting}
             icon={
               <svg viewBox="0 0 21 21" className="w-5 h-5 shrink-0">
                 <path fill="#f35325" d="M0 0h10v10H0z"/>
@@ -106,15 +111,15 @@ export default function AuthModal({ open, onClose }: Props) {
               </svg>
             }
             label="Continue with Microsoft"
-            disabledLabel="Microsoft — ยังไม่พร้อมใช้งาน"
+            disabledLabel={auth.microsoftUnavailable}
           />
 
           {/* No providers at all */}
           {!anyProviderEnabled && (
-            <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-4 text-center">
-              <p className="text-sm text-stone-500 leading-relaxed">
-                ระบบเข้าสู่ระบบยังอยู่ระหว่างการตั้งค่า<br />
-                กรุณาติดต่อผู้ดูแลระบบ
+            <div className="rounded-xl bg-elevated border border-outline px-4 py-4 text-center">
+              <p className="text-sm text-secondary leading-relaxed">
+                {auth.setupPending}<br />
+                {t.common.contactAdmin}
               </p>
             </div>
           )}
@@ -124,8 +129,8 @@ export default function AuthModal({ open, onClose }: Props) {
             <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 text-center">{error}</p>
           )}
 
-          <p className="text-center text-xs text-stone-400 pt-1 leading-relaxed">
-            การเข้าสู่ระบบถือว่าคุณยอมรับ<br />เงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว
+          <p className="text-center text-xs text-muted pt-1 leading-relaxed">
+            {auth.terms}
           </p>
         </div>
       </div>
@@ -141,6 +146,7 @@ function ProviderButton({
   icon,
   label,
   disabledLabel,
+  connectingLabel,
 }: {
   enabled: boolean;
   loading: boolean;
@@ -149,15 +155,16 @@ function ProviderButton({
   icon: React.ReactNode;
   label: string;
   disabledLabel: string;
+  connectingLabel: string;
 }) {
   if (!enabled) {
     return (
-      <div className="w-full flex items-center justify-between gap-3 border border-stone-200 rounded-xl px-4 py-3.5 text-sm text-stone-400 bg-stone-50 cursor-not-allowed select-none">
+      <div className="w-full flex items-center justify-between gap-3 border border-outline rounded-xl px-4 py-3.5 text-sm text-muted bg-elevated cursor-not-allowed select-none">
         <div className="flex items-center gap-3">
           <span className="opacity-40">{icon}</span>
           <span className="font-medium">{disabledLabel}</span>
         </div>
-        <span className="text-[10px] bg-stone-200 text-stone-500 px-2 py-0.5 rounded-full font-semibold shrink-0">Coming soon</span>
+        <span className="text-[10px] bg-elevated text-muted px-2 py-0.5 rounded-full font-semibold shrink-0 border border-outline">Coming soon</span>
       </div>
     );
   }
@@ -166,12 +173,12 @@ function ProviderButton({
     <button
       onClick={onClick}
       disabled={anyLoading}
-      className="w-full flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 hover:border-stone-300 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center gap-3 border border-outline rounded-xl px-4 py-3.5 text-sm font-semibold text-secondary hover:bg-elevated hover:border-outline active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {loading ? (
-        <span className="w-5 h-5 shrink-0 rounded-full border-2 border-stone-300 border-t-orange-500 animate-spin" />
+        <span className="w-5 h-5 shrink-0 rounded-full border-2 border-muted border-t-orange-500 animate-spin" />
       ) : icon}
-      <span className="flex-1 text-left">{loading ? "กำลังเชื่อมต่อ…" : label}</span>
+      <span className="flex-1 text-left">{loading ? connectingLabel : label}</span>
     </button>
   );
 }

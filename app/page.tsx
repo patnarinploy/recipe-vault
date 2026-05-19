@@ -87,7 +87,7 @@ export default async function HomePage() {
             <div className="skeleton h-4 w-40 rounded" />
           </div>
         </div>
-        <div className="flex gap-2 mb-8 border-b border-stone-200">
+        <div className="flex gap-2 mb-8 border-b border-outline">
           <div className="skeleton h-10 w-28 rounded-t-lg" />
           <div className="skeleton h-10 w-28 rounded-t-lg opacity-50" />
         </div>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useLocale } from "@/lib/locale";
+
 type Status = "online" | "away" | "offline";
 
 function getStatus(lastSeen: string | null | undefined): Status {
@@ -8,10 +12,10 @@ function getStatus(lastSeen: string | null | undefined): Status {
   return "offline";
 }
 
-const CONFIG: Record<Status, { dot: string; label: string; tooltip: string }> = {
-  online:  { dot: "bg-green-400",  label: "ออนไลน์",    tooltip: "ออนไลน์อยู่" },
-  away:    { dot: "bg-yellow-400", label: "ไม่อยู่",    tooltip: "ไม่อยู่ที่คีย์บอร์ด" },
-  offline: { dot: "bg-stone-300",  label: "ออฟไลน์",    tooltip: "ออฟไลน์" },
+const DOT_CLASSES: Record<Status, string> = {
+  online:  "bg-green-400",
+  away:    "bg-yellow-400",
+  offline: "bg-stone-300",
 };
 
 export default function OnlineIndicator({
@@ -23,15 +27,26 @@ export default function OnlineIndicator({
   showLabel?: boolean;
   size?: "sm" | "md";
 }) {
+  const { t } = useLocale();
   const status = getStatus(lastSeen);
-  const cfg    = CONFIG[status];
   const dotSize = size === "sm" ? "w-2 h-2" : "w-2.5 h-2.5";
 
+  const labels: Record<Status, string> = {
+    online:  t.status.online,
+    away:    t.status.away,
+    offline: t.status.offline,
+  };
+  const tooltips: Record<Status, string> = {
+    online:  t.status.onlineNow,
+    away:    t.status.awayTooltip,
+    offline: t.status.offlineTooltip,
+  };
+
   return (
-    <span className="inline-flex items-center gap-1.5 group relative" title={cfg.tooltip}>
-      <span className={`${dotSize} rounded-full shrink-0 ${cfg.dot} ${status === "online" ? "animate-pulse" : ""}`} />
+    <span className="inline-flex items-center gap-1.5 group relative" title={tooltips[status]}>
+      <span className={`${dotSize} rounded-full shrink-0 ${DOT_CLASSES[status]} ${status === "online" ? "animate-pulse" : ""}`} />
       {showLabel && (
-        <span className="text-xs text-stone-400">{cfg.label}</span>
+        <span className="text-xs text-muted">{labels[status]}</span>
       )}
     </span>
   );

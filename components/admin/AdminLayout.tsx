@@ -27,13 +27,13 @@ export default function AdminLayout({
     <div className={`${widthClass} mx-auto`}>
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-700 text-sm mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         {backLabel}
       </Link>
 
-      <h1 className="text-2xl font-bold text-stone-800 mb-6">{title}</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{title}</h1>
 
       {children}
     </div>

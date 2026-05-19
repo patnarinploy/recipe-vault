@@ -57,7 +57,7 @@ export default function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="fixed inset-0 bg-stone-50 flex flex-col overflow-auto"
+            className="fixed inset-0 bg-background flex flex-col overflow-auto"
             style={{ zIndex: 9999 }}
             role="dialog"
             aria-modal="true"
@@ -66,7 +66,7 @@ export default function Modal({
               <button
                 type="button"
                 onClick={onClose}
-                className="fixed top-4 right-4 z-[100] w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-stone-600 hover:text-stone-800 transition-colors"
+                className="fixed top-4 right-4 z-[100] w-11 h-11 rounded-full bg-surface/90 hover:bg-surface shadow-lg flex items-center justify-center text-secondary hover:text-foreground transition-colors"
                 aria-label="ปิด"
               >
                 <X className="w-5 h-5" />
@@ -109,12 +109,12 @@ export default function Modal({
               onClick={(e) => e.stopPropagation()}
             >
               {title && (
-                <div className="bg-white rounded-t-2xl border border-stone-100 border-b-0 px-6 py-4 flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-stone-800">{title}</h2>
+                <div className="bg-surface rounded-t-2xl border border-border border-b-0 px-6 py-4 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-foreground">{title}</h2>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="p-1.5 -m-1.5 rounded-lg hover:bg-stone-100 text-stone-500 hover:text-stone-700 transition-colors"
+                    className="p-1.5 -m-1.5 rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-colors"
                     aria-label="ปิด"
                   >
                     <X className="w-5 h-5" />

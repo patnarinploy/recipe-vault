@@ -7,29 +7,27 @@
     --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
       "Thonburi", "Helvetica Neue", Arial, sans-serif;
 
-    /* ── Design tokens (light) ──────────────────────────────────────────────
-     * Phase 2 will replace hardcoded bg-white / text-stone-* with these.
-     * Until then, they exist here so dark: variants work correctly once
-     * individual components are migrated.                                   */
-    --color-bg:       #fafaf9; /* stone-50  — page background  */
-    --color-surface:  #ffffff; /* white     — card / modal     */
-    --color-fg:       #1c1917; /* stone-900 — primary text     */
-    --color-fg-2:     #57534e; /* stone-600 — secondary text   */
-    --color-muted:    #a8a29e; /* stone-400 — muted / hint     */
-    --color-border:   #f5f5f4; /* stone-100 — subtle border    */
-    --color-border-2: #e7e5e4; /* stone-200 — default border   */
+    --bg:       #fafaf9;   /* stone-50  — page */
+    --surface:  #ffffff;   /* white     — card */
+    --elevated: #f5f5f4;   /* stone-100 — nested/hover bg */
+    --fg:       #1c1917;   /* stone-900 — primary text */
+    --fg-2:     #57534e;   /* stone-600 — secondary */
+    --muted:    #a8a29e;   /* stone-400 — muted */
+    --border:   #f5f5f4;   /* stone-100 — subtle border */
+    --outline:  #e7e5e4;   /* stone-200 — border */
   }
 
   /* ── Dark-mode overrides ─────────────────────────────────────────────────
    * Applied when <html class="dark"> is set by ThemeProvider.             */
   .dark {
-    --color-bg:       #1c1917; /* stone-900 */
-    --color-surface:  #292524; /* stone-800 */
-    --color-fg:       #fafaf9; /* stone-50  */
-    --color-fg-2:     #d6d3d1; /* stone-300 */
-    --color-muted:    #78716c; /* stone-500 */
-    --color-border:   #44403c; /* stone-700 */
-    --color-border-2: #57534e; /* stone-600 */
+    --bg:       #1c1917;
+    --surface:  #252120;
+    --elevated: #2e2b28;
+    --fg:       #fafaf9;
+    --fg-2:     #d6d3d1;   /* stone-300 */
+    --muted:    #78716c;   /* stone-500 */
+    --border:   #3c3532;
+    --outline:  #57534e;   /* stone-600 */
   }
 
   body {
@@ -48,7 +46,7 @@
 /* Scoped to the book reader container; does not affect app UI. */
 /* Change --font-ibm-plex in layout.tsx to restyle the whole modal. */
 .book-modal-font {
-  font-family: var(--font-ibm-plex), "IBM Plex Sans Thai", Thonburi, sans-serif;
+  font-family: var(--reading-font, var(--font-ibm-plex)), "IBM Plex Sans Thai", Thonburi, sans-serif;
 }
 
 /* ─── Page / component animations ─────────────────────────── */
@@ -138,6 +136,14 @@ button, a {
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s linear infinite;
   border-radius: 8px;
+}
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.05) 0%,
+    rgba(255,255,255,0.10) 50%,
+    rgba(255,255,255,0.05) 100%
+  );
 }
 .skeleton-dark {
   background: linear-gradient(

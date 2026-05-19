@@ -3,11 +3,12 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 import { getSession } from "@/lib/session";
-import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore } from "next/font/google";
+import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle_Aurore, Kanit, Mitr, Noto_Sans_Thai, Prompt } from "next/font/google";
 import { redirect } from "next/navigation";
 import Heartbeat from "@/components/Heartbeat";
 import { ThemeProvider, THEME_SCRIPT } from "@/lib/theme";
 import { LocaleProvider } from "@/lib/locale";
+import { ReadingFontProvider } from "@/lib/reading-font-context";
 
 const sarabun = Sarabun({
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -40,6 +41,30 @@ const laBelleAurore = La_Belle_Aurore({
   variable: "--font-belle-aurore",
   display: "swap",
 });
+const kanit = Kanit({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin", "thai"],
+  variable: "--font-kanit",
+  display: "swap",
+});
+const mitr = Mitr({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin", "thai"],
+  variable: "--font-mitr",
+  display: "swap",
+});
+const notoSansThai = Noto_Sans_Thai({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin", "thai"],
+  variable: "--font-noto-sans-thai",
+  display: "swap",
+});
+const prompt = Prompt({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin", "thai"],
+  variable: "--font-prompt",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Recipe Vault",
@@ -53,25 +78,37 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // so it unlocks immediately after the server action calls revalidatePath.
   const isOnboarding = !!user && !user.onboarding_complete;
 
+  const allFontVars = [
+    sarabun.variable,
+    ibmPlexSansThai.variable,
+    playfairDisplay.variable,
+    jetbrainsMono.variable,
+    laBelleAurore.variable,
+    kanit.variable,
+    mitr.variable,
+    notoSansThai.variable,
+    prompt.variable,
+  ].join(" ");
+
   // Banned user gate — shown regardless of page
   if (user && user.status === "banned") {
     return (
-      <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
+      <html lang="th" className={allFontVars} suppressHydrationWarning>
         <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
-        <body className="bg-stone-50 min-h-screen font-sans flex items-center justify-center px-4" suppressHydrationWarning>
-          <div className="max-w-sm w-full bg-white rounded-2xl border border-red-100 shadow-sm p-8 text-center">
+        <body className="bg-background min-h-screen font-sans flex items-center justify-center px-4" suppressHydrationWarning>
+          <div className="max-w-sm w-full bg-surface rounded-2xl border border-red-100 shadow-sm p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">🚫</span>
             </div>
-            <h1 className="text-xl font-bold text-stone-800 mb-2">บัญชีถูกระงับ</h1>
+            <h1 className="text-xl font-bold text-foreground mb-2">บัญชีถูกระงับ</h1>
             {user.banned_reason && (
-              <p className="text-sm text-stone-500 mb-4 leading-relaxed">
+              <p className="text-sm text-secondary mb-4 leading-relaxed">
                 เหตุผล: <span className="font-medium text-red-600">{user.banned_reason}</span>
               </p>
             )}
-            <p className="text-xs text-stone-400">หากคิดว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ</p>
+            <p className="text-xs text-muted">หากคิดว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ</p>
             <form action="/api/auth/signout" method="POST" className="mt-6">
-              <button type="submit" className="text-sm text-stone-500 hover:text-stone-700 underline">
+              <button type="submit" className="text-sm text-secondary hover:text-foreground underline">
                 ออกจากระบบ
               </button>
             </form>
@@ -85,22 +122,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // (Only for protected routes — guests and /onboarding itself are exempt)
 
   return (
-    <html lang="th" className={`${sarabun.variable} ${ibmPlexSansThai.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${laBelleAurore.variable}`} suppressHydrationWarning>
+    <html lang="th" className={allFontVars} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
-      <body className="bg-stone-50 min-h-screen font-sans" suppressHydrationWarning>
+      <body className="bg-background min-h-screen font-sans" suppressHydrationWarning>
         <LocaleProvider>
           <ThemeProvider>
-            <Navbar user={user} locked={isOnboarding} />
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-              {children}
-            </main>
-            {user && <Heartbeat />}
-            <Toaster
-              position="top-right"
-              toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }}
-              richColors
-              closeButton
-            />
+            <ReadingFontProvider>
+              <Navbar user={user} locked={isOnboarding} />
+              <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+                {children}
+              </main>
+              {user && <Heartbeat />}
+              <Toaster
+                position="top-right"
+                toastOptions={{ style: { fontFamily: "Thonburi, Sarabun, sans-serif", fontSize: "14px" } }}
+                richColors
+                closeButton
+              />
+            </ReadingFontProvider>
           </ThemeProvider>
         </LocaleProvider>
       </body>
