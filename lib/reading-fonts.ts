@@ -16,6 +16,13 @@ export type ReadingFont = {
 
 export const READING_FONTS: ReadingFont[] = [
   {
+    id: "noto-sans-thai",
+    name: "Noto Sans Thai",
+    variable: "--font-noto-sans-thai",
+    previewText: "สูตรอาหารของฉัน",
+    lineHeightClass: "leading-relaxed",
+  },
+  {
     id: "ibm-plex-sans-thai",
     name: "IBM Plex Sans Thai",
     variable: "--font-ibm-plex",
@@ -40,13 +47,6 @@ export const READING_FONTS: ReadingFont[] = [
     id: "mitr",
     name: "Mitr",
     variable: "--font-mitr",
-    previewText: "สูตรอาหารของฉัน",
-    lineHeightClass: "leading-relaxed",
-  },
-  {
-    id: "noto-sans-thai",
-    name: "Noto Sans Thai",
-    variable: "--font-noto-sans-thai",
     previewText: "สูตรอาหารของฉัน",
     lineHeightClass: "leading-relaxed",
   },

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { banUser, unbanUser, promoteUser, demoteUser } from "@/app/actions/auth";
 import type { User, WriterInfo } from "@/lib/types";
 import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
-import { Shield, ShieldOff, Crown, UserMinus, Search, X, AlertTriangle, Loader2 } from "lucide-react";
+import { Ban, ShieldOff, Crown, UserMinus, Search, X, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { isAvatarUrl } from "@/lib/avatar";
@@ -114,7 +114,7 @@ function UserRow({ u, isSelf, showActions, banPending, rolePending, youLabel, ba
           ) : (
             <button onClick={onBan} disabled={banPending} title={banTitle}
               className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40">
-              <Shield className="w-4 h-4" />
+              <Ban className="w-4 h-4" />
             </button>
           )}
 
