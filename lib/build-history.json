@@ -1,5 +1,12 @@
 [
   {
+    "build": 52,
+    "timestamp": "2026-05-19T18:16:19.000Z",
+    "subject": "feat(i18n+dark): full localization + dark mode for settings, forms, and ",
+    "hash": "f6bdc73",
+    "category": "feat"
+  },
+  {
     "build": 51,
     "timestamp": "2026-05-19T17:17:59.000Z",
     "subject": "fix(reader): dark mode paper pages + i18n for book reader content",
