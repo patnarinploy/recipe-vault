@@ -5,13 +5,6 @@ export type PresetUnit = {
   sort_order: number;
 };
 
-export type PresetIngredient = {
-  id: string;
-  name_th: string;
-  name_en: string | null;
-  sort_order: number;
-};
-
 export type DbIngredient = {
   id: string;
   recipe_id: string;

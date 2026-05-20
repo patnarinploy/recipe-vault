@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { type Recipe, type PresetUnit, type PresetIngredient, type DbIngredient } from "@/lib/types";
+import { type Recipe, type PresetUnit, type DbIngredient } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
@@ -269,7 +269,7 @@ interface Props {
   inModal?: boolean;
   showDelete?: boolean;
   presetUnits?: PresetUnit[];
-  presetIngredients?: PresetIngredient[];
+  ingredientNameOptions?: string[];
 }
 
 export default function RecipeForm({
@@ -281,7 +281,7 @@ export default function RecipeForm({
   inModal,
   showDelete,
   presetUnits = [],
-  presetIngredients = [],
+  ingredientNameOptions = [],
 }: Props) {
   const { t, locale } = useLocale();
   const r = t.recipe;
@@ -331,12 +331,17 @@ export default function RecipeForm({
   });
 
   // Locale-mapped options for comboboxes
-  const presetUnitOptions = presetUnits.map(u => locale === "th" ? u.unit_name_th : u.unit_name_en);
-  const presetIngredientOptions = presetIngredients.map(pi => locale === "th" ? pi.name_th : (pi.name_en ?? pi.name_th));
+  const presetUnitOptions = [...presetUnits]
+    .sort((a, b) => {
+      const aName = locale === "th" ? a.unit_name_th : (a.unit_name_en || a.unit_name_th);
+      const bName = locale === "th" ? b.unit_name_th : (b.unit_name_en || b.unit_name_th);
+      return aName.localeCompare(bName, locale === "th" ? "th" : "en");
+    })
+    .map(u => locale === "th" ? u.unit_name_th : (u.unit_name_en || u.unit_name_th));
 
   function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
   function removeRow(i: number) { setIngredientRows(r => r.filter((_, idx) => idx !== i)); }
-  function updateRow(i: number, field: "amount", value: string) {
+  function updateRow(i: number, field: "amount" | "name", value: string) {
     setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
   }
   function updateRowUnit(i: number, displayValue: string) {
@@ -350,10 +355,6 @@ export default function RecipeForm({
       unitDisplay: displayValue,
     } : row));
   }
-  function updateRowName(i: number, displayValue: string) {
-    setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, name: displayValue } : row));
-  }
-
   function addStep() { setInstructionSteps(s => [...s, { id: uid(), text: "", image_url: null }]); }
   function removeStep(i: number) { setInstructionSteps(s => s.filter((_, idx) => idx !== i)); }
   function updateStep(i: number, field: keyof Omit<InstructionStep, "id">, value: string | null) {
@@ -524,8 +525,8 @@ export default function RecipeForm({
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
                       <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientName}</p>
-                      <Combobox value={row.name} onChange={v => updateRowName(i, v)}
-                        options={presetIngredientOptions} placeholder={r.ingredientName} className={inputCls} wrapperClass="w-full" />
+                      <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
+                        options={ingredientNameOptions} placeholder={r.ingredientName} className={inputCls} wrapperClass="w-full" />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
@@ -549,8 +550,8 @@ export default function RecipeForm({
                 {/* Desktop */}
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
                   <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
-                  <Combobox value={row.name} onChange={v => updateRowName(i, v)}
-                    options={presetIngredientOptions} placeholder={r.ingredientName} className={inputCls} />
+                  <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
+                    options={ingredientNameOptions} placeholder={r.ingredientName} className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
                   <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} className={inputCls} />

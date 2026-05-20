@@ -13,7 +13,6 @@ export default async function AdminPresetUnitsPage() {
   const { data: units } = await supabase
     .from("preset_units")
     .select("*")
-    .order("sort_order")
     .returns<PresetUnit[]>();
 
   return (
