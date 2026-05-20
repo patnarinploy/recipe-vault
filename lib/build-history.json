@@ -1,5 +1,12 @@
 [
   {
+    "build": 88,
+    "timestamp": "2026-05-20T20:51:22.000Z",
+    "subject": "fix: favorites reorder now persists + show heart status in sort modal",
+    "hash": "7dad47b",
+    "category": "fix"
+  },
+  {
     "build": 87,
     "timestamp": "2026-05-20T20:47:32.000Z",
     "subject": "fix: heart button color and position in FAB menu",
