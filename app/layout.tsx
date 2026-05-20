@@ -92,7 +92,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     validLocale ? `localStorage.setItem("rv_locale","${validLocale}");document.cookie="rv_locale=${validLocale};path=/;max-age=31536000;SameSite=Lax";` : "",
     validFont   ? `localStorage.setItem("rv_reading_font","${validFont}");`  : "",
     validFlip   ? `localStorage.setItem("rv_page_flip_type","${validFlip}");` : "",
-    `var t=localStorage.getItem("rv_theme")||"system";if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark");`,
+    `var t=localStorage.getItem("rv_theme")||"light";if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark");`,
   ].join("")}}catch(e){}`;
 
   const allFontVars = [
