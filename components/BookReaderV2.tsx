@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
-import type { Book, Recipe, WriterInfo } from "@/lib/types";
+import type { Book, DbIngredient, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
 import { translateCategory } from "@/lib/locale/unit-map";
@@ -1302,13 +1302,14 @@ interface Props {
 // ─── Main component ───────────────────────────────────────────────
 export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const bookRef = useRef<any>(null);
   const fabRef  = useRef<HTMLDivElement>(null);
   const { pageW, pageH, portrait, ready, vwPx, vhPx } = usePageDimensions();
 
   const [book,    setBook]    = useState<Book | null>(null);
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
+  const [presetUnits, setPresetUnits] = useState<PresetUnit[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
@@ -1361,9 +1362,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
-    const [bk, rc] = await Promise.all([
+    const [bk, rc, unitsRes] = await Promise.all([
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
+      sb.from("preset_units").select("*").order("sort_order"),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
@@ -1396,16 +1398,49 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         })();
       }
     }
-    if (rc.data) setRecipes(rc.data);
+    if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+
+    const rawRecipes = rc.data ?? [];
+    if (rawRecipes.length > 0) {
+      const recipeIds = rawRecipes.map(r => r.id);
+      const { data: ingData } = await sb
+        .from("ingredients")
+        .select("*, preset_units(*)")
+        .in("recipe_id", recipeIds)
+        .order("ingredient_sort");
+      const ingByRecipe = new Map<string, DbIngredient[]>();
+      for (const row of (ingData ?? []) as DbIngredient[]) {
+        const arr = ingByRecipe.get(row.recipe_id) ?? [];
+        arr.push(row);
+        ingByRecipe.set(row.recipe_id, arr);
+      }
+      setRecipes(rawRecipes.map(r => ({ ...r, ingredient_rows: ingByRecipe.get(r.id) ?? [] })));
+    } else {
+      setRecipes([]);
+    }
     setLoading(false);
   }, [bookId]);
 
   useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
+  // Build locale-aware ingredient text from structured rows so the book reader
+  // displays translated unit names (e.g. "g" instead of "กรัม" in EN mode).
+  // Falls back to the raw ingredients text cache for recipes with no rows.
+  const localizedRecipes = useMemo(() => recipes.map(r => {
+    if (!r.ingredient_rows?.length) return r;
+    const lines = r.ingredient_rows.map(row => {
+      const unit = row.preset_units
+        ? (locale === "th" ? row.preset_units.unit_name_th : (row.preset_units.unit_name_en || row.preset_units.unit_name_th))
+        : row.ingredient_unit_flexible;
+      return [row.ingredient_amount, unit, row.ingredient_name].filter(Boolean).join(" ");
+    });
+    return { ...r, ingredients: lines.join("\n") };
+  }), [recipes, locale]);
+
   // ── Slot-based page layout ────────────────────────────────────────
   const { slots, recipeSlotMap, itemsPerPage } = useMemo(
-    () => buildSlots(recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady),
-    [recipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady],
+    () => buildSlots(localizedRecipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady),
+    [localizedRecipes, pageH, pageW, portrait, vwPx, vhPx, fontsReady],
   );
 
   // Book freshness = MAX(book.updated_at, each recipe's own updated_at).
@@ -1515,12 +1550,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "filler": return <PageFiller key={`f-${si}`} density={flipType} />;
       case "recipe-first": return (
         <PageRecipeFirst key={`rf-${slot.recipeIdx}`}
-                         recipe={recipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
+                         recipe={localizedRecipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
                          coverColor={book.cover_color} density={flipType} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
-                        recipe={recipes[slot.recipeIdx]}
+                        recipe={localizedRecipes[slot.recipeIdx]}
                         label="" text={slot.ingText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         variant="ing" showMeta={slot.chunkIdx === 0}
@@ -1532,7 +1567,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
-                        recipe={recipes[slot.recipeIdx]}
+                        recipe={localizedRecipes[slot.recipeIdx]}
                         label="" text={slot.instText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         youtubeUrl={slot.youtubeUrl}
@@ -1543,11 +1578,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
-                             recipe={recipes[slot.recipeIdx]} isRight={isRight} density={flipType} />
+                             recipe={localizedRecipes[slot.recipeIdx]} isRight={isRight} density={flipType} />
       );
       case "recipe-youtube": return (
         <PageRecipeYoutube key={`ryt-${slot.recipeIdx}`}
-                           recipe={recipes[slot.recipeIdx]}
+                           recipe={localizedRecipes[slot.recipeIdx]}
                            youtubeUrl={slot.youtubeUrl}
                            isRight={isRight} pn={si} density={flipType}
                            onPlayVideo={setYtModal} />
@@ -1694,14 +1729,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
       <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
-        <RecipeForm bookId={bookId} inModal
+        <RecipeForm bookId={bookId} inModal presetUnits={presetUnits}
           onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
           onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
         <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title={t.library.editRecipeTitle} disableBackdropClick>
-          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete
+          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits}
             onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
             onCancel={() => setEditRecipeOpen(false)}
             onDeleted={() => { setEditRecipeOpen(false); refreshAndReset(2); }} />
