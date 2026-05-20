@@ -148,9 +148,9 @@ export const en = {
       usage: "Preferences",
     },
     dropdowns: {
-      label: "Units & Categories",
-      sub: "Manage your personal dropdowns for recipe forms",
-      title: "Units & Categories",
+      label: "Dropdown Settings",
+      sub: "Manage your personal units & categories for recipe forms",
+      title: "Dropdown Settings",
       unitsTab: "Units",
       categoriesTab: "Categories",
       nameTh: "Thai Name",
