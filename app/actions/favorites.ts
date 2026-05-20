@@ -30,13 +30,35 @@ export async function toggleFavorite(
     revalidatePath("/");
     return { favorited: false };
   } else {
+    // Assign sort_order = max existing + 1 so new favorites go to the end
+    const { count } = await supabase
+      .from("recipe_favorites")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
     const { error } = await supabase
       .from("recipe_favorites")
-      .insert({ user_id: user.id, recipe_id: recipeId });
+      .insert({ user_id: user.id, recipe_id: recipeId, sort_order: (count ?? 0) + 1 });
     if (error) return { error: error.message };
     revalidatePath("/");
     return { favorited: true };
   }
+}
+
+export async function updateFavoriteOrder(
+  orderedIds: string[],
+): Promise<{ success: true } | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "not_authenticated" };
+  const supabase = await createClient();
+  for (let i = 0; i < orderedIds.length; i++) {
+    await supabase
+      .from("recipe_favorites")
+      .update({ sort_order: i + 1 })
+      .eq("user_id", user.id)
+      .eq("recipe_id", orderedIds[i]);
+  }
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function getFavoriteCount(): Promise<number> {
@@ -56,12 +78,13 @@ export async function getFavoriteRecipes(): Promise<Recipe[]> {
 
   const supabase = await createClient();
 
-  // Get favorite recipe IDs ordered by most recently favorited
+  // Get favorite recipe IDs ordered by user-defined sort_order, fallback to created_at
   const { data: favRows } = await supabase
     .from("recipe_favorites")
-    .select("recipe_id, created_at")
+    .select("recipe_id, created_at, sort_order")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
 
   const recipeIds = (favRows ?? []).map((r: { recipe_id: string }) => r.recipe_id);
   if (recipeIds.length === 0) return [];

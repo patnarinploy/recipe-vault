@@ -1676,9 +1676,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const currentRecipe = recipeIdx >= 0 ? recipes[recipeIdx] ?? null : null;
 
   const handleSort = async (sorted: Recipe[]) => {
-    const { updateRecipeOrder } = await import("@/app/actions/recipes");
-    const res = await updateRecipeOrder(bookId, sorted.map(r => r.id));
-    if ("error" in res) { toast.error(res.error); return; }
+    if (isFavBook) {
+      const { updateFavoriteOrder } = await import("@/app/actions/favorites");
+      const res = await updateFavoriteOrder(sorted.map(r => r.id));
+      if ("error" in res) { toast.error(res.error); return; }
+    } else {
+      const { updateRecipeOrder } = await import("@/app/actions/recipes");
+      const res = await updateRecipeOrder(bookId, sorted.map(r => r.id));
+      if ("error" in res) { toast.error(res.error); return; }
+    }
     toast.success("บันทึกลำดับแล้ว");
     setTocSortOpen(false);
     await refreshAndReset(2);
@@ -1859,6 +1865,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               </>)}
 
               {/* ถูกใจ / เลิกถูกใจ — recipe context, logged-in users */}
+              {/* จัดลำดับสูตรที่ถูกใจ — toc (favorites book only) */}
+              {isFavBook && ctx === "toc" && (
+                <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                  <List className="w-4 h-4 text-muted" /> {t.library.editToc}
+                </button>
+              )}
+
               {ctx === "recipe" && currentRecipe && (
                 <button
                   onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
