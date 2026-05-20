@@ -1,5 +1,12 @@
 [
   {
+    "build": 89,
+    "timestamp": "2026-05-20T20:59:34.000Z",
+    "subject": "fix: favorites reorder — add missing UPDATE RLS policy + move heart ri",
+    "hash": "3deac2f",
+    "category": "fix"
+  },
+  {
     "build": 88,
     "timestamp": "2026-05-20T20:51:22.000Z",
     "subject": "fix: favorites reorder now persists + show heart status in sort modal",
