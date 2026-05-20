@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, BookOpen, Settings, Palette, User, Search, X } from "lucide-react";
+import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart } from "lucide-react";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
@@ -10,6 +10,7 @@ import WriterCard from "./WriterCard";
 import AuthModal from "./AuthModal";
 import type { Book, WriterInfo } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
+import { FAVORITES_BOOK_ID } from "./BookReaderV2";
 
 interface BookWithCounts extends Book {
   recipe_count: number;
@@ -21,9 +22,10 @@ interface Props {
   myBooks: BookWithCounts[];
   publicBooks: BookWithCounts[];
   currentUser: WriterInfo | null;
+  favoriteCount: number;
 }
 
-export default function Library({ myBooks, publicBooks, currentUser }: Props) {
+export default function Library({ myBooks, publicBooks, currentUser, favoriteCount }: Props) {
   const { t } = useLocale();
   const lib = t.library;
 
@@ -125,6 +127,31 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
           </div>
         )}
       </div>
+
+      {/* Favorites virtual book — only shown in "mine" tab for logged-in users */}
+      {tab === "mine" && !isGuest && (
+        <div className="mb-8">
+          <div
+            className="inline-flex items-center gap-3 cursor-pointer group"
+            onClick={() => setOpenBook({ id: FAVORITES_BOOK_ID, isOwner: false })}
+          >
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-transform group-hover:scale-110"
+              style={{ background: "#c0392b" }}
+            >
+              <Heart className="w-5 h-5 text-white" fill="white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground group-hover:text-red-600 transition-colors">
+                {lib.favoritesBook}
+              </p>
+              <p className="text-xs text-muted">
+                {lib.favoritesCount.replace("{n}", String(favoriteCount))}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Grid of books */}
       {books.length === 0 ? (

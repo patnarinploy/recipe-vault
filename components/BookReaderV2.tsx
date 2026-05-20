@@ -12,7 +12,7 @@ import BookCoverEditor from "./BookCoverEditor";
 import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart } from "lucide-react";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
@@ -589,6 +589,42 @@ function AuthorClickButton({ label, onClick }: { label: string; onClick: () => v
   );
 }
 
+// ─── Heart button (stops pageflip from intercepting mousedown) ────
+function HeartClickButton({ recipeId, favorited, label, onToggle }: {
+  recipeId: string; favorited: boolean; label: string; onToggle: (id: string) => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const stop = (e: Event) => { e.stopPropagation(); };
+    el.addEventListener("mousedown", stop);
+    el.addEventListener("touchstart", stop, { passive: true });
+    return () => { el.removeEventListener("mousedown", stop); el.removeEventListener("touchstart", stop); };
+  }, []);
+  return (
+    <button
+      ref={ref}
+      type="button"
+      aria-label={label}
+      onClick={e => { e.stopPropagation(); onToggle(recipeId); }}
+      className="shrink-0 transition-all hover:scale-110 active:scale-95"
+      style={{ lineHeight: 0, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+    >
+      <Heart
+        style={{
+          width: "clamp(12px,2.5vmin,18px)",
+          height: "clamp(12px,2.5vmin,18px)",
+          fill: favorited ? "#e74c3c" : "none",
+          stroke: favorited ? "#e74c3c" : "rgba(255,255,255,0.6)",
+          strokeWidth: 2,
+          transition: "fill 0.15s,stroke 0.15s",
+        }}
+      />
+    </button>
+  );
+}
+
 // ─── Page components ──────────────────────────────────────────────
 const PageCoverFront = forwardRef<HTMLDivElement, { book: Book; publicCount: number; authorName?: string; onAuthorClick?: () => void; lastUpdated?: string }>(({ book, publicCount, authorName, onAuthorClick, lastUpdated }, ref) => {
   const C = book.cover_color;
@@ -676,8 +712,8 @@ PageInsideCover.displayName = "PageInsideCover";
 
 const PageToC = forwardRef<
   HTMLDivElement,
-  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string; density: "soft" | "hard" }
->(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor, density }, ref) => {
+  { recipes: Recipe[]; tocPage: number; itemsPerPage: number; recipeSlotMap: number[]; onNavigate: (pageIdx: number) => void; coverColor: string; density: "soft" | "hard"; favoriteIds?: Set<string>; onToggleFavorite?: (id: string) => void }
+>(({ recipes, tocPage, itemsPerPage, recipeSlotMap, onNavigate, coverColor, density, favoriteIds, onToggleFavorite }, ref) => {
   const { t } = useLocale();
   const navRef = useRef<HTMLElement>(null);
 
@@ -720,20 +756,40 @@ const PageToC = forwardRef<
                 const ri      = start + localIdx;
                 const slotIdx = recipeSlotMap[ri] ?? 0;
                 return (
-                  <button
-                    key={r.id}
-                    onClick={() => onNavigate(slotIdx)}
-                    className="w-full flex items-center gap-1 px-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 active:bg-amber-100 dark:active:bg-amber-950/30 transition-colors text-left"
-                    style={{ fontSize: "clamp(11px,2.2vmin,15px)", paddingTop: "clamp(4px,0.9vmin,7px)", paddingBottom: "clamp(4px,0.9vmin,7px)" }}
-                  >
-                    <span className="shrink-0 truncate max-w-[55%]" style={{ color: "var(--book-ink)" }}>{r.title}</span>
-                    {r.is_public && <ShareBadge coverColor={coverColor} />}
-                    <span className="border-b border-dotted border-stone-300 dark:border-stone-600 flex-1 mx-2" />
-                    <span className="shrink-0 font-mono"
-                          style={{ fontSize: "clamp(9px,1.3vmin,11px)", color: "var(--book-ink-2)" }}>
-                      {String(slotIdx).padStart(2, "0")}
-                    </span>
-                  </button>
+                  <div key={r.id} className="w-full flex items-center gap-1">
+                    <button
+                      onClick={() => onNavigate(slotIdx)}
+                      className="flex-1 min-w-0 flex items-center gap-1 px-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 active:bg-amber-100 dark:active:bg-amber-950/30 transition-colors text-left"
+                      style={{ fontSize: "clamp(11px,2.2vmin,15px)", paddingTop: "clamp(4px,0.9vmin,7px)", paddingBottom: "clamp(4px,0.9vmin,7px)" }}
+                    >
+                      <span className="shrink-0 truncate max-w-[50%]" style={{ color: "var(--book-ink)" }}>{r.title}</span>
+                      {r.is_public && <ShareBadge coverColor={coverColor} />}
+                      {favoriteIds?.has(r.id) && (
+                        <Heart className="shrink-0" style={{ width: "clamp(8px,1.6vmin,12px)", height: "clamp(8px,1.6vmin,12px)", fill: "#e74c3c", stroke: "#e74c3c" }} />
+                      )}
+                      <span className="border-b border-dotted border-stone-300 dark:border-stone-600 flex-1 mx-2" />
+                      <span className="shrink-0 font-mono"
+                            style={{ fontSize: "clamp(9px,1.3vmin,11px)", color: "var(--book-ink-2)" }}>
+                        {String(slotIdx).padStart(2, "0")}
+                      </span>
+                    </button>
+                    {onToggleFavorite && (
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); onToggleFavorite(r.id); }}
+                        onMouseDown={e => e.stopPropagation()}
+                        className="shrink-0 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                        style={{ lineHeight: 0 }}
+                      >
+                        <Heart style={{
+                          width: "clamp(9px,1.8vmin,13px)", height: "clamp(9px,1.8vmin,13px)",
+                          fill: favoriteIds?.has(r.id) ? "#e74c3c" : "none",
+                          stroke: favoriteIds?.has(r.id) ? "#e74c3c" : "var(--book-ink-2)",
+                          strokeWidth: 2, transition: "fill 0.15s,stroke 0.15s",
+                        }} />
+                      </button>
+                    )}
+                  </div>
                 );
               })
           }
@@ -867,8 +923,8 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
 // ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (catObj: PresetCategory | null | undefined) => string }
->(({ recipe: r, pn, coverColor, density, lookupCategory }, ref) => {
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (catObj: PresetCategory | null | undefined) => string; favorited?: boolean; onToggleFavorite?: (id: string) => void; favoriteLabel?: string }
+>(({ recipe: r, pn, coverColor, density, lookupCategory, favorited, onToggleFavorite, favoriteLabel }, ref) => {
   const { t, locale } = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -939,6 +995,14 @@ const PageRecipeFirst = forwardRef<
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
             {r.is_public && <ShareBadge coverColor={coverColor} solid />}
+            {onToggleFavorite && (
+              <HeartClickButton
+                recipeId={r.id}
+                favorited={favorited ?? false}
+                label={favoriteLabel ?? ""}
+                onToggle={onToggleFavorite}
+              />
+            )}
           </div>
 
           <h2 className="font-black leading-[1.28]"
@@ -1290,6 +1354,9 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
   );
 }
 
+// ─── Favorites book ID sentinel ───────────────────────────────────
+export const FAVORITES_BOOK_ID = "__favorites__";
+
 // ─── Props ────────────────────────────────────────────────────────
 interface Props {
   bookId: string;
@@ -1306,6 +1373,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const fabRef  = useRef<HTMLDivElement>(null);
   const { pageW, pageH, portrait, ready, vwPx, vhPx } = usePageDimensions();
 
+  const isFavBook = bookId === FAVORITES_BOOK_ID;
+
   const [book,    setBook]    = useState<Book | null>(null);
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
   const [presetUnits, setPresetUnits] = useState<PresetUnit[]>([]);
@@ -1313,6 +1382,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [ingredientNames, setIngredientNames] = useState<string[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
   const [authorName,  setAuthorName]  = useState("");
   const [writerInfo,       setWriterInfo]       = useState<WriterInfo | null>(null);
@@ -1359,16 +1429,60 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     const sb = createClient();
+
+    // Always load presets + favorite IDs (favorites work for any logged-in user)
+    const [unitsRes, catsRes, favRes] = await Promise.all([
+      sb.from("preset_units").select("*"),
+      sb.from("preset_categories").select("*"),
+      sb.from("recipe_favorites").select("recipe_id").returns<{ recipe_id: string }[]>(),
+    ]);
+    if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+    if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+    setFavoriteIds(new Set((favRes.data ?? []).map(r => r.recipe_id)));
+
+    // ── Favorites virtual book ──────────────────────────────────────
+    if (isFavBook) {
+      const favIds = (favRes.data ?? []).map(r => r.recipe_id);
+      if (favIds.length === 0) {
+        setRecipes([]);
+        setLoading(false);
+        return;
+      }
+      const [recipesRes, ingRes, ingNamesRes] = await Promise.all([
+        sb.from("recipes").select("*, preset_categories!category_id(*)").in("id", favIds).returns<Recipe[]>(),
+        sb.from("ingredients").select("*, preset_units(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
+        sb.from("ingredients").select("ingredient_name"),
+      ]);
+      const ingByRecipe = new Map<string, DbIngredient[]>();
+      for (const row of ingRes.data ?? []) {
+        const arr = ingByRecipe.get(row.recipe_id) ?? [];
+        arr.push(row);
+        ingByRecipe.set(row.recipe_id, arr);
+      }
+      if (ingNamesRes.data) {
+        const unique = [...new Set(ingNamesRes.data.map((r: { ingredient_name: string }) => r.ingredient_name))]
+          .filter(Boolean).sort((a, b) => a.localeCompare(b, "th"));
+        setIngredientNames(unique);
+      }
+      // Preserve the order from recipe_favorites (most recently favorited first)
+      const ordered = favIds
+        .map(id => (recipesRes.data ?? []).find(r => r.id === id))
+        .filter((r): r is Recipe => !!r)
+        .map(r => ({ ...r, ingredient_rows: ingByRecipe.get(r.id) ?? [] }));
+      setRecipes(ordered);
+      setLoading(false);
+      return;
+    }
+
+    // ── Normal book fetch ───────────────────────────────────────────
     let recipeQ = sb.from("recipes").select("*, preset_categories!category_id(*)").eq("book_id", bookId)
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
-    const [bk, rc, unitsRes, ingNamesRes, catsRes] = await Promise.all([
+    const [bk, rc, ingNamesRes] = await Promise.all([
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
-      sb.from("preset_units").select("*"),
       sb.from("ingredients").select("ingredient_name"),
-      sb.from("preset_categories").select("*"),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
@@ -1377,7 +1491,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       if (u) {
         setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
         setWriterStatsLoading(true);
-        // Fire-and-forget: enrich writer card with author stats after main load
         const authorId: string = (bk.data as any).user_id;
         void (async () => {
           try {
@@ -1401,8 +1514,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         })();
       }
     }
-    if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
-    if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
     if (ingNamesRes.data) {
       const unique = [...new Set(ingNamesRes.data.map((r: { ingredient_name: string }) => r.ingredient_name))]
         .filter(Boolean)
@@ -1429,7 +1540,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       setRecipes([]);
     }
     setLoading(false);
-  }, [bookId]);
+  }, [bookId, isFavBook, isOwner]);
 
   useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
@@ -1466,6 +1577,46 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     }
     return ts.length ? ts.reduce((a, b) => (a > b ? a : b)) : undefined;
   }, [book, recipes]);
+
+  // Virtual book for favorites mode
+  const favoritesVirtualBook = useMemo<Book>(() => ({
+    id: FAVORITES_BOOK_ID,
+    user_id: "",
+    title: t.library.favoritesBook,
+    subtitle: null,
+    tagline: t.library.favoritesTagline,
+    cover_color: "#c0392b",
+    created_at: new Date().toISOString(),
+  }), [t.library.favoritesBook, t.library.favoritesTagline]);
+
+  const displayBook = isFavBook ? favoritesVirtualBook : book;
+
+  // ── Handle heart toggle (optimistic update) ────────────────────
+  const handleToggleFavorite = useCallback(async (recipeId: string) => {
+    const { toggleFavorite: doToggle } = await import("@/app/actions/favorites");
+    // Optimistic
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      if (next.has(recipeId)) next.delete(recipeId); else next.add(recipeId);
+      return next;
+    });
+    const res = await doToggle(recipeId);
+    if ("error" in res) {
+      // Revert on error
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        if (next.has(recipeId)) next.delete(recipeId); else next.add(recipeId);
+        return next;
+      });
+      toast.error(res.error);
+      return;
+    }
+    // In favorites book, remove from view when unfavorited
+    if (isFavBook && !res.favorited) {
+      setRecipes(prev => prev.filter(r => r.id !== recipeId));
+    }
+    toast.success(res.favorited ? t.library.favoriteAdded : t.library.favoriteRemoved);
+  }, [isFavBook, t.library.favoriteAdded, t.library.favoriteRemoved]);
 
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
   useEffect(() => {
@@ -1545,7 +1696,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   }, [fetchData, router]);
 
   // ─────────────────────────────────────────────────────────────────
-  if (!ready || loading || !book) return <SkeletonOpenBook pageW={pageW} pageH={pageH} portrait={portrait} />;
+  if (!ready || loading || !displayBook) return <SkeletonOpenBook pageW={pageW} pageH={pageH} portrait={portrait} />;
 
   const bookW   = portrait ? pageW : pageW * 2;
   const flipKey = `${flipType}:${portrait ? "p" : "l"}:${pageW}x${pageH}:${slots.length}:${dataVersion}`;
@@ -1555,19 +1706,23 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     // and page number must always anchor to the right edge of the visible page.
     const isRight = portrait ? true : si % 2 === 0;
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={book} publicCount={recipes.filter(r => r.is_public).length} authorName={authorName} onAuthorClick={writerInfo ? () => setWriterCardOpen(true) : undefined} lastUpdated={bookLastUpdated} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={displayBook} publicCount={isFavBook ? 0 : recipes.filter(r => r.is_public).length} authorName={isFavBook ? undefined : authorName} onAuthorClick={!isFavBook && writerInfo ? () => setWriterCardOpen(true) : undefined} lastUpdated={isFavBook ? undefined : bookLastUpdated} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
                  itemsPerPage={itemsPerPage} recipeSlotMap={recipeSlotMap} onNavigate={goToPage}
-                 coverColor={book.cover_color} density={flipType} />
+                 coverColor={displayBook.cover_color} density={flipType}
+                 favoriteIds={favoriteIds} onToggleFavorite={handleToggleFavorite} />
       );
       case "filler": return <PageFiller key={`f-${si}`} density={flipType} />;
       case "recipe-first": return (
         <PageRecipeFirst key={`rf-${slot.recipeIdx}`}
                          recipe={localizedRecipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
-                         coverColor={book.cover_color} density={flipType}
-                         lookupCategory={lookupCategory} />
+                         coverColor={displayBook.cover_color} density={flipType}
+                         lookupCategory={lookupCategory}
+                         favorited={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "")}
+                         onToggleFavorite={handleToggleFavorite}
+                         favoriteLabel={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "") ? t.library.favoriteRemove : t.library.favoriteAdd} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -1605,7 +1760,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                            isRight={isRight} pn={si} density={flipType}
                            onPlayVideo={setYtModal} />
       );
-      case "back-cover": return <PageBackCover key="cb" book={book} />;
+      case "back-cover": return <PageBackCover key="cb" book={displayBook} />;
     }
   });
 
@@ -1647,8 +1802,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           {fabOpen && (
             <div ref={fabRef} className="anim-scale-in bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
-              {/* owner-only actions */}
-              {isOwner && (<>
+              {/* owner-only actions (not available in favorites virtual book) */}
+              {isOwner && !isFavBook && (<>
                 {/* เพิ่มสูตร — ทุก context */}
                 <button onClick={() => { setFabOpen(false); setNewRecipeOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
@@ -1706,8 +1861,20 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 <div className="border-t border-border my-0.5" />
               </>)}
 
+              {/* ถูกใจ / เลิกถูกใจ — recipe context, logged-in users */}
+              {ctx === "recipe" && currentRecipe && (
+                <button
+                  onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-elevated rounded-xl"
+                  style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}
+                >
+                  <Heart className="w-4 h-4" style={{ fill: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "none", stroke: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "currentColor" }} />
+                  {favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd}
+                </button>
+              )}
+
               {/* ดูการ์ดนักเขียน — cover (non-owner) */}
-              {!isOwner && ctx === "cover" && writerInfo && (
+              {!isOwner && !isFavBook && ctx === "cover" && writerInfo && (
                 <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
                   <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
@@ -1762,7 +1929,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       )}
 
       <Modal open={coverEditorOpen} onClose={() => setCoverEditorOpen(false)} title={t.library.editCoverTitle} maxWidth="max-w-3xl" disableBackdropClick>
-        <BookCoverEditor book={book} inModal
+        <BookCoverEditor book={book ?? undefined} inModal
           onSuccess={() => { setCoverEditorOpen(false); refreshAndReset(currentPage); }}
           onCancel={() => setCoverEditorOpen(false)} />
       </Modal>
@@ -1772,7 +1939,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         open={tocSortOpen}
         onClose={() => setTocSortOpen(false)}
         onSave={handleSort}
-        coverColor={book.cover_color}
+        coverColor={displayBook.cover_color}
         t={t}
         lookupCategory={lookupCategory}
       />
