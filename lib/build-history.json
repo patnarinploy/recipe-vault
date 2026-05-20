@@ -1,5 +1,12 @@
 [
   {
+    "build": 79,
+    "timestamp": "2026-05-20T19:42:31.000Z",
+    "subject": "feat: add favorites system — heart recipes, virtual Favorites book",
+    "hash": "b7d762c",
+    "category": "feat"
+  },
+  {
     "build": 78,
     "timestamp": "2026-05-20T17:35:59.000Z",
     "subject": "Force light theme for guest users, ignore stale localStorage",
