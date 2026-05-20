@@ -28,20 +28,11 @@ function TierRow({ entry, label, condition, specialLabel }: {
   specialLabel: string;
 }) {
   const tierLabel = entry.tier === "special" ? specialLabel : TIER_LABELS[entry.tier];
-  const tierColor = entry.tier === "special"
-    ? "text-rose-600 bg-rose-50 dark:bg-rose-900/20"
-    : [
-        "",
-        "text-muted bg-elevated",
-        "text-sky-600 bg-sky-50 dark:bg-sky-900/20",
-        "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
-        "text-violet-600 bg-violet-50 dark:bg-violet-900/20",
-        "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
-      ][entry.tier as number];
+  const tierColor = entry.tier === "special" ? SPECIAL_BADGE_COLOR : TIER_BADGE_COLORS[entry.tier];
 
   return (
     <div className="flex items-center gap-3 px-5 py-3.5">
-      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${tierColor}`}>
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 border ${tierColor}`}>
         {tierLabel}
       </span>
       <div className="flex-1 min-w-0">

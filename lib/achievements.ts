@@ -16,14 +16,14 @@ export type AchievementResult = {
 };
 
 export const TIER_BADGE_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-600",
-  2: "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800",
-  3: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
-  4: "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800",
-  5: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+  1: "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-200 border border-stone-200 dark:border-stone-600",
+  2: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-200 border border-sky-200 dark:border-sky-700",
+  3: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700",
+  4: "bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-200 border border-violet-200 dark:border-violet-700",
+  5: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700",
 };
 
-export const SPECIAL_BADGE_COLOR = "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800";
+export const SPECIAL_BADGE_COLOR = "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-700";
 
 const BOOK_TITLES: Array<{ min: number; id: string; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
   { min: 10, id: "book-5", label: "ศาสดาแห่งชั้นหนังสือ", emoji: "📚", tier: 5 },
