@@ -1,5 +1,12 @@
 [
   {
+    "build": 85,
+    "timestamp": "2026-05-20T20:42:18.000Z",
+    "subject": "fix: heart in TOC and recipe cover is display-only, remove toggle button",
+    "hash": "2ab3ddf",
+    "category": "fix"
+  },
+  {
     "build": 84,
     "timestamp": "2026-05-20T20:38:12.000Z",
     "subject": "chore: remove global dropdown management from admin panel",

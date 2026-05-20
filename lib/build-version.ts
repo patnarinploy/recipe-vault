@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 84;
-export const BUILD_TIMESTAMP = "2026-05-20T20:38:12.000Z";
-export const BUILD_TOOLTIP   = "chore: remove global dropdown management from admin panel";
+export const BUILD_NUMBER    = 85;
+export const BUILD_TIMESTAMP = "2026-05-20T20:42:18.000Z";
+export const BUILD_TOOLTIP   = "fix: heart in TOC and recipe cover is display-only, remove toggle button";
