@@ -1,5 +1,12 @@
 [
   {
+    "build": 74,
+    "timestamp": "2026-05-20T13:37:34.000Z",
+    "subject": "Fix reading prefs not applying on first load from new device",
+    "hash": "b05f05f",
+    "category": "fix"
+  },
+  {
     "build": 73,
     "timestamp": "2026-05-20T11:17:29.000Z",
     "subject": "Soft-delete for presets + reading settings DB sync",

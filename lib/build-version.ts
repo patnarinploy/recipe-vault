@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 73;
-export const BUILD_TIMESTAMP = "2026-05-20T11:17:29.000Z";
-export const BUILD_TOOLTIP   = "Soft-delete for presets + reading settings DB sync";
+export const BUILD_NUMBER    = 74;
+export const BUILD_TIMESTAMP = "2026-05-20T13:37:34.000Z";
+export const BUILD_TOOLTIP   = "Fix reading prefs not applying on first load from new device";
