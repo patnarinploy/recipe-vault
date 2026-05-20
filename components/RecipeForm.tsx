@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { type Recipe } from "@/lib/types";
+import { type Recipe, type PresetUnit, type PresetIngredient, type DbIngredient } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
@@ -35,7 +35,7 @@ function ytVideoId(url: string): string | null {
   return m?.[1] ?? null;
 }
 
-interface IngredientRow { id: string; name: string; amount: string; unit: string; }
+interface IngredientRow { id: string; name: string; amount: string; unitId: string | null; unitFlex: string; unitDisplay: string; }
 interface InstructionStep { id: string; text: string; image_url: string | null; }
 
 // ─── Generic searchable + creatable combobox ──────────────────────
@@ -192,34 +192,38 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
 
 // ─── Parsers ─────────────────────────────────────────────────────
 function parseIngredients(text: string): IngredientRow[] {
-  if (!text.trim()) return [{ id: uid(), name: "", amount: "", unit: "" }];
+  if (!text.trim()) return [{ id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }];
   return text.split("\n").filter(l => l.trim()).map(line => {
     const cleaned = line.trim().replace(/^[\d]+[.)]\s*|^[-•*]\s*/, "");
     const parts = cleaned.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { id: uid(), name: cleaned, amount: "", unit: "" };
+    if (parts.length === 0) return { id: uid(), name: cleaned, amount: "", unitId: null, unitFlex: "", unitDisplay: "" };
 
     const last = parts[parts.length - 1];
     const secondToLast = parts.length >= 2 ? parts[parts.length - 2] : null;
 
+    function makeRow(name: string, amount: string, unitDisplay: string): IngredientRow {
+      return { id: uid(), name, amount, unitId: null, unitFlex: unitDisplay, unitDisplay };
+    }
+
     // Known unit at end
     const knownUnit = PARSE_UNITS.find(u => last === u);
     if (knownUnit) {
-      if (parts.length >= 3) return { id: uid(), name: parts.slice(0, -2).join(" "), amount: parts[parts.length - 2], unit: knownUnit };
-      if (parts.length === 2) return { id: uid(), name: "", amount: parts[0], unit: knownUnit };
-      return { id: uid(), name: cleaned, amount: "", unit: knownUnit };
+      if (parts.length >= 3) return makeRow(parts.slice(0, -2).join(" "), parts[parts.length - 2], knownUnit);
+      if (parts.length === 2) return makeRow("", parts[0], knownUnit);
+      return makeRow(cleaned, "", knownUnit);
     }
 
     // Custom unit: last is non-number, second-to-last is number
     if (secondToLast && NUM_RE.test(secondToLast) && !NUM_RE.test(last) && parts.length >= 3) {
-      return { id: uid(), name: parts.slice(0, -2).join(" "), amount: secondToLast, unit: last };
+      return makeRow(parts.slice(0, -2).join(" "), secondToLast, last);
     }
 
     // Name + amount only: last token is a number
     if (NUM_RE.test(last) && parts.length >= 2) {
-      return { id: uid(), name: parts.slice(0, -1).join(" "), amount: last, unit: "" };
+      return makeRow(parts.slice(0, -1).join(" "), last, "");
     }
 
-    return { id: uid(), name: cleaned, amount: "", unit: "" };
+    return makeRow(cleaned, "", "");
   });
 }
 
@@ -264,6 +268,8 @@ interface Props {
   onDeleted?: () => void;
   inModal?: boolean;
   showDelete?: boolean;
+  presetUnits?: PresetUnit[];
+  presetIngredients?: PresetIngredient[];
 }
 
 export default function RecipeForm({
@@ -274,6 +280,8 @@ export default function RecipeForm({
   onDeleted,
   inModal,
   showDelete,
+  presetUnits = [],
+  presetIngredients = [],
 }: Props) {
   const { t, locale } = useLocale();
   const r = t.recipe;
@@ -283,12 +291,30 @@ export default function RecipeForm({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
 
-  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(
-    () => parseIngredients(recipe?.ingredients ?? "").map(row => ({
+  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => {
+    // Primary path: structured rows from DB
+    if (recipe?.ingredient_rows && recipe.ingredient_rows.length > 0) {
+      return recipe.ingredient_rows.map((row: DbIngredient) => {
+        const unitDisplay = row.preset_units
+          ? (locale === "th" ? row.preset_units.unit_name_th : row.preset_units.unit_name_en)
+          : row.ingredient_unit_flexible;
+        return {
+          id: uid(),
+          name: row.ingredient_name,
+          amount: row.ingredient_amount,
+          unitId: row.ingredient_unit_id,
+          unitFlex: row.ingredient_unit_flexible,
+          unitDisplay,
+        };
+      });
+    }
+    // Fallback: parse text blob for backward compat
+    return parseIngredients(recipe?.ingredients ?? "").map(row => ({
       ...row,
-      unit: translateUnit(row.unit, locale),
-    }))
-  );
+      unitDisplay: translateUnit(row.unitFlex, locale),
+      unitFlex: translateUnit(row.unitFlex, locale),
+    }));
+  });
   const [instructionSteps, setInstructionSteps] = useState<InstructionStep[]>(
     () => parseInstructions(recipe?.instructions ?? "")
   );
@@ -304,10 +330,28 @@ export default function RecipeForm({
     recipe_youtube: recipe?.youtube_url ?? extractRecipeYoutube(recipe?.instructions ?? ""),
   });
 
-  function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unit: "" }]); }
+  // Locale-mapped options for comboboxes
+  const presetUnitOptions = presetUnits.map(u => locale === "th" ? u.unit_name_th : u.unit_name_en);
+  const presetIngredientOptions = presetIngredients.map(pi => locale === "th" ? pi.name_th : (pi.name_en ?? pi.name_th));
+
+  function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
   function removeRow(i: number) { setIngredientRows(r => r.filter((_, idx) => idx !== i)); }
-  function updateRow(i: number, field: keyof Omit<IngredientRow, "id">, value: string) {
+  function updateRow(i: number, field: "amount", value: string) {
     setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+  }
+  function updateRowUnit(i: number, displayValue: string) {
+    const matched = presetUnits.find(u =>
+      (locale === "th" ? u.unit_name_th : u.unit_name_en) === displayValue
+    );
+    setIngredientRows(r => r.map((row, idx) => idx === i ? {
+      ...row,
+      unitId: matched ? matched.id : null,
+      unitFlex: matched ? "" : displayValue,
+      unitDisplay: displayValue,
+    } : row));
+  }
+  function updateRowName(i: number, displayValue: string) {
+    setIngredientRows(r => r.map((row, idx) => idx === i ? { ...row, name: displayValue } : row));
   }
 
   function addStep() { setInstructionSteps(s => [...s, { id: uid(), text: "", image_url: null }]); }
@@ -324,9 +368,16 @@ export default function RecipeForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const ingredientsText = ingredientRows
-      .filter(r => r.name.trim())
-      .map(r => [r.name.trim(), r.amount.trim(), r.unit.trim()].filter(Boolean).join(" "))
+    const validRows = ingredientRows.filter(row => row.name.trim());
+
+    // Build text cache: "name amount unitTh" per line
+    const ingredientsText = validRows
+      .map(row => {
+        const unitText = row.unitId
+          ? (presetUnits.find(u => u.id === row.unitId)?.unit_name_th ?? row.unitDisplay)
+          : row.unitFlex || row.unitDisplay;
+        return [row.name.trim(), row.amount.trim(), unitText.trim()].filter(Boolean).join(" ");
+      })
       .join("\n");
 
     const validSteps = instructionSteps.filter(s => s.text.trim());
@@ -344,10 +395,18 @@ export default function RecipeForm({
       }))
     );
 
+    const structuredRows = validRows.map(row => ({
+      name: row.name.trim(),
+      amount: row.amount.trim(),
+      unitId: row.unitId,
+      unitFlex: row.unitId ? "" : (row.unitFlex || row.unitDisplay),
+    }));
+
     const basePayload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
-      ingredients: ingredientsText,
+      ingredientsText,
+      ingredientRows: structuredRows,
       instructions: instructionsJson,
       category: form.category || null,
       cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
@@ -465,8 +524,8 @@ export default function RecipeForm({
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div>
                       <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientName}</p>
-                      <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                        placeholder={r.ingredientName} className={inputCls} />
+                      <Combobox value={row.name} onChange={v => updateRowName(i, v)}
+                        options={presetIngredientOptions} placeholder={r.ingredientName} className={inputCls} wrapperClass="w-full" />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
@@ -476,7 +535,7 @@ export default function RecipeForm({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientUnit}</p>
-                        <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={r.units as unknown as readonly string[]} placeholder={r.unspecifiedUnit} className={inputCls} wrapperClass="w-full" />
+                        <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} className={inputCls} wrapperClass="w-full" />
                       </div>
                     </div>
                   </div>
@@ -490,11 +549,11 @@ export default function RecipeForm({
                 {/* Desktop */}
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
                   <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
-                  <input value={row.name} onChange={e => updateRow(i, "name", e.target.value)}
-                    placeholder={r.ingredientName} className={inputCls} />
+                  <Combobox value={row.name} onChange={v => updateRowName(i, v)}
+                    options={presetIngredientOptions} placeholder={r.ingredientName} className={inputCls} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
-                  <Combobox value={row.unit} onChange={v => updateRow(i, "unit", v)} options={r.units as unknown as readonly string[]} placeholder={r.unspecifiedUnit} className={inputCls} />
+                  <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} className={inputCls} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />

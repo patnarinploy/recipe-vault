@@ -1,3 +1,28 @@
+export type PresetUnit = {
+  id: string;
+  unit_name_th: string;
+  unit_name_en: string;
+  sort_order: number;
+};
+
+export type PresetIngredient = {
+  id: string;
+  name_th: string;
+  name_en: string | null;
+  sort_order: number;
+};
+
+export type DbIngredient = {
+  id: string;
+  recipe_id: string;
+  ingredient_name: string;
+  ingredient_amount: string;
+  ingredient_unit_id: string | null;
+  ingredient_unit_flexible: string;
+  ingredient_sort: number;
+  preset_units: PresetUnit | null;
+};
+
 export type Recipe = {
   id: string;
   user_id: string;
@@ -15,6 +40,7 @@ export type Recipe = {
   created_at: string;
   updated_at?: string;
   sort_order: number | null;
+  ingredient_rows?: DbIngredient[];
 };
 
 export type Book = {

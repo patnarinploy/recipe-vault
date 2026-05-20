@@ -4,10 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import type { Recipe } from "@/lib/types";
 
+type IngredientRowInput = {
+  name: string;
+  amount: string;
+  unitId: string | null;
+  unitFlex: string;
+};
+
 type RecipePayload = {
   title: string;
   description: string | null;
-  ingredients: string;
+  ingredientsText: string;
+  ingredientRows: IngredientRowInput[];
   instructions: string;
   image_url: string | null;
   youtube_url: string | null;
@@ -35,14 +43,30 @@ export async function createRecipe(
 
   if (!book || book.user_id !== user.id) return { error: "ไม่มีสิทธิ์เพิ่มสูตรในเล่มนี้" };
 
+  const { ingredientRows, ingredientsText, ...recipeFields } = payload;
+
   const { data, error } = await supabase
     .from("recipes")
-    .insert({ ...payload, user_id: user.id })
+    .insert({ ...recipeFields, ingredients: ingredientsText, user_id: user.id })
     .select("id")
     .single();
 
   if (error) return { error: error.message };
-  return { id: data.id };
+
+  const recipeId = data.id;
+  if (ingredientRows.length > 0) {
+    const rows = ingredientRows.map((r, idx) => ({
+      recipe_id: recipeId,
+      ingredient_name: r.name,
+      ingredient_amount: r.amount,
+      ingredient_unit_id: r.unitId ?? null,
+      ingredient_unit_flexible: r.unitFlex,
+      ingredient_sort: idx + 1,
+    }));
+    await supabase.from("ingredients").insert(rows);
+  }
+
+  return { id: recipeId };
 }
 
 export async function updateRecipe(
@@ -64,8 +88,34 @@ export async function updateRecipe(
     return { error: "ไม่มีสิทธิ์แก้ไขสูตรนี้" };
   }
 
-  const { error } = await supabase.from("recipes").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", id);
+  const { ingredientRows, ingredientsText, ...recipeFields } = payload;
+
+  const updateData: Record<string, unknown> = {
+    ...recipeFields,
+    updated_at: new Date().toISOString(),
+  };
+  if (ingredientsText !== undefined) {
+    updateData.ingredients = ingredientsText;
+  }
+
+  const { error } = await supabase.from("recipes").update(updateData).eq("id", id);
   if (error) return { error: error.message };
+
+  if (ingredientRows !== undefined) {
+    await supabase.from("ingredients").delete().eq("recipe_id", id);
+    if (ingredientRows.length > 0) {
+      const rows = ingredientRows.map((r, idx) => ({
+        recipe_id: id,
+        ingredient_name: r.name,
+        ingredient_amount: r.amount,
+        ingredient_unit_id: r.unitId ?? null,
+        ingredient_unit_flexible: r.unitFlex,
+        ingredient_sort: idx + 1,
+      }));
+      await supabase.from("ingredients").insert(rows);
+    }
+  }
+
   return { id };
 }
 
