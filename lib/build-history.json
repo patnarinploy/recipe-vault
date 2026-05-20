@@ -1,5 +1,12 @@
 [
   {
+    "build": 56,
+    "timestamp": "2026-05-20T05:21:57.000Z",
+    "subject": "fix: WriterCard dark mode — card surface, role badges, tier 1 badge",
+    "hash": "27a8d57",
+    "category": "fix"
+  },
+  {
     "build": 55,
     "timestamp": "2026-05-19T19:53:01.000Z",
     "subject": "improve: set Noto Sans Thai as default reading font; replace ban icon",
