@@ -1,5 +1,12 @@
 [
   {
+    "build": 57,
+    "timestamp": "2026-05-20T05:38:01.000Z",
+    "subject": "fix: achievement badge dark mode contrast — unified color system",
+    "hash": "75f135f",
+    "category": "fix"
+  },
+  {
     "build": 56,
     "timestamp": "2026-05-20T05:21:57.000Z",
     "subject": "fix: WriterCard dark mode — card surface, role badges, tier 1 badge",
