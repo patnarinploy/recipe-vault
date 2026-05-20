@@ -1,5 +1,12 @@
 [
   {
+    "build": 82,
+    "timestamp": "2026-05-20T20:23:57.000Z",
+    "subject": "fix: mobile-friendly edit/add layout in dropdown settings",
+    "hash": "df9ba5b",
+    "category": "fix"
+  },
+  {
     "build": 81,
     "timestamp": "2026-05-20T20:15:49.000Z",
     "subject": "fix: settings dropdowns icon/wording + migrate global presets to patnari",
