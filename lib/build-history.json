@@ -1,5 +1,12 @@
 [
   {
+    "build": 64,
+    "timestamp": "2026-05-20T07:04:49.000Z",
+    "subject": "fix: add new book dashed border uses outline token so it's visible in li",
+    "hash": "7b898fc",
+    "category": "fix"
+  },
+  {
     "build": 63,
     "timestamp": "2026-05-20T06:40:18.000Z",
     "subject": "feat: translate units and categories based on active locale",
