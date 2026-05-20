@@ -1,5 +1,12 @@
 [
   {
+    "build": 73,
+    "timestamp": "2026-05-20T11:17:29.000Z",
+    "subject": "Soft-delete for presets + reading settings DB sync",
+    "hash": "8e3fbdd",
+    "category": "internal"
+  },
+  {
     "build": 72,
     "timestamp": "2026-05-20T10:43:05.000Z",
     "subject": "refactor: replace recipes.category text with category_id FK to preset_ca",

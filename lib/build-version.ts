@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 72;
-export const BUILD_TIMESTAMP = "2026-05-20T10:43:05.000Z";
-export const BUILD_TOOLTIP   = "refactor: replace recipes.category text with category_id FK to preset_ca";
+export const BUILD_NUMBER    = 73;
+export const BUILD_TIMESTAMP = "2026-05-20T11:17:29.000Z";
+export const BUILD_TOOLTIP   = "Soft-delete for presets + reading settings DB sync";
