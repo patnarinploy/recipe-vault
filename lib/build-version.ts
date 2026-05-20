@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 86;
-export const BUILD_TIMESTAMP = "2026-05-20T20:45:28.000Z";
-export const BUILD_TOOLTIP   = "feat: reorder favorites in TOC via drag-and-drop or up/down buttons";
+export const BUILD_NUMBER    = 87;
+export const BUILD_TIMESTAMP = "2026-05-20T20:47:32.000Z";
+export const BUILD_TOOLTIP   = "fix: heart button color and position in FAB menu";

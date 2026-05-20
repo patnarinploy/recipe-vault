@@ -1,5 +1,12 @@
 [
   {
+    "build": 87,
+    "timestamp": "2026-05-20T20:47:32.000Z",
+    "subject": "fix: heart button color and position in FAB menu",
+    "hash": "774b33f",
+    "category": "fix"
+  },
+  {
     "build": 86,
     "timestamp": "2026-05-20T20:45:28.000Z",
     "subject": "feat: reorder favorites in TOC via drag-and-drop or up/down buttons",
