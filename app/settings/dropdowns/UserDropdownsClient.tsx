@@ -92,30 +92,32 @@ function PresetsTable({
         )}
 
         {items.map(item => (
-          <div key={item.id}
-               className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 border-b border-border last:border-0 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+          <div key={item.id} className="border-b border-border last:border-0">
             {editing?.id === item.id ? (
-              <>
+              <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
                 <input value={editing.nameTh}
                   onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
-                  className="border border-orange-300 rounded-lg px-2 py-1 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                  autoFocus />
+                  placeholder={thLabel}
+                  className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                  autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
                 <input value={editing.nameEn}
                   onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
-                  className="border border-orange-300 rounded-lg px-2 py-1 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
-                <div className="flex gap-1 justify-end">
+                  placeholder={enLabel}
+                  className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                  onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+                <div className="flex gap-2 pt-1">
                   <button onClick={saveEdit} disabled={pending}
-                          className="p-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                    <Check className="w-3.5 h-3.5" />
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                    <Check className="w-4 h-4" /> บันทึก
                   </button>
                   <button onClick={() => setEditing(null)}
-                          className="p-1.5 rounded-lg text-muted hover:bg-elevated transition-colors">
-                    <X className="w-3.5 h-3.5" />
+                          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+                    ยกเลิก
                   </button>
                 </div>
-              </>
+              </div>
             ) : (
-              <>
+              <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm text-foreground truncate">{item.nameTh}</span>
                   {!item.isActive && (
@@ -144,29 +146,29 @@ function PresetsTable({
                     {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
         ))}
 
         {adding && (
-          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
+          <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
             <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
               placeholder={thLabel}
-              className="border border-orange-300 rounded-lg px-2 py-1 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
               autoFocus onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
             <input value={newRow.nameEn} onChange={e => setNewRow(v => ({ ...v, nameEn: e.target.value }))}
               placeholder={enLabel}
-              className="border border-orange-300 rounded-lg px-2 py-1 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
               onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
-            <div className="flex gap-1 justify-end">
+            <div className="flex gap-2 pt-1">
               <button onClick={saveNew} disabled={pending}
-                      className="p-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                <Check className="w-3.5 h-3.5" />
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                <Check className="w-4 h-4" /> บันทึก
               </button>
               <button onClick={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "" }); }}
-                      className="p-1.5 rounded-lg text-muted hover:bg-elevated transition-colors">
-                <X className="w-3.5 h-3.5" />
+                      className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+                ยกเลิก
               </button>
             </div>
           </div>
