@@ -1,5 +1,12 @@
 [
   {
+    "build": 65,
+    "timestamp": "2026-05-20T09:11:38.000Z",
+    "subject": "feat: wire ingredient_rows into BookReaderV2 for locale-aware unit displ",
+    "hash": "aa6fe96",
+    "category": "feat"
+  },
+  {
     "build": 64,
     "timestamp": "2026-05-20T07:04:49.000Z",
     "subject": "fix: add new book dashed border uses outline token so it's visible in li",
