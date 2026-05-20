@@ -15,14 +15,17 @@ const Ctx = createContext<ThemeCtx>({ theme: "system", setTheme: () => {}, resol
 // Exported so layout.tsx can embed it as an inline <script>.
 export const THEME_SCRIPT = `try{var t=localStorage.getItem("rv_theme")||"system";if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolved, setResolved] = useState<"light" | "dark">("light");
+function readStoredTheme(): Theme {
+  if (typeof window === "undefined") return "system";
+  const stored = localStorage.getItem("rv_theme") as Theme | null;
+  return (stored === "system" || stored === "light" || stored === "dark") ? stored : "system";
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem("rv_theme") as Theme | null;
-    if (stored === "system" || stored === "light" || stored === "dark") setThemeState(stored);
-  }, []);
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  // Read localStorage synchronously so the initial state matches THEME_SCRIPT's output.
+  // Avoids the double-render (system → stored) that caused a flash.
+  const [theme, setThemeState] = useState<Theme>(readStoredTheme);
+  const [resolved, setResolved] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     const root = document.documentElement;
