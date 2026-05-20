@@ -1,5 +1,12 @@
 [
   {
+    "build": 90,
+    "timestamp": "2026-05-20T21:04:29.000Z",
+    "subject": "fix: stay on current page after saving TOC sort order",
+    "hash": "88eee90",
+    "category": "fix"
+  },
+  {
     "build": 89,
     "timestamp": "2026-05-20T20:59:34.000Z",
     "subject": "fix: favorites reorder — add missing UPDATE RLS policy + move heart ri",

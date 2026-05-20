@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 89;
-export const BUILD_TIMESTAMP = "2026-05-20T20:59:34.000Z";
-export const BUILD_TOOLTIP   = "fix: favorites reorder — add missing UPDATE RLS policy + move heart ri";
+export const BUILD_NUMBER    = 90;
+export const BUILD_TIMESTAMP = "2026-05-20T21:04:29.000Z";
+export const BUILD_TOOLTIP   = "fix: stay on current page after saving TOC sort order";
