@@ -18,7 +18,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
   const showPresence = "last_seen" in info;
 
   return (
-    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-amber-950/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/30 text-center">
+    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-stone-800 dark:via-stone-800 dark:to-stone-800 rounded-2xl p-6 border border-orange-100 dark:border-stone-700 text-center">
 
       {onClose && (
         <button
@@ -35,7 +35,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
       <div className="flex justify-center mb-4">
         <div className="relative">
           <div
-            className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white dark:border-white/20 shadow-md overflow-hidden"
+            className="w-20 h-20 rounded-full flex items-center justify-center border-4 border-white dark:border-stone-600 shadow-md overflow-hidden"
             style={{ background: isUrl ? "#f5f5f4" : "#f97316" }}
           >
             {isUrl ? (
@@ -64,7 +64,7 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
         </div>
       )}
 
-      <div className="w-10 h-px bg-orange-200 dark:bg-orange-800/40 mx-auto mt-4 mb-4" />
+      <div className="w-10 h-px bg-orange-200 dark:bg-stone-600/60 mx-auto mt-4 mb-4" />
 
       {/* Bio */}
       {info.bio && (
