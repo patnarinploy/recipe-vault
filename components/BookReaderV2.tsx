@@ -1569,7 +1569,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       case "recipe-first": return (
         <PageRecipeFirst key={`rf-${slot.recipeIdx}`}
                          recipe={localizedRecipes[slot.recipeIdx]} ingText={slot.ingText} pn={si}
-                         coverColor={book.cover_color} density={flipType} />
+                         coverColor={book.cover_color} density={flipType}
+                         lookupCategory={lookupCategory} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -1581,7 +1582,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         instFirstChunk={slot.instFirstChunk}
                         instFirstStepImages={slot.instFirstStepImages}
                         youtubeUrl={slot.youtubeUrl}
-                        onPlayVideo={setYtModal} />
+                        onPlayVideo={setYtModal}
+                        lookupCategory={lookupCategory} />
       );
       case "recipe-inst": return (
         <PageRecipeCont key={`rinst-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -1592,7 +1594,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         stepImages={slot.stepImages}
                         variant="inst" showMeta={slot.showMeta ?? false}
                         showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)}
-                        onPlayVideo={setYtModal} />
+                        onPlayVideo={setYtModal}
+                        lookupCategory={lookupCategory} />
       );
       case "recipe-wm": return (
         <PageRecipeWatermark key={`rw-${slot.recipeIdx}`}
