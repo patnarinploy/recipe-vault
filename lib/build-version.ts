@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 58;
-export const BUILD_TIMESTAMP = "2026-05-20T05:49:00.000Z";
-export const BUILD_TOOLTIP   = "fix: achievement badge dark mode — solid *-800 bg instead of *-900/60 ";
+export const BUILD_NUMBER    = 59;
+export const BUILD_TIMESTAMP = "2026-05-20T05:58:18.000Z";
+export const BUILD_TOOLTIP   = "fix: add lib/** to Tailwind content scan so badge dark: classes are incl";

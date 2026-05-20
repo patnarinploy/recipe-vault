@@ -1,5 +1,12 @@
 [
   {
+    "build": 59,
+    "timestamp": "2026-05-20T05:58:18.000Z",
+    "subject": "fix: add lib/** to Tailwind content scan so badge dark: classes are incl",
+    "hash": "e484157",
+    "category": "fix"
+  },
+  {
     "build": 58,
     "timestamp": "2026-05-20T05:49:00.000Z",
     "subject": "fix: achievement badge dark mode — solid *-800 bg instead of *-900/60 ",
