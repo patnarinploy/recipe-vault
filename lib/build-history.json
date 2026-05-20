@@ -1,5 +1,12 @@
 [
   {
+    "build": 91,
+    "timestamp": "2026-05-20T21:24:10.000Z",
+    "subject": "feat: add shopping list (Feature #3 Phase 1)",
+    "hash": "d7bf3a2",
+    "category": "feat"
+  },
+  {
     "build": 90,
     "timestamp": "2026-05-20T21:04:29.000Z",
     "subject": "fix: stay on current page after saving TOC sort order",
