@@ -1250,7 +1250,7 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
 PageBackCover.displayName = "PageBackCover";
 
 // ─── TOC Sort Modal ───────────────────────────────────────────────
-function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCategory }: {
+function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCategory, favoriteIds }: {
   recipes: Recipe[];
   open: boolean;
   onClose: () => void;
@@ -1258,6 +1258,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
   coverColor: string;
   t: Dict;
   lookupCategory: (catObj: PresetCategory | null | undefined) => string;
+  favoriteIds?: Set<string>;
 }) {
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
@@ -1300,6 +1301,9 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
                 <GripVertical className="toc-drag-handle w-4 h-4 text-muted shrink-0 cursor-grab active:cursor-grabbing" />
                 <span className="w-5 text-center text-xs text-muted font-mono shrink-0">{i + 1}</span>
                 <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
+                {favoriteIds?.has(r.id) && (
+                  <Heart className="shrink-0 w-3.5 h-3.5" style={{ fill: "#e74c3c", stroke: "#e74c3c" }} />
+                )}
                 {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.preset_categories && (
                   <span className="text-[10px] text-muted shrink-0 hidden sm:block">{lookupCategory(r.preset_categories)}</span>
@@ -1410,7 +1414,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     const sb = createClient();
 
     // Fetch favorite IDs (always, for heart buttons)
-    const favRes = await sb.from("recipe_favorites").select("recipe_id").returns<{ recipe_id: string }[]>();
+    const favRes = await sb
+      .from("recipe_favorites")
+      .select("recipe_id, sort_order")
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true })
+      .returns<{ recipe_id: string; sort_order: number | null }[]>();
     setFavoriteIds(new Set((favRes.data ?? []).map(r => r.recipe_id)));
 
     // ── Favorites virtual book ──────────────────────────────────────
@@ -1961,6 +1970,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         coverColor={displayBook.cover_color}
         t={t}
         lookupCategory={lookupCategory}
+        favoriteIds={favoriteIds}
       />
 
       {writerInfo && (
