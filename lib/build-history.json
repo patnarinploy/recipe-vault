@@ -1,5 +1,12 @@
 [
   {
+    "build": 58,
+    "timestamp": "2026-05-20T05:49:00.000Z",
+    "subject": "fix: achievement badge dark mode — solid *-800 bg instead of *-900/60 ",
+    "hash": "5b66bb9",
+    "category": "fix"
+  },
+  {
     "build": 57,
     "timestamp": "2026-05-20T05:38:01.000Z",
     "subject": "fix: achievement badge dark mode contrast — unified color system",

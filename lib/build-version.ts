@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 57;
-export const BUILD_TIMESTAMP = "2026-05-20T05:38:01.000Z";
-export const BUILD_TOOLTIP   = "fix: achievement badge dark mode contrast — unified color system";
+export const BUILD_NUMBER    = 58;
+export const BUILD_TIMESTAMP = "2026-05-20T05:49:00.000Z";
+export const BUILD_TOOLTIP   = "fix: achievement badge dark mode — solid *-800 bg instead of *-900/60 ";
