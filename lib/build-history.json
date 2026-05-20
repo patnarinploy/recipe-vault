@@ -1,5 +1,12 @@
 [
   {
+    "build": 61,
+    "timestamp": "2026-05-20T06:07:48.000Z",
+    "subject": "fix: reading font grid 1-col on mobile so preview text fits on one line",
+    "hash": "b3ae898",
+    "category": "fix"
+  },
+  {
     "build": 60,
     "timestamp": "2026-05-20T06:06:11.000Z",
     "subject": "feat: open WriterCard modal from top-right dropdown identity block",
