@@ -9,6 +9,7 @@ import Heartbeat from "@/components/Heartbeat";
 import { ThemeProvider, THEME_SCRIPT } from "@/lib/theme";
 import { LocaleProvider } from "@/lib/locale";
 import { ReadingFontProvider } from "@/lib/reading-font-context";
+import { READING_FONTS } from "@/lib/reading-fonts";
 
 const sarabun = Sarabun({
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -78,6 +79,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // so it unlocks immediately after the server action calls revalidatePath.
   const isOnboarding = !!user && !user.onboarding_complete;
 
+  // Build a script that syncs DB reading preferences into localStorage/cookies
+  // BEFORE the theme script runs, so first paint is correct on new devices.
+  // Values are whitelist-validated to prevent script injection.
+  const prefs = (user?.preferences as Record<string, string>) ?? {};
+  const validTheme  = ["light", "dark", "system"].includes(prefs.theme)          ? prefs.theme          : null;
+  const validLocale = ["th", "en"].includes(prefs.locale)                        ? prefs.locale         : null;
+  const validFont   = READING_FONTS.some(f => f.id === prefs.reading_font)       ? prefs.reading_font   : null;
+  const validFlip   = ["soft", "hard"].includes(prefs.page_flip_type)            ? prefs.page_flip_type : null;
+  const prefsSyncLines = [
+    validTheme  ? `localStorage.setItem("rv_theme","${validTheme}");`                                                                           : "",
+    validLocale ? `localStorage.setItem("rv_locale","${validLocale}");document.cookie="rv_locale=${validLocale};path=/;max-age=31536000;SameSite=Lax";` : "",
+    validFont   ? `localStorage.setItem("rv_reading_font","${validFont}");`                                                                     : "",
+    validFlip   ? `localStorage.setItem("rv_page_flip_type","${validFlip}");`                                                                   : "",
+  ].join("");
+  const PREFS_SYNC_SCRIPT = prefsSyncLines ? `try{${prefsSyncLines}}catch(e){}` : null;
+
   const allFontVars = [
     sarabun.variable,
     ibmPlexSansThai.variable,
@@ -94,7 +111,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (user && user.status === "banned") {
     return (
       <html lang="th" className={allFontVars} suppressHydrationWarning>
-        <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
+        <head>
+          {PREFS_SYNC_SCRIPT && <script dangerouslySetInnerHTML={{ __html: PREFS_SYNC_SCRIPT }} />}
+          <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        </head>
         <body className="bg-background min-h-screen font-sans flex items-center justify-center px-4" suppressHydrationWarning>
           <div className="max-w-sm w-full bg-surface rounded-2xl border border-red-100 shadow-sm p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
