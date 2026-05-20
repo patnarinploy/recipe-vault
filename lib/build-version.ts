@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 66;
-export const BUILD_TIMESTAMP = "2026-05-20T09:15:32.000Z";
-export const BUILD_TOOLTIP   = "feat: add admin pages for preset_units and preset_ingredients management";
+export const BUILD_NUMBER    = 67;
+export const BUILD_TIMESTAMP = "2026-05-20T09:29:51.000Z";
+export const BUILD_TOOLTIP   = "fix: ingredient display order — name first, then amount + unit";
