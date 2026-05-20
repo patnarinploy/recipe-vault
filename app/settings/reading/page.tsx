@@ -162,7 +162,7 @@ export default function ReadingPage() {
               <p className="text-xs text-muted mt-0.5">{s.font.description}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {READING_FONTS.map(f => (
               <button
                 key={f.id}
@@ -176,7 +176,7 @@ export default function ReadingPage() {
               >
                 <span className="text-xs text-muted mb-1">{f.name}</span>
                 <span
-                  className="text-base text-foreground leading-snug"
+                  className="text-base text-foreground leading-snug w-full"
                   style={{ fontFamily: `var(${f.variable})` }}
                 >
                   {s.font.preview}
