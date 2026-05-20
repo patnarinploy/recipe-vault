@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 79;
-export const BUILD_TIMESTAMP = "2026-05-20T19:42:31.000Z";
-export const BUILD_TOOLTIP   = "feat: add favorites system — heart recipes, virtual Favorites book";
+export const BUILD_NUMBER    = 80;
+export const BUILD_TIMESTAMP = "2026-05-20T20:03:58.000Z";
+export const BUILD_TOOLTIP   = "feat: per-user preset dropdowns, favorites system, canvas 2-col ingredie";

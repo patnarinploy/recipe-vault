@@ -1,5 +1,12 @@
 [
   {
+    "build": 80,
+    "timestamp": "2026-05-20T20:03:58.000Z",
+    "subject": "feat: per-user preset dropdowns, favorites system, canvas 2-col ingredie",
+    "hash": "f288472",
+    "category": "feat"
+  },
+  {
     "build": 79,
     "timestamp": "2026-05-20T19:42:31.000Z",
     "subject": "feat: add favorites system — heart recipes, virtual Favorites book",
