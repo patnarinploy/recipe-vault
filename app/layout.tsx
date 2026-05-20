@@ -87,13 +87,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const validLocale = ["th", "en"].includes(prefs.locale)                  ? prefs.locale         : null;
   const validFont   = READING_FONTS.some(f => f.id === prefs.reading_font) ? prefs.reading_font   : null;
   const validFlip   = ["soft", "hard"].includes(prefs.page_flip_type)      ? prefs.page_flip_type : null;
-  const INIT_SCRIPT = `try{${[
-    validTheme  ? `localStorage.setItem("rv_theme","${validTheme}");`  : "",
-    validLocale ? `localStorage.setItem("rv_locale","${validLocale}");document.cookie="rv_locale=${validLocale};path=/;max-age=31536000;SameSite=Lax";` : "",
-    validFont   ? `localStorage.setItem("rv_reading_font","${validFont}");`  : "",
-    validFlip   ? `localStorage.setItem("rv_page_flip_type","${validFlip}");` : "",
-    `var t=localStorage.getItem("rv_theme")||"light";if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark");`,
-  ].join("")}}catch(e){}`;
+  const INIT_SCRIPT = user
+    ? `try{${[
+        validTheme  ? `localStorage.setItem("rv_theme","${validTheme}");`  : "",
+        validLocale ? `localStorage.setItem("rv_locale","${validLocale}");document.cookie="rv_locale=${validLocale};path=/;max-age=31536000;SameSite=Lax";` : "",
+        validFont   ? `localStorage.setItem("rv_reading_font","${validFont}");`  : "",
+        validFlip   ? `localStorage.setItem("rv_page_flip_type","${validFlip}");` : "",
+        `var t=localStorage.getItem("rv_theme")||"light";if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark");`,
+      ].join("")}}catch(e){}`
+    // Guest: always force light — ignore any previously stored dark preference
+    : `try{localStorage.setItem("rv_theme","light");}catch(e){}`;
 
   const allFontVars = [
     sarabun.variable,
