@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart } from "lucide-react";
+import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart, ShoppingCart } from "lucide-react";
+import Link from "next/link";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
@@ -23,9 +24,10 @@ interface Props {
   publicBooks: BookWithCounts[];
   currentUser: WriterInfo | null;
   favoriteCount: number;
+  shoppingCount: number;
 }
 
-export default function Library({ myBooks, publicBooks, currentUser, favoriteCount }: Props) {
+export default function Library({ myBooks, publicBooks, currentUser, favoriteCount, shoppingCount }: Props) {
   const { t } = useLocale();
   const lib = t.library;
 
@@ -128,9 +130,9 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
         )}
       </div>
 
-      {/* Favorites virtual book — only shown in "mine" tab for logged-in users */}
+      {/* Favorites virtual book + shopping list — only shown in "mine" tab for logged-in users */}
       {tab === "mine" && !isGuest && (
-        <div className="mb-8">
+        <div className="mb-8 flex flex-wrap gap-6">
           <div
             className="inline-flex items-center gap-3 cursor-pointer group"
             onClick={() => setOpenBook({ id: FAVORITES_BOOK_ID, isOwner: false })}
@@ -150,6 +152,25 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
               </p>
             </div>
           </div>
+
+          <Link href="/shopping" className="inline-flex items-center gap-3 group">
+            <div className="relative w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 bg-emerald-600">
+              <ShoppingCart className="w-5 h-5 text-white" />
+              {shoppingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {shoppingCount > 9 ? "9+" : shoppingCount}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground group-hover:text-emerald-600 transition-colors">
+                {lib.viewShoppingList}
+              </p>
+              <p className="text-xs text-muted">
+                {lib.shoppingListCount.replace("{n}", String(shoppingCount))}
+              </p>
+            </div>
+          </Link>
         </div>
       )}
 

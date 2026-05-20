@@ -47,6 +47,20 @@ export type Recipe = {
   ingredient_rows?: DbIngredient[];
 };
 
+export type ShoppingListItem = {
+  id: string;
+  user_id: string;
+  recipe_id: string;
+  quantity: number;
+  sort_order: number | null;
+  created_at: string;
+};
+
+export type ShoppingListEntry = {
+  quantity: number;
+  recipe: Recipe & { ingredient_rows: DbIngredient[] };
+};
+
 export type Book = {
   id: string;
   user_id: string;

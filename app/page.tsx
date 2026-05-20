@@ -5,6 +5,7 @@ import Library from "@/components/Library";
 import { SkeletonBookGrid } from "@/components/Skeleton";
 import type { Book, WriterInfo } from "@/lib/types";
 import { getFavoriteCount } from "@/app/actions/favorites";
+import { getShoppingListCount } from "@/app/actions/shopping";
 
 export const revalidate = 0;
 
@@ -64,14 +65,15 @@ async function BookLibraryData({ userId }: { userId: string | null }) {
 }
 
 async function LibraryWithData({ userId, currentUser }: { userId: string | null; currentUser: WriterInfo | null }) {
-  const [{ myBooks, publicBooks }, favoriteCount] = await Promise.all([
+  const [{ myBooks, publicBooks }, favoriteCount, shoppingCount] = await Promise.all([
     BookLibraryData({ userId }),
     userId ? getFavoriteCount() : Promise.resolve(0),
+    userId ? getShoppingListCount() : Promise.resolve(0),
   ]);
   const enrichedUser: WriterInfo | null = currentUser
     ? { ...currentUser, book_count: myBooks.length, recipe_count: myBooks.reduce((s, b) => s + b.recipe_count, 0), public_count: myBooks.reduce((s, b) => s + b.public_count, 0) }
     : null;
-  return <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={enrichedUser} favoriteCount={favoriteCount} />;
+  return <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={enrichedUser} favoriteCount={favoriteCount} shoppingCount={shoppingCount} />;
 }
 
 export default async function HomePage() {

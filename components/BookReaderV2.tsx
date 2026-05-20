@@ -12,7 +12,7 @@ import BookCoverEditor from "./BookCoverEditor";
 import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
-import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart } from "lucide-react";
+import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart, ShoppingCart } from "lucide-react";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
@@ -1366,6 +1366,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [isLoggedIn,  setIsLoggedIn]  = useState(false);
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
   const [authorName,  setAuthorName]  = useState("");
   const [writerInfo,       setWriterInfo]       = useState<WriterInfo | null>(null);
@@ -1422,10 +1423,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .returns<{ recipe_id: string; sort_order: number | null }[]>();
     setFavoriteIds(new Set((favRes.data ?? []).map(r => r.recipe_id)));
 
+    // Check auth (needed for shopping button visibility)
+    const { data: { user: authUser } } = await sb.auth.getUser();
+    setIsLoggedIn(!!authUser);
+
     // ── Favorites virtual book ──────────────────────────────────────
     if (isFavBook) {
       // Fetch current user's presets for potential RecipeForm use
-      const { data: { user: authUser } } = await sb.auth.getUser();
       if (authUser) {
         const { data: meUser } = await sb.from("users").select("id").eq("auth_id", authUser.id).maybeSingle();
         if (meUser) {
@@ -1907,6 +1911,19 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
                   <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
+                </button>
+              )}
+
+              {/* เพิ่มเข้ารายการที่อยากทำ — recipe (all logged-in users) */}
+              {isLoggedIn && ctx === "recipe" && currentRecipe && (
+                <button onClick={async () => {
+                    setFabOpen(false);
+                    const { addToShoppingList } = await import("@/app/actions/shopping");
+                    const res = await addToShoppingList(currentRecipe.id);
+                    if ("error" in res) { toast.error(res.error); } else { toast.success(t.shopping.addedToList); }
+                  }}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
+                  <ShoppingCart className="w-4 h-4 text-muted" /> {t.library.addToShoppingList}
                 </button>
               )}
 
