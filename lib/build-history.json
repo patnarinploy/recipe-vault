@@ -1,5 +1,12 @@
 [
   {
+    "build": 71,
+    "timestamp": "2026-05-20T10:42:27.000Z",
+    "subject": "fix: move Dropdown Settings above Version History in admin nav + add loa",
+    "hash": "ddb7fbe",
+    "category": "fix"
+  },
+  {
     "build": 70,
     "timestamp": "2026-05-20T10:25:26.000Z",
     "subject": "fix: pass lookupCategory as prop to PageRecipeFirst and PageRecipeCont",
