@@ -1,5 +1,12 @@
 [
   {
+    "build": 92,
+    "timestamp": "2026-05-20T21:52:55.000Z",
+    "subject": "feat: shopping list Phase 2 — store management + map",
+    "hash": "e5c48b2",
+    "category": "feat"
+  },
+  {
     "build": 91,
     "timestamp": "2026-05-20T21:24:10.000Z",
     "subject": "feat: add shopping list (Feature #3 Phase 1)",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 91;
-export const BUILD_TIMESTAMP = "2026-05-20T21:24:10.000Z";
-export const BUILD_TOOLTIP   = "feat: add shopping list (Feature #3 Phase 1)";
+export const BUILD_NUMBER    = 92;
+export const BUILD_TIMESTAMP = "2026-05-20T21:52:55.000Z";
+export const BUILD_TOOLTIP   = "feat: shopping list Phase 2 — store management + map";
