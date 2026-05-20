@@ -773,22 +773,6 @@ const PageToC = forwardRef<
                         {String(slotIdx).padStart(2, "0")}
                       </span>
                     </button>
-                    {onToggleFavorite && (
-                      <button
-                        type="button"
-                        onClick={e => { e.stopPropagation(); onToggleFavorite(r.id); }}
-                        onMouseDown={e => e.stopPropagation()}
-                        className="shrink-0 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-                        style={{ lineHeight: 0 }}
-                      >
-                        <Heart style={{
-                          width: "clamp(9px,1.8vmin,13px)", height: "clamp(9px,1.8vmin,13px)",
-                          fill: favoriteIds?.has(r.id) ? "#e74c3c" : "none",
-                          stroke: favoriteIds?.has(r.id) ? "#e74c3c" : "var(--book-ink-2)",
-                          strokeWidth: 2, transition: "fill 0.15s,stroke 0.15s",
-                        }} />
-                      </button>
-                    )}
                   </div>
                 );
               })
@@ -995,13 +979,8 @@ const PageRecipeFirst = forwardRef<
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
             {r.is_public && <ShareBadge coverColor={coverColor} solid />}
-            {onToggleFavorite && (
-              <HeartClickButton
-                recipeId={r.id}
-                favorited={favorited ?? false}
-                label={favoriteLabel ?? ""}
-                onToggle={onToggleFavorite}
-              />
+            {favorited && (
+              <Heart style={{ width: "clamp(12px,2.5vmin,18px)", height: "clamp(12px,2.5vmin,18px)", fill: "#e74c3c", stroke: "#e74c3c" }} />
             )}
           </div>
 
