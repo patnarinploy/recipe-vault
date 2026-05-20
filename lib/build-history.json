@@ -1,5 +1,12 @@
 [
   {
+    "build": 76,
+    "timestamp": "2026-05-20T16:56:03.000Z",
+    "subject": "Fix theme sync — merge PREFS_SYNC and THEME scripts into one",
+    "hash": "08ffeb4",
+    "category": "fix"
+  },
+  {
     "build": 75,
     "timestamp": "2026-05-20T15:53:53.000Z",
     "subject": "Fix theme/locale/font not syncing across devices on reload",
