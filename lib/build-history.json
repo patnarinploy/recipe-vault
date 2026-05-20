@@ -1,5 +1,12 @@
 [
   {
+    "build": 86,
+    "timestamp": "2026-05-20T20:45:28.000Z",
+    "subject": "feat: reorder favorites in TOC via drag-and-drop or up/down buttons",
+    "hash": "e09d225",
+    "category": "feat"
+  },
+  {
     "build": 85,
     "timestamp": "2026-05-20T20:42:18.000Z",
     "subject": "fix: heart in TOC and recipe cover is display-only, remove toggle button",
