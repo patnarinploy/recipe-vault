@@ -1435,7 +1435,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const unit = row.preset_units
         ? (locale === "th" ? row.preset_units.unit_name_th : (row.preset_units.unit_name_en || row.preset_units.unit_name_th))
         : row.ingredient_unit_flexible;
-      return [row.ingredient_amount, unit, row.ingredient_name].filter(Boolean).join(" ");
+      return [row.ingredient_name, row.ingredient_amount, unit].filter(Boolean).join(" ");
     });
     return { ...r, ingredients: lines.join("\n") };
   }), [recipes, locale]);
