@@ -1301,10 +1301,10 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
                 <GripVertical className="toc-drag-handle w-4 h-4 text-muted shrink-0 cursor-grab active:cursor-grabbing" />
                 <span className="w-5 text-center text-xs text-muted font-mono shrink-0">{i + 1}</span>
                 <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
+                {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {favoriteIds?.has(r.id) && (
                   <Heart className="shrink-0 w-3.5 h-3.5" style={{ fill: "#e74c3c", stroke: "#e74c3c" }} />
                 )}
-                {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.preset_categories && (
                   <span className="text-[10px] text-muted shrink-0 hidden sm:block">{lookupCategory(r.preset_categories)}</span>
                 )}
