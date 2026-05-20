@@ -324,7 +324,7 @@ export default function RecipeForm({
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
     description: recipe?.description ?? "",
-    category: recipe?.category ?? "",
+    category_id: recipe?.category_id ?? "",
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
@@ -351,9 +351,9 @@ export default function RecipeForm({
         .map(c => locale === "th" ? c.name_th : (c.name_en || c.name_th))
     : (r.categories as unknown as string[]);
 
-  const categoryDisplay = (raw: string) => {
-    const cat = presetCategories.find(c => c.name_th === raw || c.name_en === raw);
-    if (!cat) return raw;
+  const categoryDisplay = (id: string) => {
+    const cat = presetCategories.find(c => c.id === id);
+    if (!cat) return "";
     return locale === "th" ? cat.name_th : (cat.name_en || cat.name_th);
   };
 
@@ -361,7 +361,7 @@ export default function RecipeForm({
     const cat = presetCategories.find(c =>
       (locale === "th" ? c.name_th : (c.name_en || c.name_th)) === display
     );
-    setForm(p => ({ ...p, category: cat ? cat.name_th : display }));
+    setForm(p => ({ ...p, category_id: cat ? cat.id : "" }));
   };
 
   function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
@@ -434,7 +434,7 @@ export default function RecipeForm({
       ingredientsText,
       ingredientRows: structuredRows,
       instructions: instructionsJson,
-      category: form.category || null,
+      category_id: form.category_id || null,
       cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
       servings: form.servings ? parseInt(form.servings) : null,
       image_url: imageUrl,
@@ -502,7 +502,7 @@ export default function RecipeForm({
           <div>
             <label className={labelCls}>{r.categoryLabel}</label>
             <Combobox
-              value={categoryDisplay(form.category)}
+              value={categoryDisplay(form.category_id)}
               onChange={handleCategoryChange}
               options={categoryOptions}
               placeholder={r.categoryPlaceholder}

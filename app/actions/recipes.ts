@@ -19,7 +19,7 @@ type RecipePayload = {
   instructions: string;
   image_url: string | null;
   youtube_url: string | null;
-  category: string | null;
+  category_id: string | null;
   cook_time_minutes: number | null;
   servings: number | null;
   is_public: boolean;

@@ -16,7 +16,6 @@ import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp,
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
-import { translateCategory } from "@/lib/locale/unit-map";
 
 // ─── Colour helper ────────────────────────────────────────────────
 function darken(hex: string, amt: number) {
@@ -868,7 +867,7 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
 // ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (raw: string | null) => string }
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (catObj: PresetCategory | null | undefined) => string }
 >(({ recipe: r, pn, coverColor, density, lookupCategory }, ref) => {
   const { t, locale } = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
@@ -936,7 +935,7 @@ const PageRecipeFirst = forwardRef<
           <div className="flex items-center flex-wrap mb-[clamp(10px,3.5vmin,40px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
                   style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.5vmin,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
-              {[r.category ? translateCategory(r.category, locale) : null, r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : null]
+              {[r.preset_categories ? lookupCategory(r.preset_categories) : null, r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
             {r.is_public && <ShareBadge coverColor={coverColor} solid />}
@@ -985,7 +984,7 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void; lookupCategory: (raw: string | null) => string }
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void; lookupCategory: (catObj: PresetCategory | null | undefined) => string }
 >(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo, lookupCategory }, ref) => {
   const { t, locale } = useLocale();
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
@@ -1018,7 +1017,7 @@ const PageRecipeCont = forwardRef<
           <>
             <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1.2vmin,10px)" }}>
               {([
-                { lbl: "CATEGORY", val: r.category ? translateCategory(r.category, locale) : "—" },
+                { lbl: "CATEGORY", val: lookupCategory(r.preset_categories) },
                 { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : "—" },
                 { lbl: "SERVINGS", val: r.servings ? `${r.servings} ${t.recipe.servings}` : "—" },
               ] as const).map(({ lbl, val }) => (
@@ -1215,7 +1214,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
   onSave: (sorted: Recipe[]) => Promise<void>;
   coverColor: string;
   t: Dict;
-  lookupCategory: (raw: string | null) => string;
+  lookupCategory: (catObj: PresetCategory | null | undefined) => string;
 }) {
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
@@ -1259,8 +1258,8 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCat
                 <span className="w-5 text-center text-xs text-muted font-mono shrink-0">{i + 1}</span>
                 <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
                 {r.is_public && <ShareBadge coverColor={coverColor} />}
-                {r.category && (
-                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{lookupCategory(r.category)}</span>
+                {r.preset_categories && (
+                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{lookupCategory(r.preset_categories)}</span>
                 )}
                 <div className="flex gap-0.5 shrink-0">
                   <button onClick={() => move(i, -1)} disabled={i === 0}
@@ -1360,7 +1359,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   // ── Fetch ─────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     const sb = createClient();
-    let recipeQ = sb.from("recipes").select("*").eq("book_id", bookId)
+    let recipeQ = sb.from("recipes").select("*, preset_categories!category_id(*)").eq("book_id", bookId)
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
@@ -1494,12 +1493,10 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const goToPrev    = useCallback(() => bookRef.current?.pageFlip().flipPrev(), []);
   const goToNext    = useCallback(() => bookRef.current?.pageFlip().flipNext(), []);
 
-  const lookupCategory = useCallback((raw: string | null): string => {
-    if (!raw) return "—";
-    const cat = presetCategories.find(c => c.name_th === raw || c.name_en === raw);
-    if (!cat) return translateCategory(raw, locale); // fallback
-    return locale === "th" ? cat.name_th : (cat.name_en || raw);
-  }, [presetCategories, locale]);
+  const lookupCategory = useCallback((catObj: PresetCategory | null | undefined): string => {
+    if (!catObj) return "—";
+    return locale === "th" ? catObj.name_th : (catObj.name_en || catObj.name_th);
+  }, [locale]);
 
   // Keyboard arrow navigation
   useEffect(() => {

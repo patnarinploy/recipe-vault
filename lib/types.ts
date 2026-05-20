@@ -32,7 +32,8 @@ export type Recipe = {
   instructions: string;
   image_url: string | null;
   youtube_url: string | null;
-  category: string | null;
+  category_id: string | null;
+  preset_categories?: PresetCategory | null;
   cook_time_minutes: number | null;
   servings: number | null;
   is_public: boolean;

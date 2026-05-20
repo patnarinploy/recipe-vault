@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import type { Recipe } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
-import { translateCategory } from "@/lib/locale/unit-map";
 
 // ─── Parsers ───────────────────────────────────────────────────────────────────
 
@@ -54,7 +53,9 @@ export default function RecipeViewV2({
 
   const cookTime = recipe.cook_time_minutes ? `${recipe.cook_time_minutes} นาที` : "—";
   const servings = recipe.servings          ? `${recipe.servings} ที่`           : "—";
-  const category = recipe.category ? translateCategory(recipe.category, locale) : "—";
+  const category = recipe.preset_categories
+    ? (locale === "th" ? recipe.preset_categories.name_th : (recipe.preset_categories.name_en || recipe.preset_categories.name_th))
+    : "—";
 
   return (
     /* Break out of the root layout's px / py */
@@ -103,7 +104,7 @@ export default function RecipeViewV2({
                 color: "#ffbf00",
               }}
             >
-              {[bookTitle, recipe.category].filter(Boolean).join(" · ") || "Recipe"}
+              {[bookTitle, category !== "—" ? category : null].filter(Boolean).join(" · ") || "Recipe"}
             </span>
 
             <h1
