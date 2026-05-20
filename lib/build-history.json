@@ -1,5 +1,12 @@
 [
   {
+    "build": 83,
+    "timestamp": "2026-05-20T20:30:52.000Z",
+    "subject": "fix: add field labels (TH/EN) to edit and add forms in dropdown settings",
+    "hash": "7346751",
+    "category": "fix"
+  },
+  {
     "build": 82,
     "timestamp": "2026-05-20T20:23:57.000Z",
     "subject": "fix: mobile-friendly edit/add layout in dropdown settings",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 82;
-export const BUILD_TIMESTAMP = "2026-05-20T20:23:57.000Z";
-export const BUILD_TOOLTIP   = "fix: mobile-friendly edit/add layout in dropdown settings";
+export const BUILD_NUMBER    = 83;
+export const BUILD_TIMESTAMP = "2026-05-20T20:30:52.000Z";
+export const BUILD_TOOLTIP   = "fix: add field labels (TH/EN) to edit and add forms in dropdown settings";
