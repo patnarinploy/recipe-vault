@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
-import type { Book, DbIngredient, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
+import type { Book, DbIngredient, PresetIngredient, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
 import { translateCategory } from "@/lib/locale/unit-map";
@@ -1310,6 +1310,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [book,    setBook]    = useState<Book | null>(null);
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
   const [presetUnits, setPresetUnits] = useState<PresetUnit[]>([]);
+  const [presetIngredients, setPresetIngredients] = useState<PresetIngredient[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
@@ -1362,10 +1363,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
-    const [bk, rc, unitsRes] = await Promise.all([
+    const [bk, rc, unitsRes, ingsRes] = await Promise.all([
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
       sb.from("preset_units").select("*").order("sort_order"),
+      sb.from("preset_ingredients").select("*").order("sort_order"),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
@@ -1399,6 +1401,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       }
     }
     if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+    if (ingsRes.data) setPresetIngredients(ingsRes.data as PresetIngredient[]);
 
     const rawRecipes = rc.data ?? [];
     if (rawRecipes.length > 0) {
@@ -1729,14 +1732,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
       <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
-        <RecipeForm bookId={bookId} inModal presetUnits={presetUnits}
+        <RecipeForm bookId={bookId} inModal presetUnits={presetUnits} presetIngredients={presetIngredients}
           onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
           onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
         <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title={t.library.editRecipeTitle} disableBackdropClick>
-          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits}
+          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits} presetIngredients={presetIngredients}
             onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
             onCancel={() => setEditRecipeOpen(false)}
             onDeleted={() => { setEditRecipeOpen(false); refreshAndReset(2); }} />
