@@ -1,5 +1,12 @@
 [
   {
+    "build": 81,
+    "timestamp": "2026-05-20T20:15:49.000Z",
+    "subject": "fix: settings dropdowns icon/wording + migrate global presets to patnari",
+    "hash": "3d25907",
+    "category": "fix"
+  },
+  {
     "build": 80,
     "timestamp": "2026-05-20T20:03:58.000Z",
     "subject": "feat: per-user preset dropdowns, favorites system, canvas 2-col ingredie",
