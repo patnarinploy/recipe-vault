@@ -1,5 +1,12 @@
 [
   {
+    "build": 62,
+    "timestamp": "2026-05-20T06:25:53.000Z",
+    "subject": "fix: account selects appearance, dark calendar icon, all skeleton dark m",
+    "hash": "10b24f9",
+    "category": "fix"
+  },
+  {
     "build": 61,
     "timestamp": "2026-05-20T06:07:48.000Z",
     "subject": "fix: reading font grid 1-col on mobile so preview text fits on one line",
