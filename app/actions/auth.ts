@@ -104,6 +104,25 @@ export async function updatePrivateInfo(
 // kept for backwards compat
 export const updateProfile = updatePublicProfile;
 
+export async function updateReadingPreferences(
+  prefs: Partial<{ theme: string; locale: string; reading_font: string; page_flip_type: string }>,
+): Promise<void> {
+  const currentUser = await getSession();
+  if (!currentUser) return;
+
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("users")
+    .select("preferences")
+    .eq("id", currentUser.id)
+    .single();
+  const existing = (row?.preferences as Record<string, string>) ?? {};
+  await supabase
+    .from("users")
+    .update({ preferences: { ...existing, ...prefs } })
+    .eq("id", currentUser.id);
+}
+
 // ─── Admin actions ────────────────────────────────────────────────────────────
 
 async function getAdminSession() {

@@ -2,12 +2,14 @@ export type PresetUnit = {
   id: string;
   unit_name_th: string;
   unit_name_en: string;
+  is_active: boolean;
 };
 
 export type PresetCategory = {
   id: string;
   name_th: string;
   name_en: string;
+  is_active: boolean;
   created_at: string;
 };
 
@@ -98,6 +100,7 @@ export type User = {
   country: string | null;
   language: string | null;
   social_links: Record<string, string> | null;
+  preferences: Record<string, string> | null;
   created_at: string;
 };
 

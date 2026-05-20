@@ -332,8 +332,9 @@ export default function RecipeForm({
     recipe_youtube: recipe?.youtube_url ?? extractRecipeYoutube(recipe?.instructions ?? ""),
   });
 
-  // Locale-mapped options for comboboxes
+  // Locale-mapped options for comboboxes — only active presets shown
   const presetUnitOptions = [...presetUnits]
+    .filter(u => u.is_active)
     .sort((a, b) => {
       const aName = locale === "th" ? a.unit_name_th : (a.unit_name_en || a.unit_name_th);
       const bName = locale === "th" ? b.unit_name_th : (b.unit_name_en || b.unit_name_th);
@@ -343,6 +344,7 @@ export default function RecipeForm({
 
   const categoryOptions = presetCategories.length > 0
     ? [...presetCategories]
+        .filter(c => c.is_active)
         .sort((a, b) => {
           const aName = locale === "th" ? a.name_th : (a.name_en || a.name_th);
           const bName = locale === "th" ? b.name_th : (b.name_en || b.name_th);

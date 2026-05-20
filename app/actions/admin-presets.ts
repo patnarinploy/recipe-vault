@@ -31,10 +31,13 @@ export async function updatePresetUnit(
   return { success: true };
 }
 
-export async function deletePresetUnit(id: string): Promise<{ success: true } | { error: string }> {
+export async function setPresetUnitActive(
+  id: string,
+  is_active: boolean
+): Promise<{ success: true } | { error: string }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from("preset_units").delete().eq("id", id);
+  const { error } = await supabase.from("preset_units").update({ is_active }).eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }
@@ -66,11 +69,13 @@ export async function updatePresetCategory(
   return { success: true };
 }
 
-export async function deletePresetCategory(id: string): Promise<{ success: true } | { error: string }> {
+export async function setPresetCategoryActive(
+  id: string,
+  is_active: boolean
+): Promise<{ success: true } | { error: string }> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from("preset_categories").delete().eq("id", id);
+  const { error } = await supabase.from("preset_categories").update({ is_active }).eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }
-
