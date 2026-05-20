@@ -95,16 +95,22 @@ function PresetsTable({
           <div key={item.id} className="border-b border-border last:border-0">
             {editing?.id === item.id ? (
               <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
-                <input value={editing.nameTh}
-                  onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
-                  placeholder={thLabel}
-                  className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                  autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
-                <input value={editing.nameEn}
-                  onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
-                  placeholder={enLabel}
-                  className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                  onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted">{thLabel}</label>
+                  <input value={editing.nameTh}
+                    onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
+                    placeholder={thLabel}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted">{enLabel}</label>
+                  <input value={editing.nameEn}
+                    onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
+                    placeholder={enLabel}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+                </div>
                 <div className="flex gap-2 pt-1">
                   <button onClick={saveEdit} disabled={pending}
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
@@ -153,14 +159,20 @@ function PresetsTable({
 
         {adding && (
           <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
-            <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
-              placeholder={thLabel}
-              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-              autoFocus onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
-            <input value={newRow.nameEn} onChange={e => setNewRow(v => ({ ...v, nameEn: e.target.value }))}
-              placeholder={enLabel}
-              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-              onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted">{thLabel}</label>
+              <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
+                placeholder={thLabel}
+                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                autoFocus onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted">{enLabel}</label>
+              <input value={newRow.nameEn} onChange={e => setNewRow(v => ({ ...v, nameEn: e.target.value }))}
+                placeholder={enLabel}
+                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+            </div>
             <div className="flex gap-2 pt-1">
               <button onClick={saveNew} disabled={pending}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
