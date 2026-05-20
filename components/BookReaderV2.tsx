@@ -16,6 +16,7 @@ import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp,
 import type { Book, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
+import { translateCategory } from "@/lib/locale/unit-map";
 
 // ─── Colour helper ────────────────────────────────────────────────
 function darken(hex: string, amt: number) {
@@ -869,7 +870,7 @@ const PageRecipeFirst = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
 >(({ recipe: r, pn, coverColor, density }, ref) => {
-  const { t }        = useLocale();
+  const { t, locale } = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef       = useRef<number>(0);
@@ -935,7 +936,7 @@ const PageRecipeFirst = forwardRef<
           <div className="flex items-center flex-wrap mb-[clamp(10px,3.5vmin,40px)]" style={{ gap: "clamp(4px,0.8vw,8px)" }}>
             <span className="uppercase"
                   style={{ fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)", fontSize: "clamp(11px,2.5vmin,17px)", color: "#ffbf00", letterSpacing: "0.3em", opacity: 0.9, textShadow: "0px 0px 5px rgb(0,0,0)" }}>
-              {[r.category, r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : null]
+              {[r.category ? translateCategory(r.category, locale) : null, r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : null]
                 .filter(Boolean).join("  ·  ") || "Recipe"}
             </span>
             {r.is_public && <ShareBadge coverColor={coverColor} solid />}
@@ -986,7 +987,7 @@ const PageRecipeCont = forwardRef<
   HTMLDivElement,
   { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
 >(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo }, ref) => {
-  const { t }     = useLocale();
+  const { t, locale } = useLocale();
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
   const half      = Math.ceil(ingLines.length / 2);
@@ -1017,7 +1018,7 @@ const PageRecipeCont = forwardRef<
           <>
             <div className="grid grid-cols-3 mt-3 mb-3 shrink-0" style={{ gap: "clamp(4px,1.2vmin,10px)" }}>
               {([
-                { lbl: "CATEGORY", val: r.category ?? "—" },
+                { lbl: "CATEGORY", val: r.category ? translateCategory(r.category, locale) : "—" },
                 { lbl: "PREP",     val: r.cook_time_minutes ? `${r.cook_time_minutes} ${t.recipe.minutes}` : "—" },
                 { lbl: "SERVINGS", val: r.servings ? `${r.servings} ${t.recipe.servings}` : "—" },
               ] as const).map(({ lbl, val }) => (
@@ -1215,6 +1216,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t }: {
   coverColor: string;
   t: Dict;
 }) {
+  const { locale } = useLocale();
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -1258,7 +1260,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t }: {
                 <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
                 {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.category && (
-                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{r.category}</span>
+                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{translateCategory(r.category, locale)}</span>
                 )}
                 <div className="flex gap-0.5 shrink-0">
                   <button onClick={() => move(i, -1)} disabled={i === 0}

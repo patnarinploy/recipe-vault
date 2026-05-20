@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import type { Recipe } from "@/lib/types";
+import { useLocale } from "@/lib/locale";
+import { translateCategory } from "@/lib/locale/unit-map";
 
 // ─── Parsers ───────────────────────────────────────────────────────────────────
 
@@ -46,12 +48,13 @@ export default function RecipeViewV2({
   author?: string;
   bookTitle?: string;
 }) {
+  const { locale } = useLocale();
   const steps       = useMemo(() => parseInstructions(recipe.instructions), [recipe.instructions]);
   const ingredients = useMemo(() => parseIngredients(recipe.ingredients),   [recipe.ingredients]);
 
   const cookTime = recipe.cook_time_minutes ? `${recipe.cook_time_minutes} นาที` : "—";
   const servings = recipe.servings          ? `${recipe.servings} ที่`           : "—";
-  const category = recipe.category ?? "—";
+  const category = recipe.category ? translateCategory(recipe.category, locale) : "—";
 
   return (
     /* Break out of the root layout's px / py */

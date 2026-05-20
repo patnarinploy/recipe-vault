@@ -11,6 +11,7 @@ import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-re
 import LoadingButton from "./ui/LoadingButton";
 import { ReactSortable } from "react-sortablejs";
 import { useLocale } from "@/lib/locale";
+import { translateUnit, translateCategory } from "@/lib/locale/unit-map";
 
 // Static TH units used for parsing stored ingredient strings (backward compat).
 // Display units come from t.recipe.units (locale-aware).
@@ -274,7 +275,7 @@ export default function RecipeForm({
   inModal,
   showDelete,
 }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const r = t.recipe;
   const router = useRouter();
   const isEdit = !!recipe;
@@ -283,7 +284,10 @@ export default function RecipeForm({
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
 
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(
-    () => parseIngredients(recipe?.ingredients ?? "")
+    () => parseIngredients(recipe?.ingredients ?? "").map(row => ({
+      ...row,
+      unit: translateUnit(row.unit, locale),
+    }))
   );
   const [instructionSteps, setInstructionSteps] = useState<InstructionStep[]>(
     () => parseInstructions(recipe?.instructions ?? "")
@@ -292,7 +296,7 @@ export default function RecipeForm({
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
     description: recipe?.description ?? "",
-    category: recipe?.category ?? "",
+    category: translateCategory(recipe?.category ?? "", locale),
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
