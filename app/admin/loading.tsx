@@ -13,7 +13,7 @@ export default function AdminLoading() {
 
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 bg-white rounded-2xl border border-stone-100 px-5 py-4">
+          <div key={i} className="flex items-center gap-4 bg-surface rounded-2xl border border-border px-5 py-4">
             <div className="skeleton w-10 h-10 rounded-xl shrink-0" />
             <div className="flex-1 space-y-1.5">
               <div className="skeleton h-4 w-32 rounded" />

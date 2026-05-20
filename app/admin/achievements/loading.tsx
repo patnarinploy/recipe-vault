@@ -4,14 +4,15 @@ export default function AdminAchievementsLoading() {
       <div className="skeleton h-4 w-36 rounded mb-6" />
       <div className="skeleton h-8 w-56 rounded-lg mb-6" />
 
-      {/* Tier legend skeleton */}
-      <div className="bg-white rounded-2xl border border-stone-100 px-5 py-4 mb-6 space-y-3">
+      {/* Tier legend */}
+      <div className="bg-surface rounded-2xl border border-border px-5 py-4 mb-6 space-y-3">
         <div className="skeleton h-3 w-20 rounded" />
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="skeleton h-6 w-14 rounded-full" />
           ))}
         </div>
+        <div className="skeleton h-3 w-full rounded" />
       </div>
 
       {/* Section skeletons */}
@@ -24,7 +25,7 @@ export default function AdminAchievementsLoading() {
               <div className="skeleton h-3 w-40 rounded" />
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-stone-100 divide-y divide-stone-100 overflow-hidden">
+          <div className="bg-surface rounded-2xl border border-border divide-y divide-border overflow-hidden">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-5 py-3.5">
                 <div className="skeleton h-5 w-12 rounded-md shrink-0" />

@@ -1,4 +1,4 @@
-// Matches real AccountForm: username readonly + role badge + email + tel fields
+// Matches real AccountForm: email readonly + contact (tel) + personal (dob/country/lang) + social links + save
 export default function AccountLoading() {
   return (
     <div className="max-w-lg mx-auto">
@@ -6,28 +6,37 @@ export default function AccountLoading() {
       <div className="skeleton h-8 w-32 rounded-lg mb-1" />
       <div className="skeleton h-4 w-64 rounded mb-6" />
 
-      {/* Username card (readonly) */}
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 mb-5">
-        <div className="flex items-start justify-between mb-1">
-          <div className="skeleton h-3.5 w-40 rounded" />
-          <div className="skeleton h-3 w-24 rounded" />
-        </div>
-        <div className="skeleton h-3 w-44 rounded mb-3" />
+      {/* Email (readonly) */}
+      <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 mb-5">
+        <div className="skeleton h-3.5 w-16 rounded mb-1.5" />
+        <div className="skeleton h-3 w-52 rounded mb-3" />
         <div className="skeleton h-10 w-full rounded-xl" />
       </div>
 
-      {/* Role */}
-      <div className="mb-5">
-        <div className="skeleton h-3.5 w-10 rounded mb-1" />
-        <div className="skeleton h-3 w-28 rounded mb-3" />
-        <div className="skeleton h-7 w-24 rounded-full" />
+      {/* Contact: tel */}
+      <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 mb-5">
+        <div className="skeleton h-3.5 w-20 rounded mb-4" />
+        <div className="skeleton h-3.5 w-28 rounded mb-1.5" />
+        <div className="skeleton h-10 w-full rounded-xl" />
       </div>
 
-      {/* Email + Tel */}
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-4 mb-5">
-        {["อีเมล", "เบอร์โทรศัพท์"].map((_, i) => (
+      {/* Personal: dob + country + language */}
+      <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4 mb-5">
+        <div className="skeleton h-3.5 w-24 rounded" />
+        {["w-24", "w-20", "w-28"].map((lw, i) => (
           <div key={i}>
-            <div className="skeleton h-3.5 w-16 rounded mb-1.5" />
+            <div className={`skeleton h-3.5 ${lw} rounded mb-1.5`} />
+            <div className="skeleton h-10 w-full rounded-xl" />
+          </div>
+        ))}
+      </div>
+
+      {/* Social links: 4 inputs */}
+      <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4 mb-5">
+        <div className="skeleton h-3.5 w-24 rounded" />
+        {["w-20", "w-24", "w-20", "w-28"].map((lw, i) => (
+          <div key={i}>
+            <div className={`skeleton h-3.5 ${lw} rounded mb-1.5`} />
             <div className="skeleton h-10 w-full rounded-xl" />
           </div>
         ))}

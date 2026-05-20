@@ -8,7 +8,7 @@ export default function AdminUsersLoading() {
       {/* Your Account section */}
       <div className="mb-5">
         <div className="skeleton h-3 w-24 rounded mb-2" />
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
           <SkeletonUserRow showActions={false} />
         </div>
       </div>
@@ -19,7 +19,7 @@ export default function AdminUsersLoading() {
           <div className="skeleton h-3 w-20 rounded" />
           <div className="skeleton h-3 w-10 rounded" />
         </div>
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden divide-y divide-stone-100">
+        <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden divide-y divide-border">
           {Array.from({ length: 5 }).map((_, i) => (
             <SkeletonUserRow key={i} showActions />
           ))}

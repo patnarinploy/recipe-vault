@@ -269,3 +269,8 @@ button, a {
 ::-webkit-scrollbar-thumb    { background: var(--muted); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--fg-2); }
 *                            { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
+
+/* ─── Native date input — adapt browser chrome to dark mode ───── */
+.dark input[type="date"] {
+  color-scheme: dark;
+}

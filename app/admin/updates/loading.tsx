@@ -6,7 +6,8 @@ export default function AdminUpdatesLoading() {
       <div className="skeleton h-4 w-64 rounded mb-6" />
 
       <div className="space-y-4">
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 space-y-3">
+        {/* Latest update card — more detail */}
+        <div className="bg-surface rounded-2xl border border-border shadow-sm px-5 py-4 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex gap-2">
               <div className="skeleton h-6 w-20 rounded-lg" />
@@ -28,7 +29,7 @@ export default function AdminUpdatesLoading() {
         </div>
 
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 space-y-3">
+          <div key={i} className="bg-surface rounded-2xl border border-border shadow-sm px-5 py-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="skeleton h-6 w-20 rounded-lg" />
               <div className="skeleton h-3 w-28 rounded" />
