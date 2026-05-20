@@ -1845,6 +1845,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                   </button>
                 )}
 
+                {/* ถูกใจ / เลิกถูกใจ — recipe */}
+                {ctx === "recipe" && currentRecipe && (
+                  <button onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl"
+                          style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}>
+                    <Heart className="w-4 h-4" style={{ fill: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "none", stroke: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "currentColor" }} />
+                    {favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd}
+                  </button>
+                )}
+
                 {/* เปิดสารบัญ — cover / backcover / recipe */}
                 {(ctx === "cover" || ctx === "backcover" || ctx === "recipe") && (
                   <button onClick={() => { setFabOpen(false); goToToC(); }}
@@ -1864,7 +1874,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 <div className="border-t border-border my-0.5" />
               </>)}
 
-              {/* ถูกใจ / เลิกถูกใจ — recipe context, logged-in users */}
               {/* จัดลำดับสูตรที่ถูกใจ — toc (favorites book only) */}
               {isFavBook && ctx === "toc" && (
                 <button onClick={() => { setFabOpen(false); setTocSortOpen(true); }}
@@ -1873,12 +1882,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 </button>
               )}
 
-              {ctx === "recipe" && currentRecipe && (
-                <button
-                  onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-elevated rounded-xl"
-                  style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}
-                >
+              {/* ถูกใจ / เลิกถูกใจ — non-owner (public book / favorites book) */}
+              {!isOwner && ctx === "recipe" && currentRecipe && (
+                <button onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl"
+                        style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}>
                   <Heart className="w-4 h-4" style={{ fill: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "none", stroke: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : "currentColor" }} />
                   {favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd}
                 </button>
