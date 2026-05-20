@@ -140,7 +140,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
             <div className="flex justify-center mt-10">
               <div className="flex flex-col items-center">
                 <button onClick={() => requireAuth(() => setNewBookOpen(true))}
-                  className="w-40 h-[220px] rounded-md border-2 border-dashed border-border hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-muted hover:text-orange-500 transition-all group">
+                  className="w-40 h-[220px] rounded-md border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-muted hover:text-orange-500 transition-all group">
                   <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
                   <span className="text-xs font-medium">{lib.createFirst}</span>
                 </button>
@@ -214,7 +214,7 @@ export default function Library({ myBooks, publicBooks, currentUser }: Props) {
           {tab === "mine" && !isGuest && (
             <div className="flex flex-col items-center anim-fade-up" style={{ animationDelay: `${books.length * 60}ms` }}>
               <button onClick={() => requireAuth(() => setNewBookOpen(true))}
-                className="w-40 h-[220px] rounded-md border-2 border-dashed border-border hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-muted hover:text-orange-500 transition-all group">
+                className="w-40 h-[220px] rounded-md border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-muted hover:text-orange-500 transition-all group">
                 <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-medium">{lib.addBook}</span>
               </button>
