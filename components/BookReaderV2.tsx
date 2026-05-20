@@ -1695,8 +1695,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       if ("error" in res) { toast.error(res.error); return; }
     }
     toast.success("บันทึกลำดับแล้ว");
+    const pageBeforeSave = currentPage;
     setTocSortOpen(false);
-    await refreshAndReset(2);
+    await refreshAndReset(pageBeforeSave);
   };
 
   // ── Refresh helpers ────────────────────────────────────────────────
