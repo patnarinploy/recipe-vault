@@ -1,5 +1,12 @@
 [
   {
+    "build": 63,
+    "timestamp": "2026-05-20T06:40:18.000Z",
+    "subject": "feat: translate units and categories based on active locale",
+    "hash": "f607e47",
+    "category": "feat"
+  },
+  {
     "build": 62,
     "timestamp": "2026-05-20T06:25:53.000Z",
     "subject": "fix: account selects appearance, dark calendar icon, all skeleton dark m",

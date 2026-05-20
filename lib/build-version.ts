@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 62;
-export const BUILD_TIMESTAMP = "2026-05-20T06:25:53.000Z";
-export const BUILD_TOOLTIP   = "fix: account selects appearance, dark calendar icon, all skeleton dark m";
+export const BUILD_NUMBER    = 63;
+export const BUILD_TIMESTAMP = "2026-05-20T06:40:18.000Z";
+export const BUILD_TOOLTIP   = "feat: translate units and categories based on active locale";
