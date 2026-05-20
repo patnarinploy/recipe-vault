@@ -1,5 +1,12 @@
 [
   {
+    "build": 72,
+    "timestamp": "2026-05-20T10:43:05.000Z",
+    "subject": "refactor: replace recipes.category text with category_id FK to preset_ca",
+    "hash": "0064954",
+    "category": "refactor"
+  },
+  {
     "build": 71,
     "timestamp": "2026-05-20T10:42:27.000Z",
     "subject": "fix: move Dropdown Settings above Version History in admin nav + add loa",
