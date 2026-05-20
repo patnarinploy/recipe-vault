@@ -1,5 +1,12 @@
 [
   {
+    "build": 78,
+    "timestamp": "2026-05-20T17:35:59.000Z",
+    "subject": "Force light theme for guest users, ignore stale localStorage",
+    "hash": "d2d57f2",
+    "category": "internal"
+  },
+  {
     "build": 77,
     "timestamp": "2026-05-20T17:22:10.000Z",
     "subject": "Default theme to light for unauthenticated visitors",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 77;
-export const BUILD_TIMESTAMP = "2026-05-20T17:22:10.000Z";
-export const BUILD_TOOLTIP   = "Default theme to light for unauthenticated visitors";
+export const BUILD_NUMBER    = 78;
+export const BUILD_TIMESTAMP = "2026-05-20T17:35:59.000Z";
+export const BUILD_TOOLTIP   = "Force light theme for guest users, ignore stale localStorage";
