@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 67;
-export const BUILD_TIMESTAMP = "2026-05-20T09:29:51.000Z";
-export const BUILD_TOOLTIP   = "fix: ingredient display order — name first, then amount + unit";
+export const BUILD_NUMBER    = 68;
+export const BUILD_TIMESTAMP = "2026-05-20T09:50:50.000Z";
+export const BUILD_TOOLTIP   = "refactor: simplify ingredient system — name combobox from DB, unit alp";
