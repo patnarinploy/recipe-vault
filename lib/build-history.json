@@ -1,5 +1,12 @@
 [
   {
+    "build": 77,
+    "timestamp": "2026-05-20T17:22:10.000Z",
+    "subject": "Default theme to light for unauthenticated visitors",
+    "hash": "2ac54bc",
+    "category": "internal"
+  },
+  {
     "build": 76,
     "timestamp": "2026-05-20T16:56:03.000Z",
     "subject": "Fix theme sync — merge PREFS_SYNC and THEME scripts into one",
