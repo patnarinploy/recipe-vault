@@ -61,6 +61,25 @@ export type ShoppingListEntry = {
   recipe: Recipe & { ingredient_rows: DbIngredient[] };
 };
 
+export type UserStore = {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  latitude: number | null;
+  longitude: number | null;
+  sort_order: number | null;
+  created_at: string;
+};
+
+export type IngredientStorePref = {
+  id: string;
+  user_id: string;
+  ingredient_key: string;
+  store_id: string | null;
+  updated_at: string;
+};
+
 export type Book = {
   id: string;
   user_id: string;
