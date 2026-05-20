@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight } from "lucide-react";
 import { getServerLocale } from "@/lib/locale/server";
 
 export const revalidate = 0;
@@ -30,14 +30,6 @@ export default async function AdminPage() {
       icon:        Trophy,
       title:       adm.achievements.label,
       description: adm.achievements.sub,
-      meta:        null,
-      enabled:     true,
-    },
-    {
-      href:        "/admin/dropdowns",
-      icon:        SlidersHorizontal,
-      title:       adm.dropdowns.label,
-      description: adm.dropdowns.sub,
       meta:        null,
       enabled:     true,
     },
