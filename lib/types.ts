@@ -3,6 +3,8 @@ export type PresetUnit = {
   unit_name_th: string;
   unit_name_en: string;
   is_active: boolean;
+  user_id: string | null;
+  created_at?: string;
 };
 
 export type PresetCategory = {
@@ -10,6 +12,7 @@ export type PresetCategory = {
   name_th: string;
   name_en: string;
   is_active: boolean;
+  user_id: string | null;
   created_at: string;
 };
 
@@ -19,7 +22,6 @@ export type DbIngredient = {
   ingredient_name: string;
   ingredient_amount: string;
   ingredient_unit_id: string | null;
-  ingredient_unit_flexible: string;
   ingredient_sort: number;
   preset_units: PresetUnit | null;
 };

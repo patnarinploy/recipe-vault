@@ -1430,18 +1430,26 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const fetchData = useCallback(async () => {
     const sb = createClient();
 
-    // Always load presets + favorite IDs (favorites work for any logged-in user)
-    const [unitsRes, catsRes, favRes] = await Promise.all([
-      sb.from("preset_units").select("*"),
-      sb.from("preset_categories").select("*"),
-      sb.from("recipe_favorites").select("recipe_id").returns<{ recipe_id: string }[]>(),
-    ]);
-    if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
-    if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+    // Fetch favorite IDs (always, for heart buttons)
+    const favRes = await sb.from("recipe_favorites").select("recipe_id").returns<{ recipe_id: string }[]>();
     setFavoriteIds(new Set((favRes.data ?? []).map(r => r.recipe_id)));
 
     // ── Favorites virtual book ──────────────────────────────────────
     if (isFavBook) {
+      // Fetch current user's presets for potential RecipeForm use
+      const { data: { user: authUser } } = await sb.auth.getUser();
+      if (authUser) {
+        const { data: meUser } = await sb.from("users").select("id").eq("auth_id", authUser.id).maybeSingle();
+        if (meUser) {
+          const [unitsRes, catsRes] = await Promise.all([
+            sb.from("preset_units").select("*").eq("user_id", meUser.id).eq("is_active", true).order("unit_name_th"),
+            sb.from("preset_categories").select("*").eq("user_id", meUser.id).eq("is_active", true).order("name_th"),
+          ]);
+          if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+          if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+        }
+      }
+
       const favIds = (favRes.data ?? []).map(r => r.recipe_id);
       if (favIds.length === 0) {
         setRecipes([]);
@@ -1486,6 +1494,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
+      // Fetch this user's presets (for RecipeForm combobox — only needed when owner)
+      if (isOwner) {
+        const bookUserId: string = (bk.data as any).user_id;
+        const [unitsRes, catsRes] = await Promise.all([
+          sb.from("preset_units").select("*").eq("user_id", bookUserId).eq("is_active", true).order("unit_name_th"),
+          sb.from("preset_categories").select("*").eq("user_id", bookUserId).eq("is_active", true).order("name_th"),
+        ]);
+        if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+        if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+      }
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? "");
       if (u) {
@@ -1552,7 +1570,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     const lines = r.ingredient_rows.map(row => {
       const unit = row.preset_units
         ? (locale === "th" ? row.preset_units.unit_name_th : (row.preset_units.unit_name_en || row.preset_units.unit_name_th))
-        : row.ingredient_unit_flexible;
+        : "";
       return [row.ingredient_name, row.ingredient_amount, unit].filter(Boolean).join(" ");
     });
     return { ...r, ingredients: lines.join("\n") };

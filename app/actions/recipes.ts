@@ -3,11 +3,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import type { Recipe } from "@/lib/types";
+import { ensurePresetUnit } from "@/app/actions/user-presets";
 
 type IngredientRowInput = {
   name: string;
   amount: string;
   unitId: string | null;
+  // unitFlex: kept on client-side only; server auto-creates a preset and uses the FK
   unitFlex: string;
 };
 
@@ -55,13 +57,19 @@ export async function createRecipe(
 
   const recipeId = data.id;
   if (ingredientRows.length > 0) {
-    const rows = ingredientRows.map((r, idx) => ({
-      recipe_id: recipeId,
-      ingredient_name: r.name,
-      ingredient_amount: r.amount,
-      ingredient_unit_id: r.unitId ?? null,
-      ingredient_unit_flexible: r.unitFlex,
-      ingredient_sort: idx + 1,
+    // Resolve unit IDs: auto-create preset for any custom unit text
+    const rows = await Promise.all(ingredientRows.map(async (r, idx) => {
+      let unitId = r.unitId ?? null;
+      if (!unitId && r.unitFlex.trim()) {
+        unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
+      }
+      return {
+        recipe_id: recipeId,
+        ingredient_name: r.name,
+        ingredient_amount: r.amount,
+        ingredient_unit_id: unitId,
+        ingredient_sort: idx + 1,
+      };
     }));
     await supabase.from("ingredients").insert(rows);
   }
@@ -104,13 +112,18 @@ export async function updateRecipe(
   if (ingredientRows !== undefined) {
     await supabase.from("ingredients").delete().eq("recipe_id", id);
     if (ingredientRows.length > 0) {
-      const rows = ingredientRows.map((r, idx) => ({
-        recipe_id: id,
-        ingredient_name: r.name,
-        ingredient_amount: r.amount,
-        ingredient_unit_id: r.unitId ?? null,
-        ingredient_unit_flexible: r.unitFlex,
-        ingredient_sort: idx + 1,
+      const rows = await Promise.all(ingredientRows.map(async (r, idx) => {
+        let unitId = r.unitId ?? null;
+        if (!unitId && r.unitFlex.trim()) {
+          unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
+        }
+        return {
+          recipe_id: id,
+          ingredient_name: r.name,
+          ingredient_amount: r.amount,
+          ingredient_unit_id: unitId,
+          ingredient_sort: idx + 1,
+        };
       }));
       await supabase.from("ingredients").insert(rows);
     }

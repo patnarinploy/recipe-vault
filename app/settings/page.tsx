@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck, Layers } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
 import type { WriterInfo } from "@/lib/types";
 import { getServerLocale } from "@/lib/locale/server";
@@ -50,7 +50,8 @@ export default async function SettingsPage() {
     {
       label: s.sections.usage,
       items: [
-        { href: "/settings/reading",  icon: BookOpen, label: s.display.label, sub: s.display.sub },
+        { href: "/settings/reading",    icon: BookOpen, label: s.display.label,     sub: s.display.sub },
+        { href: "/settings/dropdowns",  icon: Layers,   label: s.dropdowns.label,   sub: s.dropdowns.sub },
       ],
     },
   ];

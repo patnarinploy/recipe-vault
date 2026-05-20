@@ -299,13 +299,13 @@ export default function RecipeForm({
       return recipe.ingredient_rows.map((row: DbIngredient) => {
         const unitDisplay = row.preset_units
           ? (locale === "th" ? row.preset_units.unit_name_th : row.preset_units.unit_name_en)
-          : row.ingredient_unit_flexible;
+          : "";
         return {
           id: uid(),
           name: row.ingredient_name,
           amount: row.ingredient_amount,
           unitId: row.ingredient_unit_id,
-          unitFlex: row.ingredient_unit_flexible,
+          unitFlex: "",
           unitDisplay,
         };
       });
