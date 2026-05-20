@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 59;
-export const BUILD_TIMESTAMP = "2026-05-20T05:58:18.000Z";
-export const BUILD_TOOLTIP   = "fix: add lib/** to Tailwind content scan so badge dark: classes are incl";
+export const BUILD_NUMBER    = 60;
+export const BUILD_TIMESTAMP = "2026-05-20T06:06:11.000Z";
+export const BUILD_TOOLTIP   = "feat: open WriterCard modal from top-right dropdown identity block";

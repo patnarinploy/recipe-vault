@@ -1,5 +1,12 @@
 [
   {
+    "build": 60,
+    "timestamp": "2026-05-20T06:06:11.000Z",
+    "subject": "feat: open WriterCard modal from top-right dropdown identity block",
+    "hash": "157a3fc",
+    "category": "feat"
+  },
+  {
     "build": 59,
     "timestamp": "2026-05-20T05:58:18.000Z",
     "subject": "fix: add lib/** to Tailwind content scan so badge dark: classes are incl",
