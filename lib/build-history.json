@@ -1,5 +1,12 @@
 [
   {
+    "build": 75,
+    "timestamp": "2026-05-20T15:53:53.000Z",
+    "subject": "Fix theme/locale/font not syncing across devices on reload",
+    "hash": "86108c5",
+    "category": "fix"
+  },
+  {
     "build": 74,
     "timestamp": "2026-05-20T13:37:34.000Z",
     "subject": "Fix reading prefs not applying on first load from new device",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 74;
-export const BUILD_TIMESTAMP = "2026-05-20T13:37:34.000Z";
-export const BUILD_TOOLTIP   = "Fix reading prefs not applying on first load from new device";
+export const BUILD_NUMBER    = 75;
+export const BUILD_TIMESTAMP = "2026-05-20T15:53:53.000Z";
+export const BUILD_TOOLTIP   = "Fix theme/locale/font not syncing across devices on reload";
