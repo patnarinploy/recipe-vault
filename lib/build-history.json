@@ -1,5 +1,12 @@
 [
   {
+    "build": 70,
+    "timestamp": "2026-05-20T10:25:26.000Z",
+    "subject": "fix: pass lookupCategory as prop to PageRecipeFirst and PageRecipeCont",
+    "hash": "c9cd674",
+    "category": "fix"
+  },
+  {
     "build": 69,
     "timestamp": "2026-05-20T10:24:40.000Z",
     "subject": "feat: preset_categories system + consolidated admin Dropdowns page",

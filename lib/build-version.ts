@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 69;
-export const BUILD_TIMESTAMP = "2026-05-20T10:24:40.000Z";
-export const BUILD_TOOLTIP   = "feat: preset_categories system + consolidated admin Dropdowns page";
+export const BUILD_NUMBER    = 70;
+export const BUILD_TIMESTAMP = "2026-05-20T10:25:26.000Z";
+export const BUILD_TOOLTIP   = "fix: pass lookupCategory as prop to PageRecipeFirst and PageRecipeCont";
