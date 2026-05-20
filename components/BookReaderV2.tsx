@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User } from "lucide-react";
-import type { Book, DbIngredient, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
+import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import { useLocale, type Dict } from "@/lib/locale";
 import { translateCategory } from "@/lib/locale/unit-map";
@@ -868,8 +868,8 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
 // ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard" }
->(({ recipe: r, pn, coverColor, density }, ref) => {
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (raw: string | null) => string }
+>(({ recipe: r, pn, coverColor, density, lookupCategory }, ref) => {
   const { t, locale } = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -985,8 +985,8 @@ PageRecipeFirst.displayName = "PageRecipeFirst";
 // ─── Right recipe detail page — cream editorial layout ────────────
 const PageRecipeCont = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void }
->(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo }, ref) => {
+  { recipe: Recipe; label: string; text: string; lh: string; isRight: boolean; pn: number; density: "soft" | "hard"; youtubeUrl?: string; stepImages?: { step: number; url: string }[]; variant?: "ing" | "inst"; showMeta?: boolean; showRibbon?: boolean; instFirstChunk?: string; instFirstStepImages?: { step: number; url: string }[]; onPlayVideo?: (url: string) => void; lookupCategory: (raw: string | null) => string }
+>(({ recipe: r, text, isRight, pn, density, youtubeUrl, stepImages, variant = "ing", showMeta = false, showRibbon = false, instFirstChunk, instFirstStepImages, onPlayVideo, lookupCategory }, ref) => {
   const { t, locale } = useLocale();
   const ingLines  = variant === "ing"  ? text.split("\n").filter(l => l.trim()) : [];
   const instLines = variant === "inst" ? text.split("\n").filter(l => l.trim()) : [];
@@ -1208,15 +1208,15 @@ const PageBackCover = forwardRef<HTMLDivElement, { book: Book }>(({ book }, ref)
 PageBackCover.displayName = "PageBackCover";
 
 // ─── TOC Sort Modal ───────────────────────────────────────────────
-function TocSortModal({ recipes, open, onClose, onSave, coverColor, t }: {
+function TocSortModal({ recipes, open, onClose, onSave, coverColor, t, lookupCategory }: {
   recipes: Recipe[];
   open: boolean;
   onClose: () => void;
   onSave: (sorted: Recipe[]) => Promise<void>;
   coverColor: string;
   t: Dict;
+  lookupCategory: (raw: string | null) => string;
 }) {
-  const { locale } = useLocale();
   const [sorted, setSorted] = useState<Recipe[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -1260,7 +1260,7 @@ function TocSortModal({ recipes, open, onClose, onSave, coverColor, t }: {
                 <span className="flex-1 text-sm text-secondary truncate">{r.title}</span>
                 {r.is_public && <ShareBadge coverColor={coverColor} />}
                 {r.category && (
-                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{translateCategory(r.category, locale)}</span>
+                  <span className="text-[10px] text-muted shrink-0 hidden sm:block">{lookupCategory(r.category)}</span>
                 )}
                 <div className="flex gap-0.5 shrink-0">
                   <button onClick={() => move(i, -1)} disabled={i === 0}
@@ -1310,6 +1310,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [book,    setBook]    = useState<Book | null>(null);
   const [recipes,    setRecipes]    = useState<Recipe[]>([]);
   const [presetUnits, setPresetUnits] = useState<PresetUnit[]>([]);
+  const [presetCategories, setPresetCategories] = useState<PresetCategory[]>([]);
   const [ingredientNames, setIngredientNames] = useState<string[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [dataVersion, setDataVersion] = useState(0);
@@ -1363,11 +1364,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
-    const [bk, rc, unitsRes, ingNamesRes] = await Promise.all([
+    const [bk, rc, unitsRes, ingNamesRes, catsRes] = await Promise.all([
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
       sb.from("preset_units").select("*"),
       sb.from("ingredients").select("ingredient_name"),
+      sb.from("preset_categories").select("*"),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
@@ -1401,6 +1403,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       }
     }
     if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
+    if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
     if (ingNamesRes.data) {
       const unique = [...new Set(ingNamesRes.data.map((r: { ingredient_name: string }) => r.ingredient_name))]
         .filter(Boolean)
@@ -1490,6 +1493,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const goToPage    = useCallback((idx: number) => bookRef.current?.pageFlip().turnToPage(idx), []);
   const goToPrev    = useCallback(() => bookRef.current?.pageFlip().flipPrev(), []);
   const goToNext    = useCallback(() => bookRef.current?.pageFlip().flipNext(), []);
+
+  const lookupCategory = useCallback((raw: string | null): string => {
+    if (!raw) return "—";
+    const cat = presetCategories.find(c => c.name_th === raw || c.name_en === raw);
+    if (!cat) return translateCategory(raw, locale); // fallback
+    return locale === "th" ? cat.name_th : (cat.name_en || raw);
+  }, [presetCategories, locale]);
 
   // Keyboard arrow navigation
   useEffect(() => {
@@ -1737,14 +1747,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
       <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
-        <RecipeForm bookId={bookId} inModal presetUnits={presetUnits} ingredientNameOptions={ingredientNames}
+        <RecipeForm bookId={bookId} inModal presetUnits={presetUnits} presetCategories={presetCategories} ingredientNameOptions={ingredientNames}
           onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
           onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
         <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title={t.library.editRecipeTitle} disableBackdropClick>
-          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits} ingredientNameOptions={ingredientNames}
+          <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits} presetCategories={presetCategories} ingredientNameOptions={ingredientNames}
             onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
             onCancel={() => setEditRecipeOpen(false)}
             onDeleted={() => { setEditRecipeOpen(false); refreshAndReset(2); }} />
@@ -1764,6 +1774,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         onSave={handleSort}
         coverColor={book.cover_color}
         t={t}
+        lookupCategory={lookupCategory}
       />
 
       {writerInfo && (

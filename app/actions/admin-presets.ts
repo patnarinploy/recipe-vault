@@ -2,12 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/session";
-import type { PresetUnit } from "@/lib/types";
+import type { PresetUnit, PresetCategory } from "@/lib/types";
 
 // ── Preset Units ─────────────────────────────────────────────────────────────
 
 export async function createPresetUnit(
-  data: { unit_name_th: string; unit_name_en: string; sort_order: number }
+  data: { unit_name_th: string; unit_name_en: string }
 ): Promise<PresetUnit | { error: string }> {
   await requireAdmin();
   const supabase = await createClient();
@@ -22,7 +22,7 @@ export async function createPresetUnit(
 
 export async function updatePresetUnit(
   id: string,
-  data: { unit_name_th?: string; unit_name_en?: string; sort_order?: number }
+  data: { unit_name_th?: string; unit_name_en?: string }
 ): Promise<{ success: true } | { error: string }> {
   await requireAdmin();
   const supabase = await createClient();
@@ -35,6 +35,41 @@ export async function deletePresetUnit(id: string): Promise<{ success: true } | 
   await requireAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from("preset_units").delete().eq("id", id);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+// ── Preset Categories ─────────────────────────────────────────────────────────
+
+export async function createPresetCategory(
+  data: { name_th: string; name_en: string }
+): Promise<PresetCategory | { error: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data: row, error } = await supabase
+    .from("preset_categories")
+    .insert(data)
+    .select()
+    .single<PresetCategory>();
+  if (error) return { error: error.message };
+  return row;
+}
+
+export async function updatePresetCategory(
+  id: string,
+  data: { name_th?: string; name_en?: string }
+): Promise<{ success: true } | { error: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from("preset_categories").update(data).eq("id", id);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function deletePresetCategory(id: string): Promise<{ success: true } | { error: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.from("preset_categories").delete().eq("id", id);
   if (error) return { error: error.message };
   return { success: true };
 }

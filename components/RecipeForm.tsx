@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { type Recipe, type PresetUnit, type DbIngredient } from "@/lib/types";
+import { type Recipe, type PresetUnit, type PresetCategory, type DbIngredient } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
@@ -11,7 +11,7 @@ import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-re
 import LoadingButton from "./ui/LoadingButton";
 import { ReactSortable } from "react-sortablejs";
 import { useLocale } from "@/lib/locale";
-import { translateUnit, translateCategory } from "@/lib/locale/unit-map";
+import { translateUnit } from "@/lib/locale/unit-map";
 
 // Static TH units used for parsing stored ingredient strings (backward compat).
 // Display units come from t.recipe.units (locale-aware).
@@ -269,6 +269,7 @@ interface Props {
   inModal?: boolean;
   showDelete?: boolean;
   presetUnits?: PresetUnit[];
+  presetCategories?: PresetCategory[];
   ingredientNameOptions?: string[];
 }
 
@@ -281,6 +282,7 @@ export default function RecipeForm({
   inModal,
   showDelete,
   presetUnits = [],
+  presetCategories = [],
   ingredientNameOptions = [],
 }: Props) {
   const { t, locale } = useLocale();
@@ -322,7 +324,7 @@ export default function RecipeForm({
   const [form, setForm] = useState({
     title: recipe?.title ?? "",
     description: recipe?.description ?? "",
-    category: translateCategory(recipe?.category ?? "", locale),
+    category: recipe?.category ?? "",
     cook_time_minutes: recipe?.cook_time_minutes?.toString() ?? "",
     servings: recipe?.servings?.toString() ?? "",
     is_public: recipe?.is_public ?? false,
@@ -338,6 +340,29 @@ export default function RecipeForm({
       return aName.localeCompare(bName, locale === "th" ? "th" : "en");
     })
     .map(u => locale === "th" ? u.unit_name_th : (u.unit_name_en || u.unit_name_th));
+
+  const categoryOptions = presetCategories.length > 0
+    ? [...presetCategories]
+        .sort((a, b) => {
+          const aName = locale === "th" ? a.name_th : (a.name_en || a.name_th);
+          const bName = locale === "th" ? b.name_th : (b.name_en || b.name_th);
+          return aName.localeCompare(bName, locale === "th" ? "th" : "en");
+        })
+        .map(c => locale === "th" ? c.name_th : (c.name_en || c.name_th))
+    : (r.categories as unknown as string[]);
+
+  const categoryDisplay = (raw: string) => {
+    const cat = presetCategories.find(c => c.name_th === raw || c.name_en === raw);
+    if (!cat) return raw;
+    return locale === "th" ? cat.name_th : (cat.name_en || cat.name_th);
+  };
+
+  const handleCategoryChange = (display: string) => {
+    const cat = presetCategories.find(c =>
+      (locale === "th" ? c.name_th : (c.name_en || c.name_th)) === display
+    );
+    setForm(p => ({ ...p, category: cat ? cat.name_th : display }));
+  };
 
   function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
   function removeRow(i: number) { setIngredientRows(r => r.filter((_, idx) => idx !== i)); }
@@ -477,9 +502,9 @@ export default function RecipeForm({
           <div>
             <label className={labelCls}>{r.categoryLabel}</label>
             <Combobox
-              value={form.category}
-              onChange={v => setForm(p => ({ ...p, category: v }))}
-              options={r.categories as unknown as readonly string[]}
+              value={categoryDisplay(form.category)}
+              onChange={handleCategoryChange}
+              options={categoryOptions}
               placeholder={r.categoryPlaceholder}
               className={inputCls}
             />

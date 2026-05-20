@@ -2,7 +2,13 @@ export type PresetUnit = {
   id: string;
   unit_name_th: string;
   unit_name_en: string;
-  sort_order: number;
+};
+
+export type PresetCategory = {
+  id: string;
+  name_th: string;
+  name_en: string;
+  created_at: string;
 };
 
 export type DbIngredient = {

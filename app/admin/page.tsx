@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight, Ruler } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { getServerLocale } from "@/lib/locale/server";
 
 export const revalidate = 0;
@@ -42,10 +42,10 @@ export default async function AdminPage() {
       enabled:     true,
     },
     {
-      href:        "/admin/preset-units",
-      icon:        Ruler,
-      title:       "จัดการหน่วยวัด",
-      description: "เพิ่ม แก้ไข หรือลบหน่วยวัดที่ใช้ใน Dropdown สูตรอาหาร",
+      href:        "/admin/dropdowns",
+      icon:        SlidersHorizontal,
+      title:       adm.dropdowns.label,
+      description: adm.dropdowns.sub,
       meta:        null,
       enabled:     true,
     },
