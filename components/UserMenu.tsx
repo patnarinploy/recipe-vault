@@ -9,9 +9,15 @@ import type { User } from "@/lib/types";
 import { isAvatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 import { useLocale } from "@/lib/locale";
+import Modal from "./Modal";
+import WriterCard from "./WriterCard";
+import { getMyStats } from "@/app/actions/stats";
 
 export default function UserMenu({ user, locked }: { user: User; locked?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+  const [stats, setStats] = useState<{ book_count: number; recipe_count: number; public_count: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
 
@@ -57,14 +63,25 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 bg-surface rounded-2xl shadow-lg border border-border py-1.5 z-50">
-          <div className="px-4 py-2 border-b border-border mb-1">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setCardOpen(true);
+              if (!stats) {
+                setStatsLoading(true);
+                getMyStats().then(s => { setStats(s); setStatsLoading(false); });
+              }
+            }}
+            className="w-full text-left px-4 py-2 border-b border-border mb-1 hover:bg-elevated transition-colors rounded-t-2xl"
+          >
             {hasName ? (
               <p className="text-sm font-semibold text-foreground truncate">{user.display_name}</p>
             ) : (
               <p className="text-sm italic text-muted truncate">{t.nav.noName}</p>
             )}
             {user.email && <p className="text-xs text-muted truncate">{user.email}</p>}
-          </div>
+          </button>
 
           {!locked && (
             <>
@@ -100,6 +117,25 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
           </div>
         </div>
       )}
+
+      <Modal open={cardOpen} onClose={() => setCardOpen(false)} maxWidth="max-w-[30rem]">
+        <WriterCard
+          info={{
+            display_name: user.display_name,
+            bio: user.bio,
+            avatar: user.avatar,
+            role: user.role,
+            status: user.status,
+            last_seen: user.last_seen,
+            created_at: user.created_at,
+            book_count:   stats?.book_count,
+            recipe_count: stats?.recipe_count,
+            public_count: stats?.public_count,
+          }}
+          statsLoading={statsLoading}
+          onClose={() => setCardOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }
