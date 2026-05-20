@@ -16,14 +16,14 @@ export type AchievementResult = {
 };
 
 export const TIER_BADGE_COLORS: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-200 border border-stone-200 dark:border-stone-600",
-  2: "bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-200 border border-sky-200 dark:border-sky-700",
-  3: "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700",
-  4: "bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-200 border border-violet-200 dark:border-violet-700",
-  5: "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700",
+  1: "bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-100 border border-stone-200 dark:border-stone-500",
+  2: "bg-sky-100 dark:bg-sky-800 text-sky-700 dark:text-sky-100 border border-sky-200 dark:border-sky-600",
+  3: "bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-100 border border-emerald-200 dark:border-emerald-600",
+  4: "bg-violet-100 dark:bg-violet-800 text-violet-700 dark:text-violet-100 border border-violet-200 dark:border-violet-600",
+  5: "bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-100 border border-amber-200 dark:border-amber-600",
 };
 
-export const SPECIAL_BADGE_COLOR = "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-700";
+export const SPECIAL_BADGE_COLOR = "bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-100 border border-rose-200 dark:border-rose-600";
 
 const BOOK_TITLES: Array<{ min: number; id: string; label: string; emoji: string; tier: 1 | 2 | 3 | 4 | 5 }> = [
   { min: 10, id: "book-5", label: "ศาสดาแห่งชั้นหนังสือ", emoji: "📚", tier: 5 },
