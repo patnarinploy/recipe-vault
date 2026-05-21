@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 104;
-export const BUILD_TIMESTAMP = "2026-05-21T19:34:50.000Z";
-export const BUILD_TOOLTIP   = "fix: default to ingredients tab; fix preset_ingredients RLS policy";
+export const BUILD_NUMBER    = 105;
+export const BUILD_TIMESTAMP = "2026-05-21T19:44:36.000Z";
+export const BUILD_TOOLTIP   = "feat: wire preset_ingredients as ingredient autocomplete source";
