@@ -66,7 +66,7 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
     for (const ing of item.recipe.ingredient_rows ?? []) {
       const name = getIngredientName(ing, locale);
       // ingredient_key for store prefs always uses TH name for consistency
-      const keyName = (ing.preset_ingredients?.name_th ?? "").toLowerCase().trim();
+      const keyName = (ing.preset_ingredients?.name_th || ing.preset_ingredients?.name_en || "").toLowerCase().trim();
       const unit = ing.preset_units
         ? (locale === "th" ? ing.preset_units.unit_name_th : ing.preset_units.unit_name_en)
         : "";

@@ -229,16 +229,26 @@ export async function setPresetIngredientActive(
 export async function ensurePresetIngredient(name: string, userId: string): Promise<string | null> {
   if (!name.trim()) return null;
   const supabase = await createClient();
-  const { data: existing } = await supabase
+  const trimmed = name.trim();
+  // Match by name_th first, then name_en (user may type in either language)
+  const { data: byTh } = await supabase
     .from("preset_ingredients")
     .select("id")
     .eq("user_id", userId)
-    .eq("name_th", name.trim())
+    .eq("name_th", trimmed)
     .maybeSingle();
-  if (existing) return existing.id;
+  if (byTh) return byTh.id;
+  const { data: byEn } = await supabase
+    .from("preset_ingredients")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("name_en", trimmed)
+    .maybeSingle();
+  if (byEn) return byEn.id;
+  // New: store in both fields so EN users see the name too; they can correct it in Settings later
   const { data: created } = await supabase
     .from("preset_ingredients")
-    .insert({ name_th: name.trim(), name_en: "", is_active: true, user_id: userId })
+    .insert({ name_th: trimmed, name_en: trimmed, is_active: true, user_id: userId })
     .select("id")
     .single();
   return created?.id ?? null;

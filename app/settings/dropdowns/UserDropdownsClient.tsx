@@ -31,6 +31,7 @@ function PresetsTable({
   restoreLabel,
   archivedLabel,
   emptyLabel,
+  requireOneNameError,
 }: {
   items: { id: string; nameTh: string; nameEn: string; isActive: boolean }[];
   onSaveEdit: (id: string, nameTh: string, nameEn: string) => Promise<void>;
@@ -46,6 +47,7 @@ function PresetsTable({
   restoreLabel: string;
   archivedLabel: string;
   emptyLabel: string;
+  requireOneNameError: string;
 }) {
   const [editing, setEditing] = useState<EditState | null>(null);
   const [adding, setAdding] = useState(false);
@@ -54,7 +56,7 @@ function PresetsTable({
 
   const saveEdit = () => {
     if (!editing) return;
-    if (!editing.nameTh.trim()) { toast.error("กรุณากรอกชื่อภาษาไทย"); return; }
+    if (!editing.nameTh.trim() && !editing.nameEn.trim()) { toast.error(requireOneNameError); return; }
     startTransition(async () => {
       await onSaveEdit(editing.id, editing.nameTh.trim(), editing.nameEn.trim());
       setEditing(null);
@@ -67,7 +69,7 @@ function PresetsTable({
   };
 
   const saveNew = () => {
-    if (!newRow.nameTh.trim()) { toast.error("กรุณากรอกชื่อภาษาไทย"); return; }
+    if (!newRow.nameTh.trim() && !newRow.nameEn.trim()) { toast.error(requireOneNameError); return; }
     startTransition(async () => {
       await onAdd(newRow.nameTh.trim(), newRow.nameEn.trim());
       setNewRow({ nameTh: "", nameEn: "" });
@@ -127,7 +129,7 @@ function PresetsTable({
             ) : (
               <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm text-foreground truncate">{item.nameTh}</span>
+                  <span className="text-sm text-foreground truncate">{item.nameTh || item.nameEn}</span>
                   {!item.isActive && (
                     <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
                       {archivedLabel}
@@ -218,7 +220,7 @@ function IngredientsTable({
   thLabel, enLabel, addLabel,
   archiveConfirm, restoreConfirm,
   countLabel, archiveLabel, restoreLabel, archivedLabel, emptyLabel,
-  storesLabel, noStoreLabel,
+  storesLabel, noStoreLabel, requireOneNameError,
 }: {
   items: IngItem[];
   stores: UserStore[];
@@ -230,6 +232,7 @@ function IngredientsTable({
   countLabel: string; archiveLabel: string; restoreLabel: string;
   archivedLabel: string; emptyLabel: string;
   storesLabel: string; noStoreLabel: string;
+  requireOneNameError: string;
 }) {
   const [editing, setEditing] = useState<IngEditState | null>(null);
   const [adding, setAdding] = useState(false);
@@ -242,7 +245,7 @@ function IngredientsTable({
     ids.includes(storeId) ? ids.filter(x => x !== storeId) : [...ids, storeId];
 
   const saveEdit = () => {
-    if (!editing || !editing.nameTh.trim()) { toast.error("กรุณากรอกชื่อภาษาไทย"); return; }
+    if (!editing || (!editing.nameTh.trim() && !editing.nameEn.trim())) { toast.error(requireOneNameError); return; }
     startTransition(async () => {
       await onSaveEdit(editing.id, editing.nameTh.trim(), editing.nameEn.trim(), editing.storeIds);
       setEditing(null);
@@ -255,7 +258,7 @@ function IngredientsTable({
   };
 
   const saveNew = () => {
-    if (!newRow.nameTh.trim()) { toast.error("กรุณากรอกชื่อภาษาไทย"); return; }
+    if (!newRow.nameTh.trim() && !newRow.nameEn.trim()) { toast.error(requireOneNameError); return; }
     startTransition(async () => {
       await onAdd(newRow.nameTh.trim(), newRow.nameEn.trim(), newRow.storeIds);
       setNewRow({ nameTh: "", nameEn: "", storeIds: [] });
@@ -372,8 +375,8 @@ function IngredientsTable({
               <div className={`flex items-start gap-3 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm text-foreground">{item.nameTh}</span>
-                    {item.nameEn && <span className="text-xs text-muted">{item.nameEn}</span>}
+                    <span className="text-sm text-foreground">{item.nameTh || item.nameEn}</span>
+                    {item.nameTh && item.nameEn && <span className="text-xs text-muted">{item.nameEn}</span>}
                     {!item.isActive && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
                         {archivedLabel}
@@ -475,7 +478,7 @@ export default function UserDropdownsClient({
     nameTh: i.name_th,
     nameEn: i.name_en,
     isActive: i.is_active,
-    storeIds: ingStorePrefs.get(i.name_th.toLowerCase()) ?? [],
+    storeIds: ingStorePrefs.get((i.name_th || i.name_en).toLowerCase()) ?? [],
   }));
 
   // ─── Unit handlers ───────────────────────────────────────────────
@@ -544,8 +547,8 @@ export default function UserDropdownsClient({
 
   const saveIngredient = async (id: string, nameTh: string, nameEn: string, storeIds: string[]) => {
     const existing = ingredients.find(i => i.id === id);
-    const oldKey = existing?.name_th.toLowerCase() ?? "";
-    const newKey = nameTh.toLowerCase();
+    const oldKey = existing ? (existing.name_th || existing.name_en).toLowerCase() : "";
+    const newKey = (nameTh || nameEn).toLowerCase();
 
     const res = await updatePresetIngredient(id, { name_th: nameTh, name_en: nameEn });
     if ("error" in res) { toast.error(res.error); return; }
@@ -585,16 +588,17 @@ export default function UserDropdownsClient({
   const addIngredient = async (nameTh: string, nameEn: string, storeIds: string[]) => {
     const res = await createPresetIngredient({ name_th: nameTh, name_en: nameEn });
     if ("error" in res) { toast.error(res.error); return; }
+    const key = (nameTh || nameEn).toLowerCase();
     if (storeIds.length > 0) {
-      await setIngredientStorePrefs(nameTh.toLowerCase(), storeIds);
+      await setIngredientStorePrefs(key, storeIds);
     }
     setIngredients(prev =>
-      [...prev, res as PresetIngredient].sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+      [...prev, res as PresetIngredient].sort((a, b) => (a.name_th || a.name_en).localeCompare(b.name_th || b.name_en, "th"))
     );
     if (storeIds.length > 0) {
       setIngStorePrefs(prev => {
         const next = new Map(prev);
-        next.set(nameTh.toLowerCase(), storeIds);
+        next.set(key, storeIds);
         return next;
       });
     }
@@ -637,6 +641,7 @@ export default function UserDropdownsClient({
           emptyLabel={d.emptyIngredients}
           storesLabel={d.ingredientStores}
           noStoreLabel={d.noStoreAssigned}
+          requireOneNameError={d.requireOneName}
         />
       )}
 
@@ -656,6 +661,7 @@ export default function UserDropdownsClient({
           restoreLabel={d.restore}
           archivedLabel={d.archived}
           emptyLabel={d.emptyUnits}
+          requireOneNameError={d.requireOneName}
         />
       )}
 
@@ -675,6 +681,7 @@ export default function UserDropdownsClient({
           restoreLabel={d.restore}
           archivedLabel={d.archived}
           emptyLabel={d.emptyCategories}
+          requireOneNameError={d.requireOneName}
         />
       )}
     </div>

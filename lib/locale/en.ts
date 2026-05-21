@@ -236,6 +236,7 @@ export const en = {
       emptyIngredients: "No ingredients yet. Add your first one.",
       ingredientStores: "Stores",
       noStoreAssigned: "No store assigned",
+      requireOneName: "Please enter a name in at least one language",
     },
   },
   reading: {

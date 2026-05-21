@@ -236,6 +236,7 @@ export const th = {
       emptyIngredients: "ยังไม่มีวัตถุดิบ เพิ่มรายการแรกได้เลย",
       ingredientStores: "ร้านที่ซื้อ",
       noStoreAssigned: "ยังไม่ได้ระบุร้าน",
+      requireOneName: "กรุณากรอกชื่ออย่างน้อยหนึ่งภาษา",
     },
   },
   reading: {
