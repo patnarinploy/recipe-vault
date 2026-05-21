@@ -1,5 +1,12 @@
 [
   {
+    "build": 103,
+    "timestamp": "2026-05-21T18:27:12.000Z",
+    "subject": "feat: add Ingredients tab to /settings/dropdowns with store assignment",
+    "hash": "8b705b6",
+    "category": "feat"
+  },
+  {
     "build": 102,
     "timestamp": "2026-05-21T18:25:17.000Z",
     "subject": "feat: add preset_ingredients foundation (type, actions, locale, migratio",

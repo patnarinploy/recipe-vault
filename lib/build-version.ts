@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 102;
-export const BUILD_TIMESTAMP = "2026-05-21T18:25:17.000Z";
-export const BUILD_TOOLTIP   = "feat: add preset_ingredients foundation (type, actions, locale, migratio";
+export const BUILD_NUMBER    = 103;
+export const BUILD_TIMESTAMP = "2026-05-21T18:27:12.000Z";
+export const BUILD_TOOLTIP   = "feat: add Ingredients tab to /settings/dropdowns with store assignment";
