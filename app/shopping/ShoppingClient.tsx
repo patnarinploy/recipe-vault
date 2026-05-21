@@ -91,13 +91,18 @@ function computeRoute(
     const ids = storePrefs.get(c.key) ?? new Set<string>();
     if (ids.size === 0) { unassigned.push(c); continue; }
     for (const sid of ids) {
+      if (!storeMap.has(sid)) continue; // skip stale refs to deleted stores
       if (!storeToItems.has(sid)) storeToItems.set(sid, []);
       storeToItems.get(sid)!.push(c);
     }
+    if ([...ids].every(sid => !storeMap.has(sid))) unassigned.push(c);
   }
 
   const remaining = new Set(
-    combined.filter(c => (storePrefs.get(c.key) ?? new Set()).size > 0).map(c => c.key),
+    combined.filter(c => {
+      const ids = storePrefs.get(c.key) ?? new Set<string>();
+      return [...ids].some(sid => storeMap.has(sid));
+    }).map(c => c.key),
   );
   const route: { store: UserStore; items: CombinedIng[] }[] = [];
 
@@ -109,7 +114,9 @@ function computeRoute(
       if (coverable.length > bestItems.length) { bestId = sid; bestItems = coverable; }
     }
     if (!bestId || bestItems.length === 0) break;
-    route.push({ store: storeMap.get(bestId)!, items: bestItems });
+    const storeObj = storeMap.get(bestId);
+    if (!storeObj) break; // guard: should not happen after filtering above
+    route.push({ store: storeObj, items: bestItems });
     for (const c of bestItems) remaining.delete(c.key);
   }
 
@@ -653,7 +660,7 @@ function StoresTab({
                       {s.itemsAt.replace("{n}", String(stop.items.length))}
                     </span>
                   </div>
-                  <p className="text-xs text-muted pl-7 leading-relaxed">
+                  <p className="text-xs text-secondary pl-7 leading-relaxed">
                     {stop.items.map(c => c.name).join(" · ")}
                   </p>
                 </div>
@@ -669,7 +676,7 @@ function StoresTab({
                 <span className="text-sm text-muted font-medium">{s.unassigned}</span>
                 <span className="ml-auto text-xs text-muted">{s.itemsAt.replace("{n}", String(unassigned.length))}</span>
               </div>
-              <p className="text-xs text-muted/70 pl-7 leading-relaxed">
+              <p className="text-xs text-secondary pl-7 leading-relaxed">
                 {unassigned.map(c => c.name).join(" · ")}
               </p>
             </div>
@@ -693,7 +700,7 @@ function StoresTab({
           <div className="text-center py-10 bg-surface rounded-2xl border border-border">
             <Store className="w-10 h-10 mx-auto text-muted opacity-30 mb-3" />
             <p className="text-sm text-muted">{s.noStores}</p>
-            <p className="text-xs text-muted/70 mt-1">{s.noStoresSub}</p>
+            <p className="text-xs text-muted mt-1">{s.noStoresSub}</p>
           </div>
         ) : (
           <div className="space-y-2">

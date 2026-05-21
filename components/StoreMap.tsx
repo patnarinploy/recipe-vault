@@ -62,7 +62,7 @@ export default function StoreMap({ stores, storeItemCounts, itemsLabel }: Props)
           <Popup>
             <strong style={{ color: store.color }}>{store.name}</strong>
             <br />
-            <span style={{ fontSize: 12, color: "#666" }}>
+            <span style={{ fontSize: 12 }}>
               {itemsLabel.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
             </span>
           </Popup>
