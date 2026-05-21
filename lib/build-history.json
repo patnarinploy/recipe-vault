@@ -1,5 +1,12 @@
 [
   {
+    "build": 104,
+    "timestamp": "2026-05-21T19:34:50.000Z",
+    "subject": "fix: default to ingredients tab; fix preset_ingredients RLS policy",
+    "hash": "3d55b5e",
+    "category": "fix"
+  },
+  {
     "build": 103,
     "timestamp": "2026-05-21T18:27:12.000Z",
     "subject": "feat: add Ingredients tab to /settings/dropdowns with store assignment",
