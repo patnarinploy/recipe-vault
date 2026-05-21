@@ -818,6 +818,7 @@ export default function ShoppingClient({
     return map;
   });
   const [tab, setTab] = useState<"per" | "combined" | "map">("per");
+  const [clearSignal, setClearSignal] = useState(0);
   const [, startTransition] = useTransition();
   const [picker, setPicker] = useState<{ key: string; name: string; storeIds: Set<string> } | null>(null);
 
@@ -841,6 +842,8 @@ export default function ShoppingClient({
   const handleClearAll = async () => {
     if (!confirm(s.clearAllConfirm)) return;
     setItems([]);
+    try { localStorage.removeItem("rv_shopping_checked"); } catch {}
+    setClearSignal(n => n + 1);
     const res = await clearShoppingList();
     if ("error" in res) { toast.error(res.error); router.refresh(); }
   };
@@ -923,7 +926,7 @@ export default function ShoppingClient({
         items.length === 0 ? (
           <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>
         ) : (
-          <CombinedView items={items} locale={locale} stores={stores}
+          <CombinedView key={clearSignal} items={items} locale={locale} stores={stores}
             storePrefs={storePrefs} onPickStore={handlePickStore} />
         )
       )}
