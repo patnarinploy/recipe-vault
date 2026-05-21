@@ -65,6 +65,15 @@ export default function StoreMap({ stores, storeItemCounts, itemsLabel }: Props)
             <span style={{ fontSize: 12 }}>
               {itemsLabel.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
             </span>
+            <br />
+            <a
+              href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 11, color: "#3b82f6" }}
+            >
+              Google Maps ↗
+            </a>
           </Popup>
         </Marker>
       ))}

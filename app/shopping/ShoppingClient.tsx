@@ -7,13 +7,14 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import {
   ArrowLeft, ShoppingCart, Trash2, Plus, Minus, ChevronDown, ChevronUp,
-  Check, MapPin, X, Pencil, Loader2, Navigation, Store, Route,
+  Check, MapPin, X, Pencil, Loader2, Navigation, Store, Route, ExternalLink,
 } from "lucide-react";
 import { removeFromShoppingList, updateShoppingQuantity, clearShoppingList } from "@/app/actions/shopping";
 import type { ShoppingListEntry, DbIngredient, UserStore, IngredientStorePref } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 
 const DynamicMap = dynamic(() => import("@/components/StoreMap"), { ssr: false });
+const DynamicLocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
 
 const STORE_COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e",
@@ -337,17 +338,8 @@ function StoreForm({ store, onSave, onCancel }: {
   const [color, setColor] = useState(store?.color ?? STORE_COLORS[4]);
   const [lat, setLat] = useState(store?.latitude != null ? String(store.latitude) : "");
   const [lng, setLng] = useState(store?.longitude != null ? String(store.longitude) : "");
-  const [locating, setLocating] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const handleLocate = () => {
-    if (!navigator.geolocation) { toast.error(s.locationError); return; }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      pos => { setLat(pos.coords.latitude.toFixed(6)); setLng(pos.coords.longitude.toFixed(6)); setLocating(false); },
-      () => { toast.error(s.locationError); setLocating(false); },
-    );
-  };
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -370,62 +362,107 @@ function StoreForm({ store, onSave, onCancel }: {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" onMouseDown={onCancel}>
-      <div className="absolute inset-0 bg-black/40" />
-      <div
-        className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4 anim-scale-in"
-        onMouseDown={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground">{store ? s.editStore : s.addStore}</h3>
-          <button onClick={onCancel} className="text-muted hover:text-foreground"><X className="w-4 h-4" /></button>
-        </div>
-        <div>
-          <label className="text-xs text-muted mb-1.5 block">{s.storeName}</label>
-          <input
-            autoFocus value={name} onChange={e => setName(e.target.value)}
-            placeholder={s.storeNamePh}
-            onKeyDown={e => { if (e.key === "Enter" && name.trim()) handleSave(); }}
-            className="w-full border border-outline rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted mb-1.5 block">{s.storeColor}</label>
-          <div className="flex gap-2 flex-wrap">
-            {STORE_COLORS.map(c => (
-              <button key={c} onClick={() => setColor(c)}
-                className="w-7 h-7 rounded-full transition-transform hover:scale-110"
-                style={{ background: c, outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }}
-              />
-            ))}
+    <>
+      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" onMouseDown={onCancel}>
+        <div className="absolute inset-0 bg-black/40" />
+        <div
+          className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4 anim-scale-in"
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">{store ? s.editStore : s.addStore}</h3>
+            <button onClick={onCancel} className="text-muted hover:text-foreground"><X className="w-4 h-4" /></button>
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-muted mb-1.5 block">{s.storeLocation}</label>
-          <div className="flex gap-2 mb-2">
-            <input value={lat} onChange={e => setLat(e.target.value)} placeholder={s.lat} type="number" step="any"
-              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground" />
-            <input value={lng} onChange={e => setLng(e.target.value)} placeholder={s.lng} type="number" step="any"
-              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground" />
+
+          {/* Name */}
+          <div>
+            <label className="text-xs text-muted mb-1.5 block">{s.storeName}</label>
+            <input
+              autoFocus value={name} onChange={e => setName(e.target.value)}
+              placeholder={s.storeNamePh}
+              onKeyDown={e => { if (e.key === "Enter" && name.trim()) handleSave(); }}
+              className="w-full border border-outline rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground"
+            />
           </div>
-          <button onClick={handleLocate} disabled={locating}
-            className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 disabled:opacity-50 transition-colors">
-            {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
-            {locating ? s.locating : s.useMyLocation}
-          </button>
-        </div>
-        <div className="flex gap-2 pt-1">
-          <button onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl text-sm text-secondary bg-elevated hover:bg-border transition-colors">
-            {t.common.cancel}
-          </button>
-          <button onClick={handleSave} disabled={saving || !name.trim()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
-            {saving ? t.common.saving : t.common.save}
-          </button>
+
+          {/* Color */}
+          <div>
+            <label className="text-xs text-muted mb-1.5 block">{s.storeColor}</label>
+            <div className="flex gap-2 flex-wrap">
+              {STORE_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)}
+                  className="w-7 h-7 rounded-full transition-transform hover:scale-110"
+                  style={{ background: c, outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Location — map picker button */}
+          <div>
+            <label className="text-xs text-muted mb-1.5 block">{s.storeLocation}</label>
+            {lat && lng && (
+              <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-elevated rounded-xl">
+                <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                <span className="text-xs text-secondary font-mono flex-1 truncate">
+                  {parseFloat(lat).toFixed(5)}, {parseFloat(lng).toFixed(5)}
+                </span>
+                <a href={`https://www.google.com/maps?q=${lat},${lng}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-0.5 shrink-0"
+                  onMouseDown={e => e.stopPropagation()}>
+                  <ExternalLink className="w-3 h-3" /> {s.viewGoogleMaps}
+                </a>
+                <button onClick={() => { setLat(""); setLng(""); }}
+                  className="text-muted hover:text-red-500 shrink-0 transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+            <button onClick={() => setMapPickerOpen(true)}
+              className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl border border-dashed border-outline hover:bg-elevated text-sm text-muted hover:text-foreground transition-colors">
+              <MapPin className="w-4 h-4" />
+              {lat && lng ? s.changeLocation : s.setOnMap}
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <button onClick={onCancel}
+              className="flex-1 py-2.5 rounded-xl text-sm text-secondary bg-elevated hover:bg-border transition-colors">
+              {t.common.cancel}
+            </button>
+            <button onClick={handleSave} disabled={saving || !name.trim()}
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-colors">
+              {saving ? t.common.saving : t.common.save}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Full-screen map picker */}
+      {mapPickerOpen && (
+        <div className="fixed inset-0 z-[99999] flex flex-col" style={{ background: "var(--bg)" }}>
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
+            <button onClick={() => setMapPickerOpen(false)} className="p-1 text-muted hover:text-foreground transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-semibold text-foreground text-sm flex-1">{s.setOnMap}</h3>
+          </div>
+          <div className="flex-1 min-h-0">
+            <DynamicLocationPicker
+              initialPos={lat && lng ? [parseFloat(lat), parseFloat(lng)] : undefined}
+              onConfirm={(newLat, newLng) => {
+                setLat(newLat.toFixed(6));
+                setLng(newLng.toFixed(6));
+                setMapPickerOpen(false);
+              }}
+              onCancel={() => setMapPickerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -709,9 +746,15 @@ function StoresTab({
                 <div className="w-3 h-3 rounded-full shrink-0" style={{ background: store.color }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{store.name}</p>
-                  <p className="text-xs text-muted">
-                    {store.latitude != null ? `${store.latitude}, ${store.longitude}` : s.noLocation}
-                  </p>
+                  {store.latitude != null ? (
+                    <a href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-blue-400 hover:text-blue-500 flex items-center gap-0.5 transition-colors">
+                      <ExternalLink className="w-3 h-3" /> {s.viewGoogleMaps}
+                    </a>
+                  ) : (
+                    <p className="text-xs text-muted">{s.noLocation}</p>
+                  )}
                 </div>
                 {combined.length > 0 && (
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium text-white shrink-0"
