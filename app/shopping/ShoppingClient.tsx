@@ -50,15 +50,29 @@ interface CombinedIng {
   sources: { title: string; amount: string; qty: number }[];
 }
 
+function getIngredientName(ing: DbIngredient, locale: "th" | "en"): string {
+  if (ing.preset_ingredients) {
+    const name = locale === "en"
+      ? (ing.preset_ingredients.name_en || ing.preset_ingredients.name_th)
+      : ing.preset_ingredients.name_th;
+    if (name) return name;
+  }
+  return ing.ingredient_name;
+}
+
 function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): CombinedIng[] {
   const map = new Map<string, CombinedIng>();
   for (const item of items) {
     for (const ing of item.recipe.ingredient_rows ?? []) {
-      const name = ing.ingredient_name.trim();
+      const name = getIngredientName(ing, locale);
+      // ingredient_key for store prefs always uses TH name for consistency
+      const keyName = ing.preset_ingredients?.name_th
+        ? ing.preset_ingredients.name_th.toLowerCase()
+        : ing.ingredient_name.toLowerCase().trim();
       const unit = ing.preset_units
         ? (locale === "th" ? ing.preset_units.unit_name_th : ing.preset_units.unit_name_en)
         : "";
-      const key = `${name.toLowerCase()}:::${unit.toLowerCase()}`;
+      const key = `${keyName}:::${unit.toLowerCase()}`;
       const parsed = parseAmount(ing.ingredient_amount);
       const source = { title: item.recipe.title, amount: ing.ingredient_amount, qty: item.quantity };
       const existing = map.get(key);

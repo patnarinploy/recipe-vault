@@ -1452,7 +1452,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       }
       const [recipesRes, ingRes] = await Promise.all([
         sb.from("recipes").select("*, preset_categories!category_id(*)").in("id", favIds).returns<Recipe[]>(),
-        sb.from("ingredients").select("*, preset_units(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
+        sb.from("ingredients").select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
       ]);
       const ingByRecipe = new Map<string, DbIngredient[]>();
       for (const row of ingRes.data ?? []) {
@@ -1526,7 +1526,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const recipeIds = rawRecipes.map(r => r.id);
       const { data: ingData } = await sb
         .from("ingredients")
-        .select("*, preset_units(*)")
+        .select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)")
         .in("recipe_id", recipeIds)
         .order("ingredient_sort");
       const ingByRecipe = new Map<string, DbIngredient[]>();
@@ -1553,7 +1553,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const unit = row.preset_units
         ? (locale === "th" ? row.preset_units.unit_name_th : (row.preset_units.unit_name_en || row.preset_units.unit_name_th))
         : "";
-      return [row.ingredient_name, row.ingredient_amount, unit].filter(Boolean).join(" ");
+      const name = row.preset_ingredients
+        ? (locale === "en"
+            ? (row.preset_ingredients.name_en || row.preset_ingredients.name_th)
+            : row.preset_ingredients.name_th)
+        : row.ingredient_name;
+      return [name, row.ingredient_amount, unit].filter(Boolean).join(" ");
     });
     return { ...r, ingredients: lines.join("\n") };
   }), [recipes, locale]);

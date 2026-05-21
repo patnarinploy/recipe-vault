@@ -63,12 +63,13 @@ export async function createRecipe(
       if (!unitId && r.unitFlex.trim()) {
         unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
       }
-      await ensurePresetIngredient(r.name, user.id);
+      const presetId = await ensurePresetIngredient(r.name, user.id);
       return {
         recipe_id: recipeId,
         ingredient_name: r.name,
         ingredient_amount: r.amount,
         ingredient_unit_id: unitId,
+        ingredient_preset_id: presetId,
         ingredient_sort: idx + 1,
       };
     }));
@@ -118,12 +119,13 @@ export async function updateRecipe(
         if (!unitId && r.unitFlex.trim()) {
           unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
         }
-        await ensurePresetIngredient(r.name, user.id);
+        const presetId = await ensurePresetIngredient(r.name, user.id);
         return {
           recipe_id: id,
           ingredient_name: r.name,
           ingredient_amount: r.amount,
           ingredient_unit_id: unitId,
+          ingredient_preset_id: presetId,
           ingredient_sort: idx + 1,
         };
       }));

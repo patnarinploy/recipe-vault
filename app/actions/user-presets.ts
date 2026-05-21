@@ -226,8 +226,8 @@ export async function setPresetIngredientActive(
 }
 
 // ─── Auto-create preset ingredient (used by recipe save) ──────────
-export async function ensurePresetIngredient(name: string, userId: string): Promise<void> {
-  if (!name.trim()) return;
+export async function ensurePresetIngredient(name: string, userId: string): Promise<string | null> {
+  if (!name.trim()) return null;
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("preset_ingredients")
@@ -235,10 +235,13 @@ export async function ensurePresetIngredient(name: string, userId: string): Prom
     .eq("user_id", userId)
     .eq("name_th", name.trim())
     .maybeSingle();
-  if (existing) return;
-  await supabase
+  if (existing) return existing.id;
+  const { data: created } = await supabase
     .from("preset_ingredients")
-    .insert({ name_th: name.trim(), name_en: "", is_active: true, user_id: userId });
+    .insert({ name_th: name.trim(), name_en: "", is_active: true, user_id: userId })
+    .select("id")
+    .single();
+  return created?.id ?? null;
 }
 
 // ─── Auto-create preset unit (used by recipe save) ────────────────

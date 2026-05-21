@@ -22,8 +22,10 @@ export type DbIngredient = {
   ingredient_name: string;
   ingredient_amount: string;
   ingredient_unit_id: string | null;
+  ingredient_preset_id: string | null;
   ingredient_sort: number;
   preset_units: PresetUnit | null;
+  preset_ingredients: PresetIngredient | null;
 };
 
 export type Recipe = {
