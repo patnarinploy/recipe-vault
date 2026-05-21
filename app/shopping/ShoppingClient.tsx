@@ -78,7 +78,7 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
 
 // ── IngredientList (per recipe) ───────────────────────────────────
 
-function IngredientList({ rows, locale }: { rows: DbIngredient[]; locale: "th" | "en" }) {
+function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "th" | "en"; qty: number }) {
   const [open, setOpen] = useState(true);
   const { t } = useLocale();
   const s = t.shopping;
@@ -97,11 +97,18 @@ function IngredientList({ rows, locale }: { rows: DbIngredient[]; locale: "th" |
             const unit = ing.preset_units
               ? (locale === "th" ? ing.preset_units.unit_name_th : ing.preset_units.unit_name_en)
               : "";
+            const base = parseAmount(ing.ingredient_amount);
+            const scaled = base !== null && qty > 1 ? formatAmount(base * qty) : null;
             return (
               <li key={ing.id} className="flex items-baseline gap-2 text-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0 mt-1.5" />
                 <span className="text-foreground flex-1">{ing.ingredient_name}</span>
                 <span className="text-muted shrink-0">{ing.ingredient_amount}{unit ? ` ${unit}` : ""}</span>
+                {scaled !== null && (
+                  <span className="text-orange-500 font-semibold shrink-0">
+                    = {scaled}{unit ? ` ${unit}` : ""}
+                  </span>
+                )}
               </li>
             );
           })}
@@ -169,7 +176,7 @@ function RecipeCard({
         </button>
       </div>
       {(r.ingredient_rows ?? []).length > 0 && (
-        <IngredientList rows={r.ingredient_rows ?? []} locale={locale} />
+        <IngredientList rows={r.ingredient_rows ?? []} locale={locale} qty={entry.quantity} />
       )}
     </div>
   );
