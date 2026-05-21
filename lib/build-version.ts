@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 97;
-export const BUILD_TIMESTAMP = "2026-05-21T09:09:27.000Z";
-export const BUILD_TOOLTIP   = "fix: GPS button in LocationPicker now reliably pans map + shows error";
+export const BUILD_NUMBER    = 98;
+export const BUILD_TIMESTAMP = "2026-05-21T09:38:32.000Z";
+export const BUILD_TOOLTIP   = "fix: IP geolocation fallback when GPS is unavailable/blocked";
