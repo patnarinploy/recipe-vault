@@ -139,6 +139,13 @@ export const th = {
     noLocation: "ไม่มีพิกัด",
     locating: "กำลังระบุตำแหน่ง…",
     locationError: "ไม่สามารถระบุตำแหน่งได้",
+    routeTitle: "แนะนำเส้นทาง",
+    routeSummary: "ไป {stores} ร้าน · ได้ {items} รายการ",
+    routeStop: "จุดที่ {n}",
+    unassigned: "ยังไม่ระบุร้าน",
+    clearStores: "ล้างทั้งหมด",
+    doneBtn: "เลือก {n} ร้าน",
+    multiStores: "{n} ร้าน",
   },
   settings: {
     title: "ตั้งค่า",

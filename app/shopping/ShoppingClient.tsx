@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import {
   ArrowLeft, ShoppingCart, Trash2, Plus, Minus, ChevronDown, ChevronUp,
-  Check, MapPin, X, Pencil, Loader2, Navigation, Store,
+  Check, MapPin, X, Pencil, Loader2, Navigation, Store, Route,
 } from "lucide-react";
 import { removeFromShoppingList, updateShoppingQuantity, clearShoppingList } from "@/app/actions/shopping";
 import type { ShoppingListEntry, DbIngredient, UserStore, IngredientStorePref } from "@/lib/types";
@@ -76,6 +76,46 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
   return Array.from(map.values());
 }
 
+// ── Route recommendation (greedy set cover) ───────────────────────
+
+function computeRoute(
+  combined: CombinedIng[],
+  storePrefs: Map<string, Set<string>>,
+  stores: UserStore[],
+) {
+  const storeMap = new Map(stores.map(s => [s.id, s]));
+  const storeToItems = new Map<string, CombinedIng[]>();
+  const unassigned: CombinedIng[] = [];
+
+  for (const c of combined) {
+    const ids = storePrefs.get(c.key) ?? new Set<string>();
+    if (ids.size === 0) { unassigned.push(c); continue; }
+    for (const sid of ids) {
+      if (!storeToItems.has(sid)) storeToItems.set(sid, []);
+      storeToItems.get(sid)!.push(c);
+    }
+  }
+
+  const remaining = new Set(
+    combined.filter(c => (storePrefs.get(c.key) ?? new Set()).size > 0).map(c => c.key),
+  );
+  const route: { store: UserStore; items: CombinedIng[] }[] = [];
+
+  while (remaining.size > 0) {
+    let bestId = "";
+    let bestItems: CombinedIng[] = [];
+    for (const [sid, items] of storeToItems) {
+      const coverable = items.filter(c => remaining.has(c.key));
+      if (coverable.length > bestItems.length) { bestId = sid; bestItems = coverable; }
+    }
+    if (!bestId || bestItems.length === 0) break;
+    route.push({ store: storeMap.get(bestId)!, items: bestItems });
+    for (const c of bestItems) remaining.delete(c.key);
+  }
+
+  return { route, unassigned };
+}
+
 // ── IngredientList (per recipe) ───────────────────────────────────
 
 function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "th" | "en"; qty: number }) {
@@ -105,9 +145,7 @@ function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "
                 <span className="text-foreground flex-1">{ing.ingredient_name}</span>
                 <span className="text-muted shrink-0">{ing.ingredient_amount}{unit ? ` ${unit}` : ""}</span>
                 {scaled !== null && (
-                  <span className="text-orange-500 font-semibold shrink-0">
-                    = {scaled}{unit ? ` ${unit}` : ""}
-                  </span>
+                  <span className="text-orange-500 font-semibold shrink-0">= {scaled}{unit ? ` ${unit}` : ""}</span>
                 )}
               </li>
             );
@@ -182,65 +220,97 @@ function RecipeCard({
   );
 }
 
-// ── StorePicker bottom drawer ─────────────────────────────────────
+// ── StorePicker — multi-select bottom drawer ──────────────────────
 
 function StorePicker({
-  open, onClose, ingredientName, ingredientKey, stores, currentStoreId, onPick,
+  open, onClose, ingredientName, ingredientKey, stores, currentStoreIds, onSave,
 }: {
   open: boolean;
   onClose: () => void;
   ingredientName: string;
   ingredientKey: string;
   stores: UserStore[];
-  currentStoreId: string | null;
-  onPick: (key: string, storeId: string | null) => void;
+  currentStoreIds: Set<string>;
+  onSave: (key: string, storeIds: Set<string>) => void;
 }) {
   const { t } = useLocale();
   const s = t.shopping;
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(currentStoreIds));
+
+  const toggle = (id: string) =>
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const handleClose = () => {
+    onSave(ingredientKey, selected);
+    onClose();
+  };
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col justify-end" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-end" onMouseDown={handleClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-surface rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto anim-scale-in"
+        className="relative bg-surface rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col anim-scale-in"
         onMouseDown={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-surface px-5 pt-5 pb-3 border-b border-border/50">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 border-b border-border/50 shrink-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <p className="text-xs text-muted">{s.pickStore}</p>
-            <button onClick={onClose} className="shrink-0 text-muted hover:text-foreground">
+            <button onClick={handleClose} className="shrink-0 text-muted hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
           <p className="font-semibold text-foreground text-sm truncate">{ingredientName}</p>
         </div>
-        <div className="p-3 space-y-1">
-          <button
-            onClick={() => { onPick(ingredientKey, null); onClose(); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
-              !currentStoreId ? "bg-elevated border border-border" : "hover:bg-elevated/60"
-            }`}
-          >
-            <div className="w-4 h-4 rounded-full border-2 border-muted shrink-0" />
-            <span className="text-sm text-muted">{s.noStore}</span>
-            {!currentStoreId && <Check className="w-4 h-4 text-green-500 ml-auto" />}
-          </button>
-          {stores.map(store => (
-            <button
-              key={store.id}
-              onClick={() => { onPick(ingredientKey, store.id); onClose(); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
-                currentStoreId === store.id ? "bg-elevated border border-border" : "hover:bg-elevated/60"
-              }`}
-            >
-              <div className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
-              <span className="text-sm text-foreground">{store.name}</span>
-              {currentStoreId === store.id && <Check className="w-4 h-4 text-green-500 ml-auto" />}
-            </button>
-          ))}
+
+        {/* Store list */}
+        <div className="overflow-y-auto flex-1 p-3 space-y-1">
           {stores.length === 0 && (
             <p className="text-sm text-muted text-center py-8">{s.noStores}</p>
           )}
+          {stores.map(store => {
+            const on = selected.has(store.id);
+            return (
+              <button
+                key={store.id}
+                onClick={() => toggle(store.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
+                  on ? "bg-elevated border border-border" : "hover:bg-elevated/60"
+                }`}
+              >
+                <div className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
+                <span className="text-sm text-foreground flex-1">{store.name}</span>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  on ? "border-green-500 bg-green-500" : "border-border"
+                }`}>
+                  {on && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 pb-6 pt-3 border-t border-border/50 flex gap-2 shrink-0">
+          <button
+            onClick={() => setSelected(new Set())}
+            className="px-4 py-2.5 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors"
+          >
+            {s.clearStores}
+          </button>
+          <button
+            onClick={handleClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+          >
+            {selected.size === 0
+              ? s.noStore
+              : s.doneBtn.replace("{n}", String(selected.size))}
+          </button>
         </div>
       </div>
     </div>
@@ -303,63 +373,40 @@ function StoreForm({ store, onSave, onCancel }: {
           <h3 className="font-semibold text-foreground">{store ? s.editStore : s.addStore}</h3>
           <button onClick={onCancel} className="text-muted hover:text-foreground"><X className="w-4 h-4" /></button>
         </div>
-
         <div>
           <label className="text-xs text-muted mb-1.5 block">{s.storeName}</label>
           <input
-            autoFocus
-            value={name}
-            onChange={e => setName(e.target.value)}
+            autoFocus value={name} onChange={e => setName(e.target.value)}
             placeholder={s.storeNamePh}
             onKeyDown={e => { if (e.key === "Enter" && name.trim()) handleSave(); }}
             className="w-full border border-outline rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground"
           />
         </div>
-
         <div>
           <label className="text-xs text-muted mb-1.5 block">{s.storeColor}</label>
           <div className="flex gap-2 flex-wrap">
             {STORE_COLORS.map(c => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
+              <button key={c} onClick={() => setColor(c)}
                 className="w-7 h-7 rounded-full transition-transform hover:scale-110"
                 style={{ background: c, outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }}
               />
             ))}
           </div>
         </div>
-
         <div>
           <label className="text-xs text-muted mb-1.5 block">{s.storeLocation}</label>
           <div className="flex gap-2 mb-2">
-            <input
-              value={lat}
-              onChange={e => setLat(e.target.value)}
-              placeholder={s.lat}
-              type="number"
-              step="any"
-              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground"
-            />
-            <input
-              value={lng}
-              onChange={e => setLng(e.target.value)}
-              placeholder={s.lng}
-              type="number"
-              step="any"
-              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground"
-            />
+            <input value={lat} onChange={e => setLat(e.target.value)} placeholder={s.lat} type="number" step="any"
+              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground" />
+            <input value={lng} onChange={e => setLng(e.target.value)} placeholder={s.lng} type="number" step="any"
+              className="flex-1 border border-outline rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground" />
           </div>
-          <button
-            onClick={handleLocate}
-            disabled={locating}
-            className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 disabled:opacity-50 transition-colors"
-          >
+          <button onClick={handleLocate} disabled={locating}
+            className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 disabled:opacity-50 transition-colors">
             {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
             {locating ? s.locating : s.useMyLocation}
           </button>
         </div>
-
         <div className="flex gap-2 pt-1">
           <button onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl text-sm text-secondary bg-elevated hover:bg-border transition-colors">
@@ -375,7 +422,48 @@ function StoreForm({ store, onSave, onCancel }: {
   );
 }
 
-// ── CombinedView (with store tags) ────────────────────────────────
+// ── Multi-store pill for Combined view ────────────────────────────
+
+function StorePills({
+  storeIds, storeMap, onClick,
+}: {
+  storeIds: Set<string>;
+  storeMap: Map<string, UserStore>;
+  onClick: () => void;
+}) {
+  const assigned = [...storeIds].map(id => storeMap.get(id)).filter(Boolean) as UserStore[];
+
+  if (assigned.length === 0) {
+    return (
+      <button onClick={onClick}
+        className="shrink-0 p-1.5 rounded-lg bg-elevated hover:bg-border text-muted transition-colors">
+        <MapPin className="w-3.5 h-3.5" />
+      </button>
+    );
+  }
+  if (assigned.length === 1) {
+    return (
+      <button onClick={onClick}
+        className="shrink-0 px-2.5 py-1 rounded-lg text-xs text-white font-medium max-w-[80px] truncate transition-opacity hover:opacity-80"
+        style={{ background: assigned[0].color }}>
+        {assigned[0].name}
+      </button>
+    );
+  }
+  return (
+    <button onClick={onClick}
+      className="shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-lg bg-elevated hover:bg-border transition-colors">
+      {assigned.slice(0, 3).map(s => (
+        <div key={s.id} className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+      ))}
+      {assigned.length > 3 && (
+        <span className="text-[10px] text-muted ml-0.5">+{assigned.length - 3}</span>
+      )}
+    </button>
+  );
+}
+
+// ── CombinedView ──────────────────────────────────────────────────
 
 function CombinedView({
   items, locale, stores, storePrefs, onPickStore,
@@ -383,8 +471,8 @@ function CombinedView({
   items: ShoppingListEntry[];
   locale: "th" | "en";
   stores: UserStore[];
-  storePrefs: Map<string, string | null>;
-  onPickStore: (key: string, name: string, currentStoreId: string | null) => void;
+  storePrefs: Map<string, Set<string>>;
+  onPickStore: (key: string, name: string, currentStoreIds: Set<string>) => void;
 }) {
   const { t } = useLocale();
   const s = t.shopping;
@@ -426,8 +514,7 @@ function CombinedView({
     const amountDisplay = c.totalAmount !== null
       ? `${formatAmount(c.totalAmount)}${c.unit ? ` ${c.unit}` : ""}`
       : c.sources.map(src => `${src.amount}${c.unit ? ` ${c.unit}` : ""} ×${src.qty}`).join(" + ");
-    const currentStoreId = storePrefs.get(c.key) ?? null;
-    const currentStore = currentStoreId ? storeMap.get(currentStoreId) : null;
+    const currentStoreIds = storePrefs.get(c.key) ?? new Set<string>();
 
     return (
       <div key={c.key} className={`flex items-start gap-3 px-4 py-3 transition-colors ${isChecked ? "opacity-50" : ""}`}>
@@ -450,18 +537,11 @@ function CombinedView({
             </p>
           )}
         </div>
-        <button
-          onClick={() => onPickStore(c.key, c.name, currentStoreId)}
-          className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
-            currentStore ? "text-white font-medium" : "bg-elevated hover:bg-border text-muted"
-          }`}
-          style={currentStore ? { background: currentStore.color } : undefined}
-        >
-          {currentStore
-            ? <span className="max-w-[72px] truncate">{currentStore.name}</span>
-            : <><MapPin className="w-3 h-3" /><span className="hidden xs:inline">{s.noStore}</span></>
-          }
-        </button>
+        <StorePills
+          storeIds={currentStoreIds}
+          storeMap={storeMap}
+          onClick={() => onPickStore(c.key, c.name, currentStoreIds)}
+        />
       </div>
     );
   };
@@ -495,7 +575,7 @@ function StoresTab({
   stores, storePrefs, items, locale, onStoresChange,
 }: {
   stores: UserStore[];
-  storePrefs: Map<string, string | null>;
+  storePrefs: Map<string, Set<string>>;
   items: ShoppingListEntry[];
   locale: "th" | "en";
   onStoresChange: (s: UserStore[]) => void;
@@ -506,12 +586,14 @@ function StoresTab({
   const [editStore, setEditStore] = useState<UserStore | undefined>(undefined);
 
   const combined = buildCombined(items, locale);
+  const { route, unassigned } = computeRoute(combined, storePrefs, stores);
+
+  // Coverage count per store for the store cards
   const storeItemCounts: Record<string, number> = {};
-  let unassignedCount = 0;
   for (const c of combined) {
-    const storeId = storePrefs.get(c.key) ?? null;
-    if (storeId) storeItemCounts[storeId] = (storeItemCounts[storeId] ?? 0) + 1;
-    else unassignedCount++;
+    for (const sid of (storePrefs.get(c.key) ?? new Set())) {
+      storeItemCounts[sid] = (storeItemCounts[sid] ?? 0) + 1;
+    }
   }
 
   const handleSaveStore = (saved: UserStore) => {
@@ -530,9 +612,72 @@ function StoresTab({
     onStoresChange(stores.filter(st => st.id !== storeId));
   };
 
+  const assignedItemCount = combined.length - unassigned.length;
+
   return (
     <div className="space-y-5">
-      {/* Store list */}
+
+      {/* ── Recommendation ──────────────────────────────────────── */}
+      {combined.length > 0 && stores.length > 0 && (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60 bg-elevated/40">
+            <Route className="w-4 h-4 text-orange-500 shrink-0" />
+            <span className="text-sm font-semibold text-foreground">{s.routeTitle}</span>
+            {route.length > 0 && (
+              <span className="ml-auto text-xs text-muted">
+                {s.routeSummary
+                  .replace("{stores}", String(route.length))
+                  .replace("{items}", String(assignedItemCount))}
+              </span>
+            )}
+          </div>
+
+          {/* Route stops */}
+          {route.length === 0 ? (
+            <div className="px-4 py-5 text-sm text-muted text-center">
+              {s.noStoresSub}
+            </div>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {route.map((stop, i) => (
+                <div key={stop.store.id} className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                      style={{ background: stop.store.color }}>
+                      {i + 1}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground">{stop.store.name}</span>
+                    <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full text-white"
+                      style={{ background: stop.store.color }}>
+                      {s.itemsAt.replace("{n}", String(stop.items.length))}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted pl-7 leading-relaxed">
+                    {stop.items.map(c => c.name).join(" · ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Unassigned items */}
+          {unassigned.length > 0 && (
+            <div className="px-4 py-3 border-t border-border/60 bg-elevated/20">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-5 h-5 rounded-full border-2 border-muted shrink-0" />
+                <span className="text-sm text-muted font-medium">{s.unassigned}</span>
+                <span className="ml-auto text-xs text-muted">{s.itemsAt.replace("{n}", String(unassigned.length))}</span>
+              </div>
+              <p className="text-xs text-muted/70 pl-7 leading-relaxed">
+                {unassigned.map(c => c.name).join(" · ")}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Store list ──────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-foreground">{s.myStores}</h2>
@@ -562,23 +707,17 @@ function StoresTab({
                   </p>
                 </div>
                 {combined.length > 0 && (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full font-medium text-white shrink-0"
-                    style={{ background: store.color }}
-                  >
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium text-white shrink-0"
+                    style={{ background: store.color }}>
                     {s.itemsAt.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
                   </span>
                 )}
-                <button
-                  onClick={() => { setEditStore(store); setFormOpen(true); }}
-                  className="p-1.5 text-muted hover:text-foreground transition-colors"
-                >
+                <button onClick={() => { setEditStore(store); setFormOpen(true); }}
+                  className="p-1.5 text-muted hover:text-foreground transition-colors">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  onClick={() => handleDeleteStore(store.id)}
-                  className="p-1.5 text-muted hover:text-red-500 transition-colors"
-                >
+                <button onClick={() => handleDeleteStore(store.id)}
+                  className="p-1.5 text-muted hover:text-red-500 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -587,63 +726,9 @@ function StoresTab({
         )}
       </div>
 
-      {/* Leaflet map */}
+      {/* ── Leaflet map ─────────────────────────────────────────── */}
       {stores.some(st => st.latitude !== null) && (
-        <DynamicMap
-          stores={stores}
-          storeItemCounts={storeItemCounts}
-          itemsLabel={s.itemsAt}
-        />
-      )}
-
-      {/* Breakdown by store */}
-      {combined.length > 0 && (stores.length > 0 || unassignedCount > 0) && (
-        <div className="space-y-3">
-          {stores.map(store => {
-            const storeItems = combined.filter(c => (storePrefs.get(c.key) ?? null) === store.id);
-            if (storeItems.length === 0) return null;
-            return (
-              <div key={store.id} className="bg-surface rounded-2xl border border-border p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: store.color }} />
-                  <span className="text-sm font-semibold text-foreground">{store.name}</span>
-                  <span className="text-xs text-muted ml-auto">{s.itemsAt.replace("{n}", String(storeItems.length))}</span>
-                </div>
-                <ul className="space-y-1.5">
-                  {storeItems.map(c => (
-                    <li key={c.key} className="flex items-baseline gap-2 text-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-muted shrink-0 mt-1.5" />
-                      <span className="text-foreground flex-1">{c.name}</span>
-                      <span className="text-muted shrink-0 text-xs">
-                        {c.totalAmount !== null ? `${formatAmount(c.totalAmount)}${c.unit ? ` ${c.unit}` : ""}` : c.unit}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-          {unassignedCount > 0 && (
-            <div className="bg-surface rounded-2xl border border-border p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full border-2 border-muted shrink-0" />
-                <span className="text-sm font-semibold text-muted">{s.noStore}</span>
-                <span className="text-xs text-muted ml-auto">{s.itemsAt.replace("{n}", String(unassignedCount))}</span>
-              </div>
-              <ul className="space-y-1.5">
-                {combined.filter(c => !(storePrefs.get(c.key) ?? null)).map(c => (
-                  <li key={c.key} className="flex items-baseline gap-2 text-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted shrink-0 mt-1.5" />
-                    <span className="text-foreground flex-1">{c.name}</span>
-                    <span className="text-muted shrink-0 text-xs">
-                      {c.totalAmount !== null ? `${formatAmount(c.totalAmount)}${c.unit ? ` ${c.unit}` : ""}` : c.unit}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        <DynamicMap stores={stores} storeItemCounts={storeItemCounts} itemsLabel={s.itemsAt} />
       )}
 
       {formOpen && (
@@ -660,10 +745,7 @@ function StoresTab({
 // ── Main component ────────────────────────────────────────────────
 
 export default function ShoppingClient({
-  initialItems,
-  initialStores,
-  initialStorePrefs,
-  locale,
+  initialItems, initialStores, initialStorePrefs, locale,
 }: {
   initialItems: ShoppingListEntry[];
   initialStores: UserStore[];
@@ -676,12 +758,18 @@ export default function ShoppingClient({
 
   const [items, setItems] = useState<ShoppingListEntry[]>(initialItems);
   const [stores, setStores] = useState<UserStore[]>(initialStores);
-  const [storePrefs, setStorePrefs] = useState<Map<string, string | null>>(
-    () => new Map(initialStorePrefs.map(p => [p.ingredient_key, p.store_id])),
-  );
+  const [storePrefs, setStorePrefs] = useState<Map<string, Set<string>>>(() => {
+    const map = new Map<string, Set<string>>();
+    for (const p of initialStorePrefs) {
+      const set = map.get(p.ingredient_key) ?? new Set<string>();
+      set.add(p.store_id);
+      map.set(p.ingredient_key, set);
+    }
+    return map;
+  });
   const [tab, setTab] = useState<"per" | "combined" | "map">("per");
   const [, startTransition] = useTransition();
-  const [picker, setPicker] = useState<{ key: string; name: string; storeId: string | null } | null>(null);
+  const [picker, setPicker] = useState<{ key: string; name: string; storeIds: Set<string> } | null>(null);
 
   const handleQuantityChange = (recipeId: string, qty: number) => {
     if (qty < 1) { handleRemove(recipeId); return; }
@@ -707,14 +795,13 @@ export default function ShoppingClient({
     if ("error" in res) { toast.error(res.error); router.refresh(); }
   };
 
-  const handlePickStore = (key: string, name: string, currentStoreId: string | null) => {
-    setPicker({ key, name, storeId: currentStoreId });
-  };
+  const handlePickStore = (key: string, name: string, currentStoreIds: Set<string>) =>
+    setPicker({ key, name, storeIds: currentStoreIds });
 
-  const handleStoreAssign = async (key: string, storeId: string | null) => {
-    setStorePrefs(prev => new Map(prev).set(key, storeId));
-    const { setIngredientStorePref } = await import("@/app/actions/stores");
-    const res = await setIngredientStorePref(key, storeId);
+  const handleStoreAssign = async (key: string, storeIds: Set<string>) => {
+    setStorePrefs(prev => new Map(prev).set(key, storeIds));
+    const { setIngredientStorePrefs } = await import("@/app/actions/stores");
+    const res = await setIngredientStorePrefs(key, [...storeIds]);
     if ("error" in res) toast.error(res.error);
   };
 
@@ -741,10 +828,8 @@ export default function ShoppingClient({
           )}
         </div>
         {items.length > 0 && (
-          <button
-            onClick={handleClearAll}
-            className="text-sm text-red-500 hover:text-red-600 transition-colors flex items-center gap-1.5"
-          >
+          <button onClick={handleClearAll}
+            className="text-sm text-red-500 hover:text-red-600 transition-colors flex items-center gap-1.5">
             <Trash2 className="w-3.5 h-3.5" />{s.clearAll}
           </button>
         )}
@@ -753,9 +838,7 @@ export default function ShoppingClient({
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border mb-6">
         {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
+          <button key={key} onClick={() => setTab(key)}
             className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
               tab === key ? "text-orange-500" : "text-muted hover:text-foreground"
             }`}
@@ -766,7 +849,6 @@ export default function ShoppingClient({
         ))}
       </div>
 
-      {/* Tab: per recipe */}
       {tab === "per" && (
         items.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
@@ -780,45 +862,27 @@ export default function ShoppingClient({
         ) : (
           <div className="space-y-4">
             {items.map(entry => (
-              <RecipeCard
-                key={entry.recipe.id}
-                entry={entry}
-                locale={locale}
-                onQuantityChange={handleQuantityChange}
-                onRemove={handleRemove}
-              />
+              <RecipeCard key={entry.recipe.id} entry={entry} locale={locale}
+                onQuantityChange={handleQuantityChange} onRemove={handleRemove} />
             ))}
           </div>
         )
       )}
 
-      {/* Tab: combined */}
       {tab === "combined" && (
         items.length === 0 ? (
           <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>
         ) : (
-          <CombinedView
-            items={items}
-            locale={locale}
-            stores={stores}
-            storePrefs={storePrefs}
-            onPickStore={handlePickStore}
-          />
+          <CombinedView items={items} locale={locale} stores={stores}
+            storePrefs={storePrefs} onPickStore={handlePickStore} />
         )
       )}
 
-      {/* Tab: map / stores */}
       {tab === "map" && (
-        <StoresTab
-          stores={stores}
-          storePrefs={storePrefs}
-          items={items}
-          locale={locale}
-          onStoresChange={setStores}
-        />
+        <StoresTab stores={stores} storePrefs={storePrefs} items={items}
+          locale={locale} onStoresChange={setStores} />
       )}
 
-      {/* Store picker bottom sheet */}
       {picker && (
         <StorePicker
           open
@@ -826,8 +890,8 @@ export default function ShoppingClient({
           ingredientName={picker.name}
           ingredientKey={picker.key}
           stores={stores}
-          currentStoreId={picker.storeId}
-          onPick={handleStoreAssign}
+          currentStoreIds={picker.storeIds}
+          onSave={handleStoreAssign}
         />
       )}
     </div>

@@ -139,6 +139,13 @@ export const en = {
     noLocation: "No location set",
     locating: "Locating…",
     locationError: "Unable to get location",
+    routeTitle: "Suggested route",
+    routeSummary: "{stores} stores · {items} items",
+    routeStop: "Stop {n}",
+    unassigned: "No store assigned",
+    clearStores: "Clear all",
+    doneBtn: "{n} stores selected",
+    multiStores: "{n} stores",
   },
   settings: {
     title: "Settings",

@@ -93,24 +93,26 @@ export async function getIngredientStorePrefs(): Promise<IngredientStorePref[]> 
   return (data ?? []) as IngredientStorePref[];
 }
 
-export async function setIngredientStorePref(
+export async function setIngredientStorePrefs(
   ingredientKey: string,
-  storeId: string | null,
+  storeIds: string[],
 ): Promise<{ success: true } | { error: string }> {
   const user = await getSession();
   if (!user) return { error: "not_authenticated" };
   const sb = await createClient();
-  const { error } = await sb
+
+  await sb
     .from("ingredient_store_pref")
-    .upsert(
-      {
-        user_id: user.id,
-        ingredient_key: ingredientKey,
-        store_id: storeId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,ingredient_key" },
+    .delete()
+    .eq("user_id", user.id)
+    .eq("ingredient_key", ingredientKey);
+
+  if (storeIds.length > 0) {
+    const { error } = await sb.from("ingredient_store_pref").insert(
+      storeIds.map(store_id => ({ user_id: user.id, ingredient_key: ingredientKey, store_id })),
     );
-  if (error) return { error: error.message };
+    if (error) return { error: error.message };
+  }
+
   return { success: true };
 }

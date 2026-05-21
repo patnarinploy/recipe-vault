@@ -76,8 +76,8 @@ export type IngredientStorePref = {
   id: string;
   user_id: string;
   ingredient_key: string;
-  store_id: string | null;
-  updated_at: string;
+  store_id: string;
+  created_at: string;
 };
 
 export type Book = {
