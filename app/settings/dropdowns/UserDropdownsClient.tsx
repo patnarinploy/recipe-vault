@@ -448,7 +448,7 @@ export default function UserDropdownsClient({
   const { t } = useLocale();
   const d = t.settings.dropdowns;
 
-  const [activeTab, setActiveTab] = useState<Tab>("units");
+  const [activeTab, setActiveTab] = useState<Tab>("ingredients");
   const [units, setUnits] = useState(() =>
     [...initialUnits].sort((a, b) => a.unit_name_th.localeCompare(b.unit_name_th, "th"))
   );
