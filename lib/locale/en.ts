@@ -139,6 +139,7 @@ export const en = {
     noLocation: "No location set",
     locating: "Locating…",
     locationError: "Unable to get location",
+    approxLocation: "Using approximate location (by IP)",
     setOnMap: "Set on map",
     changeLocation: "Change location",
     confirmLocation: "Confirm location",

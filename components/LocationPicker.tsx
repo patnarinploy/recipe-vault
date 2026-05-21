@@ -111,24 +111,39 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
     return () => clearTimeout(timerRef.current);
   }, [query]);
 
-  const handleGPS = () => {
-    if (!navigator.geolocation) {
-      toast.error(s.locationError);
-      return;
-    }
+  const getIPLocation = async (): Promise<[number, number] | null> => {
+    try {
+      const res = await fetch("https://ipwho.is/");
+      const d = await res.json();
+      if (d.success && d.latitude && d.longitude) return [d.latitude, d.longitude];
+    } catch {}
+    return null;
+  };
+
+  const handleGPS = async () => {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      p => {
-        goTo([p.coords.latitude, p.coords.longitude]);
-        setLocating(false);
-      },
-      err => {
-        // err.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) { reject(new Error("unavailable")); return; }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+          maximumAge: 30000,
+          enableHighAccuracy: false,
+        });
+      });
+      goTo([pos.coords.latitude, pos.coords.longitude]);
+    } catch {
+      // GPS unavailable or denied → fall back to IP-based approximate location
+      const ipPos = await getIPLocation();
+      if (ipPos) {
+        goTo(ipPos);
+        toast.info(s.approxLocation);
+      } else {
         toast.error(s.locationError);
-        setLocating(false);
-      },
-      { timeout: 15000, maximumAge: 30000, enableHighAccuracy: false },
-    );
+      }
+    } finally {
+      setLocating(false);
+    }
   };
 
   const handlePickResult = (r: SearchResult) => {
