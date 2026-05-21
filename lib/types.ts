@@ -80,6 +80,15 @@ export type IngredientStorePref = {
   created_at: string;
 };
 
+export type PresetIngredient = {
+  id: string;
+  user_id: string;
+  name_th: string;
+  name_en: string;
+  is_active: boolean;
+  created_at: string;
+};
+
 export type Book = {
   id: string;
   user_id: string;

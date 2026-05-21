@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
-import type { PresetUnit, PresetCategory } from "@/lib/types";
+import type { PresetUnit, PresetCategory, PresetIngredient } from "@/lib/types";
 
 // ─── Units ────────────────────────────────────────────────────────
 
@@ -158,6 +158,70 @@ export async function deletePresetCategory(id: string): Promise<{ error?: string
     .eq("user_id", user.id);
   if (error) return { error: error.message };
   revalidatePath("/");
+  return {};
+}
+
+// ─── Ingredients ──────────────────────────────────────────────────
+
+export async function getUserPresetIngredients(): Promise<PresetIngredient[]> {
+  const user = await getSession();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("preset_ingredients")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("name_th");
+  return (data ?? []) as PresetIngredient[];
+}
+
+export async function createPresetIngredient(
+  payload: { name_th: string; name_en: string },
+): Promise<PresetIngredient | { error: string }> {
+  const user = await getSession();
+  if (!user) return { error: "not_authenticated" };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("preset_ingredients")
+    .insert({ ...payload, is_active: true, user_id: user.id })
+    .select("*")
+    .single();
+  if (error) return { error: error.message };
+  revalidatePath("/settings/dropdowns");
+  return data as PresetIngredient;
+}
+
+export async function updatePresetIngredient(
+  id: string,
+  payload: { name_th?: string; name_en?: string },
+): Promise<{ error?: string }> {
+  const user = await getSession();
+  if (!user) return { error: "not_authenticated" };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("preset_ingredients")
+    .update(payload)
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath("/settings/dropdowns");
+  return {};
+}
+
+export async function setPresetIngredientActive(
+  id: string,
+  is_active: boolean,
+): Promise<{ error?: string }> {
+  const user = await getSession();
+  if (!user) return { error: "not_authenticated" };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("preset_ingredients")
+    .update({ is_active })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath("/settings/dropdowns");
   return {};
 }
 
