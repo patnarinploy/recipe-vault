@@ -1,5 +1,12 @@
 [
   {
+    "build": 97,
+    "timestamp": "2026-05-21T09:09:27.000Z",
+    "subject": "fix: GPS button in LocationPicker now reliably pans map + shows error",
+    "hash": "2027650",
+    "category": "fix"
+  },
+  {
     "build": 96,
     "timestamp": "2026-05-21T09:00:19.000Z",
     "subject": "feat: interactive map picker for store location (Grab-style)",
