@@ -1,5 +1,12 @@
 [
   {
+    "build": 96,
+    "timestamp": "2026-05-21T09:00:19.000Z",
+    "subject": "feat: interactive map picker for store location (Grab-style)",
+    "hash": "ee5b3f2",
+    "category": "feat"
+  },
+  {
     "build": 95,
     "timestamp": "2026-05-21T08:40:09.000Z",
     "subject": "fix: TypeError on deleted store + dark mode text colors",
