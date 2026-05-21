@@ -1,5 +1,12 @@
 [
   {
+    "build": 107,
+    "timestamp": "2026-05-21T20:09:28.000Z",
+    "subject": "feat: drop ingredient_name column, backfill preset FK for all rows",
+    "hash": "1cfa9e1",
+    "category": "feat"
+  },
+  {
     "build": 106,
     "timestamp": "2026-05-21T19:57:15.000Z",
     "subject": "feat: link ingredients to preset_ingredients FK for locale-aware names",
