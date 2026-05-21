@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import type { Recipe } from "@/lib/types";
-import { ensurePresetUnit } from "@/app/actions/user-presets";
+import { ensurePresetUnit, ensurePresetIngredient } from "@/app/actions/user-presets";
 
 type IngredientRowInput = {
   name: string;
@@ -63,6 +63,7 @@ export async function createRecipe(
       if (!unitId && r.unitFlex.trim()) {
         unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
       }
+      await ensurePresetIngredient(r.name, user.id);
       return {
         recipe_id: recipeId,
         ingredient_name: r.name,
@@ -117,6 +118,7 @@ export async function updateRecipe(
         if (!unitId && r.unitFlex.trim()) {
           unitId = await ensurePresetUnit(r.unitFlex.trim(), user.id);
         }
+        await ensurePresetIngredient(r.name, user.id);
         return {
           recipe_id: id,
           ingredient_name: r.name,

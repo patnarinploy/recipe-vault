@@ -225,6 +225,22 @@ export async function setPresetIngredientActive(
   return {};
 }
 
+// ─── Auto-create preset ingredient (used by recipe save) ──────────
+export async function ensurePresetIngredient(name: string, userId: string): Promise<void> {
+  if (!name.trim()) return;
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("preset_ingredients")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("name_th", name.trim())
+    .maybeSingle();
+  if (existing) return;
+  await supabase
+    .from("preset_ingredients")
+    .insert({ name_th: name.trim(), name_en: "", is_active: true, user_id: userId });
+}
+
 // ─── Auto-create preset unit (used by recipe save) ────────────────
 // Finds existing preset unit for this user by name, or creates one with
 // the same TH and EN name. User can edit the EN name later in settings.

@@ -1433,12 +1433,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       if (authUser) {
         const { data: meUser } = await sb.from("users").select("id").eq("auth_id", authUser.id).maybeSingle();
         if (meUser) {
-          const [unitsRes, catsRes] = await Promise.all([
+          const [unitsRes, catsRes, ingNamesRes] = await Promise.all([
             sb.from("preset_units").select("*").eq("user_id", meUser.id).eq("is_active", true).order("unit_name_th"),
             sb.from("preset_categories").select("*").eq("user_id", meUser.id).eq("is_active", true).order("name_th"),
+            sb.from("preset_ingredients").select("name_th").eq("user_id", meUser.id).eq("is_active", true).order("name_th"),
           ]);
           if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
           if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+          if (ingNamesRes.data) setIngredientNames(ingNamesRes.data.map((r: { name_th: string }) => r.name_th));
         }
       }
 
@@ -1448,21 +1450,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         setLoading(false);
         return;
       }
-      const [recipesRes, ingRes, ingNamesRes] = await Promise.all([
+      const [recipesRes, ingRes] = await Promise.all([
         sb.from("recipes").select("*, preset_categories!category_id(*)").in("id", favIds).returns<Recipe[]>(),
         sb.from("ingredients").select("*, preset_units(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
-        sb.from("ingredients").select("ingredient_name"),
       ]);
       const ingByRecipe = new Map<string, DbIngredient[]>();
       for (const row of ingRes.data ?? []) {
         const arr = ingByRecipe.get(row.recipe_id) ?? [];
         arr.push(row);
         ingByRecipe.set(row.recipe_id, arr);
-      }
-      if (ingNamesRes.data) {
-        const unique = [...new Set(ingNamesRes.data.map((r: { ingredient_name: string }) => r.ingredient_name))]
-          .filter(Boolean).sort((a, b) => a.localeCompare(b, "th"));
-        setIngredientNames(unique);
       }
       // Preserve the order from recipe_favorites (most recently favorited first)
       const ordered = favIds
@@ -1479,22 +1475,23 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
-    const [bk, rc, ingNamesRes] = await Promise.all([
+    const [bk, rc] = await Promise.all([
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
-      sb.from("ingredients").select("ingredient_name"),
     ]);
     if (bk.data) {
       setBook(bk.data as Book);
       // Fetch this user's presets (for RecipeForm combobox — only needed when owner)
       if (isOwner) {
         const bookUserId: string = (bk.data as any).user_id;
-        const [unitsRes, catsRes] = await Promise.all([
+        const [unitsRes, catsRes, ingNamesRes] = await Promise.all([
           sb.from("preset_units").select("*").eq("user_id", bookUserId).eq("is_active", true).order("unit_name_th"),
           sb.from("preset_categories").select("*").eq("user_id", bookUserId).eq("is_active", true).order("name_th"),
+          sb.from("preset_ingredients").select("name_th").eq("user_id", bookUserId).eq("is_active", true).order("name_th"),
         ]);
         if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
         if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+        if (ingNamesRes.data) setIngredientNames(ingNamesRes.data.map((r: { name_th: string }) => r.name_th));
       }
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? "");
@@ -1524,13 +1521,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         })();
       }
     }
-    if (ingNamesRes.data) {
-      const unique = [...new Set(ingNamesRes.data.map((r: { ingredient_name: string }) => r.ingredient_name))]
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b, "th"));
-      setIngredientNames(unique);
-    }
-
     const rawRecipes = rc.data ?? [];
     if (rawRecipes.length > 0) {
       const recipeIds = rawRecipes.map(r => r.id);
