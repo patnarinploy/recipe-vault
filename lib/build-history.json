@@ -1,5 +1,12 @@
 [
   {
+    "build": 102,
+    "timestamp": "2026-05-21T18:25:17.000Z",
+    "subject": "feat: add preset_ingredients foundation (type, actions, locale, migratio",
+    "hash": "d677632",
+    "category": "feat"
+  },
+  {
     "build": 101,
     "timestamp": "2026-05-21T18:03:49.000Z",
     "subject": "fix: clear checked state in Combined view when Clear all is pressed",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 101;
-export const BUILD_TIMESTAMP = "2026-05-21T18:03:49.000Z";
-export const BUILD_TOOLTIP   = "fix: clear checked state in Combined view when Clear all is pressed";
+export const BUILD_NUMBER    = 102;
+export const BUILD_TIMESTAMP = "2026-05-21T18:25:17.000Z";
+export const BUILD_TOOLTIP   = "feat: add preset_ingredients foundation (type, actions, locale, migratio";
