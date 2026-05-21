@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 100;
-export const BUILD_TIMESTAMP = "2026-05-21T10:13:04.000Z";
-export const BUILD_TOOLTIP   = "fix: move map modal X button to right; reset tab to public on logout";
+export const BUILD_NUMBER    = 101;
+export const BUILD_TIMESTAMP = "2026-05-21T18:03:49.000Z";
+export const BUILD_TOOLTIP   = "fix: clear checked state in Combined view when Clear all is pressed";
