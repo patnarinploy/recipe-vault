@@ -271,10 +271,10 @@ function StorePicker({
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col justify-end" onMouseDown={handleClose}>
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-end sm:items-center sm:justify-center sm:p-4" onMouseDown={handleClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-surface rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col anim-scale-in"
+        className="relative bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[75vh] w-full sm:max-w-sm flex flex-col anim-scale-in"
         onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -870,9 +870,11 @@ export default function ShoppingClient({
     if ("error" in res) toast.error(res.error);
   };
 
+  const combinedCount = buildCombined(items, locale).length;
+
   const TABS: { key: "per" | "combined" | "map"; label: string }[] = [
     { key: "per",      label: s.perRecipeTab },
-    { key: "combined", label: s.combinedTab },
+    { key: "combined", label: combinedCount > 0 ? `${s.combinedTab} (${combinedCount})` : s.combinedTab },
     { key: "map",      label: s.storesTab },
   ];
 

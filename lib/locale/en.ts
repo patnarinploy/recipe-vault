@@ -207,9 +207,9 @@ export const en = {
       usage: "Preferences",
     },
     dropdowns: {
-      label: "Dropdown Settings",
-      sub: "Manage your personal units & categories for recipe forms",
-      title: "Dropdown Settings",
+      label: "Presets & Stores",
+      sub: "Manage your ingredient, unit and category lists, and store locations",
+      title: "Presets & Stores",
       unitsTab: "Units",
       categoriesTab: "Categories",
       nameTh: "Thai Name",

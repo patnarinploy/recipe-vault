@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Check, Pencil, EyeOff, Eye, Layers } from "lucide-react";
+import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp } from "lucide-react";
 import {
   createPresetUnit, updatePresetUnit, setPresetUnitActive,
   createPresetCategory, updatePresetCategory, setPresetCategoryActive,
@@ -15,6 +15,134 @@ import { useLocale } from "@/lib/locale";
 
 type Tab = "ingredients" | "units" | "categories";
 type EditState = { id: string; nameTh: string; nameEn: string };
+
+// ─── Module-level sub-components for IngredientsTable ────────────
+// These MUST be defined outside IngredientsTable to keep stable identity
+// across renders, preventing the autoFocus/remount bug.
+
+type IngItem = {
+  id: string;
+  nameTh: string;
+  nameEn: string;
+  isActive: boolean;
+  storeIds: string[];
+};
+type IngEditState = { id: string; nameTh: string; nameEn: string; storeIds: string[] };
+
+function StoreChips({
+  ids, muted, storeMap, noStoreLabel,
+}: {
+  ids: string[];
+  muted?: boolean;
+  storeMap: Map<string, UserStore>;
+  noStoreLabel: string;
+}) {
+  if (ids.length === 0) {
+    return muted ? <span className="text-xs text-muted/50 italic">{noStoreLabel}</span> : null;
+  }
+  return (
+    <div className="flex flex-wrap gap-1 mt-0.5">
+      {ids.map(id => {
+        const st = storeMap.get(id);
+        if (!st) return null;
+        return (
+          <span key={id} className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full bg-elevated border border-border/70">
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: st.color }} />
+            <span className="text-secondary truncate max-w-[80px]">{st.name}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function StorePicker({
+  ids, onChange, stores, noStoreLabel,
+}: {
+  ids: string[];
+  onChange: (ids: string[]) => void;
+  stores: UserStore[];
+  noStoreLabel: string;
+}) {
+  const toggleStoreId = (storeId: string, current: string[]): string[] =>
+    current.includes(storeId) ? current.filter(x => x !== storeId) : [...current, storeId];
+
+  if (stores.length === 0) {
+    return <p className="text-xs text-muted italic">{noStoreLabel}</p>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {stores.map(st => {
+        const on = ids.includes(st.id);
+        return (
+          <button key={st.id} type="button"
+            onClick={() => onChange(toggleStoreId(st.id, ids))}
+            className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              on ? "border-orange-400 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
+                 : "border-border bg-elevated text-muted hover:border-orange-300"
+            }`}>
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: st.color }} />
+            {st.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EditForm({
+  nameTh, nameEn, storeIds,
+  onNameTh, onNameEn, onStores,
+  onSave, onCancel,
+  thLabel, enLabel, storesLabel, noStoreLabel,
+  stores, storeMap, pending,
+}: {
+  nameTh: string; nameEn: string; storeIds: string[];
+  onNameTh: (v: string) => void; onNameEn: (v: string) => void;
+  onStores: (ids: string[]) => void;
+  onSave: () => void; onCancel: () => void;
+  thLabel: string; enLabel: string; storesLabel: string; noStoreLabel: string;
+  stores: UserStore[]; storeMap: Map<string, UserStore>; pending: boolean;
+}) {
+  void storeMap; // used by StorePicker indirectly via stores prop
+  return (
+    <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted">{thLabel}</label>
+          <input value={nameTh} onChange={e => onNameTh(e.target.value)} placeholder={thLabel}
+            className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+            autoFocus
+            onKeyDown={e => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted">{enLabel}</label>
+          <input value={nameEn} onChange={e => onNameEn(e.target.value)} placeholder={enLabel}
+            className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+            onKeyDown={e => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }} />
+        </div>
+      </div>
+      {stores.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted">{storesLabel}</label>
+          <StorePicker ids={storeIds} onChange={onStores} stores={stores} noStoreLabel={noStoreLabel} />
+        </div>
+      )}
+      <div className="flex gap-2 pt-1">
+        <button onClick={onCancel}
+          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+          ยกเลิก
+        </button>
+        <button onClick={onSave} disabled={pending}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+          <Check className="w-4 h-4" /> บันทึก
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── PresetsTable ─────────────────────────────────────────────────
 
 function PresetsTable({
   items,
@@ -53,6 +181,10 @@ function PresetsTable({
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState({ nameTh: "", nameEn: "" });
   const [pending, startTransition] = useTransition();
+  const [showArchived, setShowArchived] = useState(false);
+
+  const activeItems = items.filter(i => i.isActive);
+  const archivedItems = items.filter(i => !i.isActive);
 
   const saveEdit = () => {
     if (!editing) return;
@@ -77,92 +209,87 @@ function PresetsTable({
     });
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {items.length > 0 && (
-          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{thLabel}</span>
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{enLabel}</span>
-            <span />
+  const renderItem = (item: { id: string; nameTh: string; nameEn: string; isActive: boolean }) => (
+    <div key={item.id} className="border-b border-border last:border-0">
+      {editing?.id === item.id ? (
+        <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted">{thLabel}</label>
+            <input value={editing.nameTh}
+              onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
+              placeholder={thLabel}
+              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+              autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
           </div>
-        )}
-
-        {items.length === 0 && !adding && (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted">
-            <Layers className="w-8 h-8 opacity-30" />
-            <p className="text-sm">{emptyLabel}</p>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted">{enLabel}</label>
+            <input value={editing.nameEn}
+              onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
+              placeholder={enLabel}
+              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+              onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
           </div>
-        )}
-
-        {items.map(item => (
-          <div key={item.id} className="border-b border-border last:border-0">
-            {editing?.id === item.id ? (
-              <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted">{thLabel}</label>
-                  <input value={editing.nameTh}
-                    onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
-                    placeholder={thLabel}
-                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted">{enLabel}</label>
-                  <input value={editing.nameEn}
-                    onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
-                    placeholder={enLabel}
-                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                    onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button onClick={saveEdit} disabled={pending}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                    <Check className="w-4 h-4" /> บันทึก
-                  </button>
-                  <button onClick={() => setEditing(null)}
-                          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
-                    ยกเลิก
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm text-foreground truncate">{item.nameTh || item.nameEn}</span>
-                  {!item.isActive && (
-                    <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
-                      {archivedLabel}
-                    </span>
-                  )}
-                </div>
-                <span className="text-sm text-muted truncate">
-                  {item.nameEn || <span className="italic text-muted/50">—</span>}
-                </span>
-                <div className="flex gap-1 justify-end">
-                  {item.isActive && (
-                    <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn })}
-                            className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button onClick={() => handleArchive(item.id, item.isActive)} disabled={pending}
-                          title={item.isActive ? archiveLabel : restoreLabel}
-                          className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
-                            item.isActive
-                              ? "text-muted hover:bg-elevated hover:text-orange-500"
-                              : "text-muted hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20"
-                          }`}>
-                    {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => setEditing(null)}
+                    className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+              ยกเลิก
+            </button>
+            <button onClick={saveEdit} disabled={pending}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+              <Check className="w-4 h-4" /> บันทึก
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm text-foreground truncate">{item.nameTh || item.nameEn}</span>
+            {!item.isActive && (
+              <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
+                {archivedLabel}
+              </span>
             )}
           </div>
-        ))}
+          <span className="text-sm text-muted truncate">
+            {item.nameEn || <span className="italic text-muted/50">—</span>}
+          </span>
+          <div className="flex gap-1 justify-end">
+            {item.isActive && (
+              <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn })}
+                      className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button onClick={() => handleArchive(item.id, item.isActive)} disabled={pending}
+                    title={item.isActive ? archiveLabel : restoreLabel}
+                    className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                      item.isActive
+                        ? "text-muted hover:bg-elevated hover:text-orange-500"
+                        : "text-muted hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20"
+                    }`}>
+              {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
-        {adding && (
-          <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
+  return (
+    <div className="space-y-4">
+      {/* Add button at top */}
+      {!adding && (
+        <button onClick={() => setAdding(true)}
+                className="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
+          <Plus className="w-4 h-4" />
+          {addLabel}
+        </button>
+      )}
+
+      {/* Add form at top when open */}
+      {adding && (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted">{thLabel}</label>
               <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
@@ -178,41 +305,58 @@ function PresetsTable({
                 onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
             </div>
             <div className="flex gap-2 pt-1">
-              <button onClick={saveNew} disabled={pending}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                <Check className="w-4 h-4" /> บันทึก
-              </button>
               <button onClick={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "" }); }}
                       className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
                 ยกเลิก
               </button>
+              <button onClick={saveNew} disabled={pending}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                <Check className="w-4 h-4" /> บันทึก
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+        {activeItems.length > 0 && (
+          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{thLabel}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{enLabel}</span>
+            <span />
+          </div>
+        )}
+
+        {activeItems.length === 0 && !adding && (
+          <div className="flex flex-col items-center gap-2 py-10 text-muted">
+            <Layers className="w-8 h-8 opacity-30" />
+            <p className="text-sm">{emptyLabel}</p>
+          </div>
+        )}
+
+        {activeItems.map(renderItem)}
+
+        {/* Archived section */}
+        {archivedItems.length > 0 && (
+          <>
+            <button
+              onClick={() => setShowArchived(v => !v)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
+            >
+              {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              ซ่อนอยู่ ({archivedItems.length})
+            </button>
+            {showArchived && archivedItems.map(renderItem)}
+          </>
         )}
       </div>
 
-      {!adding && (
-        <button onClick={() => setAdding(true)}
-                className="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
-          <Plus className="w-4 h-4" />
-          {addLabel}
-        </button>
-      )}
       <p className="text-xs text-muted">{countLabel}</p>
     </div>
   );
 }
 
 // ─── IngredientsTable ─────────────────────────────────────────────
-
-type IngItem = {
-  id: string;
-  nameTh: string;
-  nameEn: string;
-  isActive: boolean;
-  storeIds: string[];
-};
-type IngEditState = { id: string; nameTh: string; nameEn: string; storeIds: string[] };
 
 function IngredientsTable({
   items, stores,
@@ -238,11 +382,12 @@ function IngredientsTable({
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState({ nameTh: "", nameEn: "", storeIds: [] as string[] });
   const [pending, startTransition] = useTransition();
+  const [showArchived, setShowArchived] = useState(false);
 
   const storeMap = new Map(stores.map(s => [s.id, s]));
 
-  const toggleStoreId = (storeId: string, ids: string[]): string[] =>
-    ids.includes(storeId) ? ids.filter(x => x !== storeId) : [...ids, storeId];
+  const activeItems = items.filter(i => i.isActive);
+  const archivedItems = items.filter(i => !i.isActive);
 
   const saveEdit = () => {
     if (!editing || (!editing.nameTh.trim() && !editing.nameEn.trim())) { toast.error(requireOneNameError); return; }
@@ -266,160 +411,57 @@ function IngredientsTable({
     });
   };
 
-  const StoreChips = ({ ids, muted }: { ids: string[]; muted?: boolean }) =>
-    ids.length === 0 ? (
-      muted ? <span className="text-xs text-muted/50 italic">{noStoreLabel}</span> : null
-    ) : (
-      <div className="flex flex-wrap gap-1 mt-0.5">
-        {ids.map(id => {
-          const st = storeMap.get(id);
-          if (!st) return null;
-          return (
-            <span key={id} className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded-full bg-elevated border border-border/70">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: st.color }} />
-              <span className="text-secondary truncate max-w-[80px]">{st.name}</span>
-            </span>
-          );
-        })}
-      </div>
-    );
-
-  const StorePicker = ({ ids, onChange }: { ids: string[]; onChange: (ids: string[]) => void }) =>
-    stores.length === 0 ? (
-      <p className="text-xs text-muted italic">{noStoreLabel}</p>
-    ) : (
-      <div className="flex flex-wrap gap-1.5">
-        {stores.map(st => {
-          const on = ids.includes(st.id);
-          return (
-            <button key={st.id} type="button"
-              onClick={() => onChange(toggleStoreId(st.id, ids))}
-              className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                on ? "border-orange-400 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
-                   : "border-border bg-elevated text-muted hover:border-orange-300"
+  const renderItem = (item: IngItem) => (
+    <div key={item.id} className="border-b border-border last:border-0">
+      {editing?.id === item.id ? (
+        <EditForm
+          nameTh={editing.nameTh} nameEn={editing.nameEn} storeIds={editing.storeIds}
+          onNameTh={v => setEditing(e => e && ({ ...e, nameTh: v }))}
+          onNameEn={v => setEditing(e => e && ({ ...e, nameEn: v }))}
+          onStores={ids => setEditing(e => e && ({ ...e, storeIds: ids }))}
+          onSave={saveEdit} onCancel={() => setEditing(null)}
+          thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
+          stores={stores} storeMap={storeMap} pending={pending}
+        />
+      ) : (
+        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-start px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+          <div className="min-w-0">
+            <span className="text-sm text-foreground">{item.nameTh || item.nameEn}</span>
+            {!item.isActive && (
+              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
+                {archivedLabel}
+              </span>
+            )}
+            <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
+          </div>
+          <span className="text-sm text-muted truncate pt-0.5">
+            {item.nameEn || <span className="italic text-muted/50">—</span>}
+          </span>
+          <div className="flex gap-1 justify-end">
+            {item.isActive && (
+              <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds })}
+                className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button onClick={() => handleArchive(item.id, item.isActive)} disabled={pending}
+              title={item.isActive ? archiveLabel : restoreLabel}
+              className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                item.isActive
+                  ? "text-muted hover:bg-elevated hover:text-orange-500"
+                  : "text-muted hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20"
               }`}>
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: st.color }} />
-              {st.name}
+              {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
-          );
-        })}
-      </div>
-    );
-
-  const EditForm = ({
-    nameTh, nameEn, storeIds,
-    onNameTh, onNameEn, onStores,
-    onSave, onCancel, isNew,
-  }: {
-    nameTh: string; nameEn: string; storeIds: string[];
-    onNameTh: (v: string) => void; onNameEn: (v: string) => void;
-    onStores: (ids: string[]) => void;
-    onSave: () => void; onCancel: () => void; isNew?: boolean;
-  }) => (
-    <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted">{thLabel}</label>
-          <input value={nameTh} onChange={e => onNameTh(e.target.value)} placeholder={thLabel}
-            className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-            autoFocus={isNew}
-            onKeyDown={e => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted">{enLabel}</label>
-          <input value={nameEn} onChange={e => onNameEn(e.target.value)} placeholder={enLabel}
-            className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-            onKeyDown={e => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }} />
-        </div>
-      </div>
-      {stores.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted">{storesLabel}</label>
-          <StorePicker ids={storeIds} onChange={onStores} />
+          </div>
         </div>
       )}
-      <div className="flex gap-2 pt-1">
-        <button onClick={onSave} disabled={pending}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
-          <Check className="w-4 h-4" /> บันทึก
-        </button>
-        <button onClick={onCancel}
-          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
-          ยกเลิก
-        </button>
-      </div>
     </div>
   );
 
   return (
     <div className="space-y-4">
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {items.length === 0 && !adding && (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted">
-            <Layers className="w-8 h-8 opacity-30" />
-            <p className="text-sm">{emptyLabel}</p>
-          </div>
-        )}
-
-        {items.map(item => (
-          <div key={item.id} className="border-b border-border last:border-0">
-            {editing?.id === item.id ? (
-              <EditForm
-                nameTh={editing.nameTh} nameEn={editing.nameEn} storeIds={editing.storeIds}
-                onNameTh={v => setEditing(e => e && ({ ...e, nameTh: v }))}
-                onNameEn={v => setEditing(e => e && ({ ...e, nameEn: v }))}
-                onStores={ids => setEditing(e => e && ({ ...e, storeIds: ids }))}
-                onSave={saveEdit} onCancel={() => setEditing(null)}
-              />
-            ) : (
-              <div className={`flex items-start gap-3 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm text-foreground">{item.nameTh || item.nameEn}</span>
-                    {item.nameTh && item.nameEn && <span className="text-xs text-muted">{item.nameEn}</span>}
-                    {!item.isActive && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
-                        {archivedLabel}
-                      </span>
-                    )}
-                  </div>
-                  <StoreChips ids={item.storeIds} muted />
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  {item.isActive && (
-                    <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds })}
-                      className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <button onClick={() => handleArchive(item.id, item.isActive)} disabled={pending}
-                    title={item.isActive ? archiveLabel : restoreLabel}
-                    className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
-                      item.isActive
-                        ? "text-muted hover:bg-elevated hover:text-orange-500"
-                        : "text-muted hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20"
-                    }`}>
-                    {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {adding && (
-          <EditForm
-            nameTh={newRow.nameTh} nameEn={newRow.nameEn} storeIds={newRow.storeIds}
-            onNameTh={v => setNewRow(r => ({ ...r, nameTh: v }))}
-            onNameEn={v => setNewRow(r => ({ ...r, nameEn: v }))}
-            onStores={ids => setNewRow(r => ({ ...r, storeIds: ids }))}
-            onSave={saveNew}
-            onCancel={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "", storeIds: [] }); }}
-            isNew
-          />
-        )}
-      </div>
-
+      {/* Add button at top */}
       {!adding && (
         <button onClick={() => setAdding(true)}
           className="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
@@ -427,6 +469,57 @@ function IngredientsTable({
           {addLabel}
         </button>
       )}
+
+      {/* Add form at top when open */}
+      {adding && (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          <EditForm
+            nameTh={newRow.nameTh} nameEn={newRow.nameEn} storeIds={newRow.storeIds}
+            onNameTh={v => setNewRow(r => ({ ...r, nameTh: v }))}
+            onNameEn={v => setNewRow(r => ({ ...r, nameEn: v }))}
+            onStores={ids => setNewRow(r => ({ ...r, storeIds: ids }))}
+            onSave={saveNew}
+            onCancel={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "", storeIds: [] }); }}
+            thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
+            stores={stores} storeMap={storeMap} pending={pending}
+          />
+        </div>
+      )}
+
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+        {/* Column headers */}
+        {(activeItems.length > 0 || archivedItems.length > 0) && (
+          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{thLabel}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{enLabel}</span>
+            <span />
+          </div>
+        )}
+
+        {activeItems.length === 0 && archivedItems.length === 0 && !adding && (
+          <div className="flex flex-col items-center gap-2 py-10 text-muted">
+            <Layers className="w-8 h-8 opacity-30" />
+            <p className="text-sm">{emptyLabel}</p>
+          </div>
+        )}
+
+        {activeItems.map(renderItem)}
+
+        {/* Archived section */}
+        {archivedItems.length > 0 && (
+          <>
+            <button
+              onClick={() => setShowArchived(v => !v)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
+            >
+              {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              ซ่อนอยู่ ({archivedItems.length})
+            </button>
+            {showArchived && archivedItems.map(renderItem)}
+          </>
+        )}
+      </div>
+
       <p className="text-xs text-muted">{countLabel}</p>
     </div>
   );

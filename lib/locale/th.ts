@@ -207,9 +207,9 @@ export const th = {
       usage: "การใช้งาน",
     },
     dropdowns: {
-      label: "ตั้งค่า Dropdown",
-      sub: "จัดการหน่วยวัดและหมวดหมู่ส่วนตัวสำหรับสูตรอาหารของคุณ",
-      title: "ตั้งค่า Dropdown",
+      label: "Presets และร้านค้า",
+      sub: "จัดการรายการวัตถุดิบ หน่วยวัด หมวดหมู่ และร้านค้าส่วนตัว",
+      title: "Presets และร้านค้า",
       unitsTab: "หน่วยวัด",
       categoriesTab: "หมวดหมู่",
       nameTh: "ชื่อภาษาไทย",
