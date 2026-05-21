@@ -1,5 +1,12 @@
 [
   {
+    "build": 100,
+    "timestamp": "2026-05-21T10:13:04.000Z",
+    "subject": "fix: move map modal X button to right; reset tab to public on logout",
+    "hash": "a13c491",
+    "category": "fix"
+  },
+  {
     "build": 99,
     "timestamp": "2026-05-21T09:56:20.000Z",
     "subject": "fix: replace GPS error toast with friendly guidance when location unavai",
