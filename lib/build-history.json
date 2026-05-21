@@ -1,5 +1,12 @@
 [
   {
+    "build": 109,
+    "timestamp": "2026-05-21T20:44:28.000Z",
+    "subject": "fix: autoFocus bug, UX improvements in settings & shopping",
+    "hash": "dccc7ac",
+    "category": "fix"
+  },
+  {
     "build": 108,
     "timestamp": "2026-05-21T20:25:33.000Z",
     "subject": "feat: allow EN-only preset names, fix ensure to match either language",
