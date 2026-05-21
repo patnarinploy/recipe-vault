@@ -1,5 +1,12 @@
 [
   {
+    "build": 106,
+    "timestamp": "2026-05-21T19:57:15.000Z",
+    "subject": "feat: link ingredients to preset_ingredients FK for locale-aware names",
+    "hash": "bd600bb",
+    "category": "feat"
+  },
+  {
     "build": 105,
     "timestamp": "2026-05-21T19:44:36.000Z",
     "subject": "feat: wire preset_ingredients as ingredient autocomplete source",
