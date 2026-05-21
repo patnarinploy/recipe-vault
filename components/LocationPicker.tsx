@@ -5,12 +5,14 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-lea
 import L from "leaflet";
 import { useRef, useState, useEffect } from "react";
 import { Search, Navigation, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { useLocale } from "@/lib/locale";
 
 // Orange teardrop pin icon
 const PIN_ICON = L.divIcon({
   html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="28" height="42">
-    <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z" fill="#f97316" stroke="white" stroke-width="1.5"/>
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24C24 5.37 18.63 0 12 0z"
+      fill="#f97316" stroke="white" stroke-width="1.5"/>
     <circle cx="12" cy="12" r="5" fill="white"/>
   </svg>`,
   className: "",
@@ -19,14 +21,21 @@ const PIN_ICON = L.divIcon({
   popupAnchor: [0, -42],
 });
 
-// Exposes the Leaflet map instance via ref
-function MapController({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
+// Animates the map to a new position; uses an incrementing id so the same
+// coordinates can be targeted again after the first time.
+function FlyTo({ target }: { target: { pos: [number, number]; id: number } }) {
   const map = useMap();
-  mapRef.current = map;
+  const prevId = useRef(-1);
+  useEffect(() => {
+    if (target.id > prevId.current) {
+      prevId.current = target.id;
+      map.flyTo(target.pos, 16, { duration: 1.2 });
+    }
+  }, [map, target]);
   return null;
 }
 
-// Handles map tap + marker drag
+// Handles tap-on-map + marker drag
 function DragPin({
   pos, setPos,
 }: {
@@ -64,15 +73,27 @@ const BKK: [number, number] = [13.7563, 100.5018];
 export default function LocationPicker({ initialPos, onConfirm, onCancel }: Props) {
   const { t } = useLocale();
   const s = t.shopping;
+
   const [markerPos, setMarkerPos] = useState<[number, number]>(initialPos ?? BKK);
+  // flyTarget drives map pan/zoom via the FlyTo component
+  const [flyTarget, setFlyTarget] = useState<{ pos: [number, number]; id: number }>({
+    pos: initialPos ?? BKK,
+    id: 0,
+  });
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
-  const mapRef = useRef<L.Map | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Nominatim search with 600ms debounce
+  // Move marker AND fly the map together
+  const goTo = (pos: [number, number]) => {
+    setMarkerPos(pos);
+    setFlyTarget(prev => ({ pos, id: prev.id + 1 }));
+  };
+
+  // Nominatim search — 600 ms debounce
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
     clearTimeout(timerRef.current);
@@ -80,8 +101,7 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
       setSearching(true);
       try {
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&accept-language=th,en`;
-        const res = await fetch(url);
-        const data: Record<string, string>[] = await res.json();
+        const data: Record<string, string>[] = await (await fetch(url)).json();
         setResults(data.map(r => {
           const parts = r.display_name.split(",");
           return { lat: parseFloat(r.lat), lng: parseFloat(r.lon), label: parts[0].trim(), sublabel: parts.slice(1, 3).join(",").trim() };
@@ -91,22 +111,28 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
     return () => clearTimeout(timerRef.current);
   }, [query]);
 
-  const flyTo = (pos: [number, number]) => {
-    setMarkerPos(pos);
-    mapRef.current?.flyTo(pos, 16, { duration: 1.2 });
-  };
-
   const handleGPS = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error(s.locationError);
+      return;
+    }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      p => { flyTo([p.coords.latitude, p.coords.longitude]); setLocating(false); },
-      () => setLocating(false),
+      p => {
+        goTo([p.coords.latitude, p.coords.longitude]);
+        setLocating(false);
+      },
+      err => {
+        // err.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+        toast.error(s.locationError);
+        setLocating(false);
+      },
+      { timeout: 15000, maximumAge: 30000, enableHighAccuracy: false },
     );
   };
 
   const handlePickResult = (r: SearchResult) => {
-    flyTo([r.lat, r.lng]);
+    goTo([r.lat, r.lng]);
     setQuery(r.label);
     setResults([]);
   };
@@ -125,20 +151,27 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
               placeholder={s.searchPlace}
               className="w-full pl-9 pr-8 py-2.5 text-sm border border-outline rounded-xl bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
-            {query && (
+            {query && !searching && (
               <button onClick={() => { setQuery(""); setResults([]); }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
             {searching && (
-              <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted" />
+              <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted pointer-events-none" />
             )}
           </div>
-          <button onClick={handleGPS} disabled={locating}
+
+          {/* GPS button */}
+          <button
+            onClick={handleGPS}
+            disabled={locating}
             title={s.useMyLocation}
-            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-outline bg-surface text-orange-500 hover:bg-elevated disabled:opacity-50 transition-colors">
-            {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-outline bg-surface text-orange-500 hover:bg-elevated disabled:opacity-50 transition-colors"
+          >
+            {locating
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Navigation className="w-4 h-4" />}
           </button>
         </div>
 
@@ -172,7 +205,7 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapController mapRef={mapRef} />
+            <FlyTo target={flyTarget} />
             <DragPin pos={markerPos} setPos={setMarkerPos} />
           </MapContainer>
         </div>
