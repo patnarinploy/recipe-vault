@@ -66,7 +66,6 @@ export async function createRecipe(
       const presetId = await ensurePresetIngredient(r.name, user.id);
       return {
         recipe_id: recipeId,
-        ingredient_name: r.name,
         ingredient_amount: r.amount,
         ingredient_unit_id: unitId,
         ingredient_preset_id: presetId,
@@ -122,7 +121,6 @@ export async function updateRecipe(
         const presetId = await ensurePresetIngredient(r.name, user.id);
         return {
           recipe_id: id,
-          ingredient_name: r.name,
           ingredient_amount: r.amount,
           ingredient_unit_id: unitId,
           ingredient_preset_id: presetId,

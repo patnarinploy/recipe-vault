@@ -302,7 +302,7 @@ export default function RecipeForm({
           : "";
         return {
           id: uid(),
-          name: row.preset_ingredients?.name_th || row.ingredient_name,
+          name: row.preset_ingredients?.name_th ?? "",
           amount: row.ingredient_amount,
           unitId: row.ingredient_unit_id,
           unitFlex: "",

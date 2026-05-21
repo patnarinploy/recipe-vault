@@ -19,7 +19,6 @@ export type PresetCategory = {
 export type DbIngredient = {
   id: string;
   recipe_id: string;
-  ingredient_name: string;
   ingredient_amount: string;
   ingredient_unit_id: string | null;
   ingredient_preset_id: string | null;

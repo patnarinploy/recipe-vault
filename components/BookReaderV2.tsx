@@ -1557,7 +1557,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         ? (locale === "en"
             ? (row.preset_ingredients.name_en || row.preset_ingredients.name_th)
             : row.preset_ingredients.name_th)
-        : row.ingredient_name;
+        : "";
       return [name, row.ingredient_amount, unit].filter(Boolean).join(" ");
     });
     return { ...r, ingredients: lines.join("\n") };

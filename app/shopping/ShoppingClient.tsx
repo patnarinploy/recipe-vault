@@ -57,7 +57,7 @@ function getIngredientName(ing: DbIngredient, locale: "th" | "en"): string {
       : ing.preset_ingredients.name_th;
     if (name) return name;
   }
-  return ing.ingredient_name;
+  return "";
 }
 
 function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): CombinedIng[] {
@@ -66,9 +66,7 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
     for (const ing of item.recipe.ingredient_rows ?? []) {
       const name = getIngredientName(ing, locale);
       // ingredient_key for store prefs always uses TH name for consistency
-      const keyName = ing.preset_ingredients?.name_th
-        ? ing.preset_ingredients.name_th.toLowerCase()
-        : ing.ingredient_name.toLowerCase().trim();
+      const keyName = (ing.preset_ingredients?.name_th ?? "").toLowerCase().trim();
       const unit = ing.preset_units
         ? (locale === "th" ? ing.preset_units.unit_name_th : ing.preset_units.unit_name_en)
         : "";
@@ -164,7 +162,7 @@ function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "
             return (
               <li key={ing.id} className="flex items-baseline gap-2 text-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0 mt-1.5" />
-                <span className="text-foreground flex-1">{ing.ingredient_name}</span>
+                <span className="text-foreground flex-1">{getIngredientName(ing, locale)}</span>
                 <span className="text-muted shrink-0">{ing.ingredient_amount}{unit ? ` ${unit}` : ""}</span>
                 {scaled !== null && (
                   <span className="text-orange-500 font-semibold shrink-0">= {scaled}{unit ? ` ${unit}` : ""}</span>
