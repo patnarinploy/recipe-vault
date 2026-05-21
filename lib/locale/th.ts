@@ -140,6 +140,7 @@ export const th = {
     locating: "กำลังระบุตำแหน่ง…",
     locationError: "ไม่สามารถระบุตำแหน่งได้",
     approxLocation: "ใช้ตำแหน่งโดยประมาณ (ตาม IP)",
+    noGps: "ไม่พบ GPS — ค้นหาชื่อสถานที่หรือแตะบนแผนที่ได้เลย",
     setOnMap: "ตั้งตำแหน่งบนแผนที่",
     changeLocation: "เปลี่ยนตำแหน่ง",
     confirmLocation: "ยืนยันตำแหน่ง",

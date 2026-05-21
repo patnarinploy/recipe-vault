@@ -111,15 +111,6 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
     return () => clearTimeout(timerRef.current);
   }, [query]);
 
-  const getIPLocation = async (): Promise<[number, number] | null> => {
-    try {
-      const res = await fetch("https://ipwho.is/");
-      const d = await res.json();
-      if (d.success && d.latitude && d.longitude) return [d.latitude, d.longitude];
-    } catch {}
-    return null;
-  };
-
   const handleGPS = async () => {
     setLocating(true);
     try {
@@ -133,14 +124,9 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
       });
       goTo([pos.coords.latitude, pos.coords.longitude]);
     } catch {
-      // GPS unavailable or denied → fall back to IP-based approximate location
-      const ipPos = await getIPLocation();
-      if (ipPos) {
-        goTo(ipPos);
-        toast.info(s.approxLocation);
-      } else {
-        toast.error(s.locationError);
-      }
+      // GPS unavailable or denied (e.g. served over HTTP) — map already defaults
+      // to BKK, so just guide the user to use search or tap to place the pin
+      toast.info(s.noGps);
     } finally {
       setLocating(false);
     }
