@@ -444,10 +444,10 @@ function StoreForm({ store, onSave, onCancel }: {
       {mapPickerOpen && (
         <div className="fixed inset-0 z-[99999] flex flex-col" style={{ background: "var(--bg)" }}>
           <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
+            <h3 className="font-semibold text-foreground text-sm flex-1">{s.setOnMap}</h3>
             <button onClick={() => setMapPickerOpen(false)} className="p-1 text-muted hover:text-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="font-semibold text-foreground text-sm flex-1">{s.setOnMap}</h3>
           </div>
           <div className="flex-1 min-h-0">
             <DynamicLocationPicker

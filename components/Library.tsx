@@ -33,6 +33,11 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
 
   const isGuest = !currentUser;
   const [tab, setTab] = useState<"mine" | "public">(isGuest ? "public" : "mine");
+
+  // When the user logs out, props change but the component stays mounted — reset to public tab
+  useEffect(() => {
+    if (isGuest) setTab("public");
+  }, [isGuest]);
   const [newBookOpen, setNewBookOpen]   = useState(false);
   const [openBook, setOpenBook]         = useState<{ id: string; isOwner: boolean; autoNewRecipe?: boolean } | null>(null);
   const [settingsBookId, setSettingsBookId] = useState<string | null>(null);
