@@ -1,5 +1,12 @@
 [
   {
+    "build": 95,
+    "timestamp": "2026-05-21T08:40:09.000Z",
+    "subject": "fix: TypeError on deleted store + dark mode text colors",
+    "hash": "c55f890",
+    "category": "fix"
+  },
+  {
     "build": 94,
     "timestamp": "2026-05-21T07:51:23.000Z",
     "subject": "feat: multi-store per ingredient + greedy route recommendation",

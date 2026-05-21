@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 94;
-export const BUILD_TIMESTAMP = "2026-05-21T07:51:23.000Z";
-export const BUILD_TOOLTIP   = "feat: multi-store per ingredient + greedy route recommendation";
+export const BUILD_NUMBER    = 95;
+export const BUILD_TIMESTAMP = "2026-05-21T08:40:09.000Z";
+export const BUILD_TOOLTIP   = "fix: TypeError on deleted store + dark mode text colors";
