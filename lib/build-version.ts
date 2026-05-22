@@ -6,4 +6,4 @@
 
 export const BUILD_NUMBER    = 143;
 export const BUILD_TIMESTAMP = "2026-05-22T20:46:53.000Z";
-export const BUILD_TOOLTIP   = "Fix pinch-to-zoom on book reader: intercept multi-touch before page-flip"Fix iOS Safari auto-zoom on input focus in recipe form"";
+export const BUILD_TOOLTIP   = "Fix pinch-to-zoom on book reader: intercept multi-touch before page-flip";
