@@ -1,5 +1,12 @@
 [
   {
+    "build": 116,
+    "timestamp": "2026-05-22T10:46:40.000Z",
+    "subject": "feat: add StoreFormInline shared component",
+    "hash": "de08a3f",
+    "category": "feat"
+  },
+  {
     "build": 115,
     "timestamp": "2026-05-22T10:46:23.000Z",
     "subject": "refactor: use shared StoreFormInline with inline map picker on shopping ",
