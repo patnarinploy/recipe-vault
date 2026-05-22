@@ -1,5 +1,12 @@
 [
   {
+    "build": 147,
+    "timestamp": "2026-05-22T23:20:36.000Z",
+    "subject": "Add theme transition (View Transition API) and polish modal exit animati",
+    "hash": "d98ed64",
+    "category": "feat"
+  },
+  {
     "build": 146,
     "timestamp": "2026-05-22T23:02:21.000Z",
     "subject": "Add guided product tour to book reader using react-joyride",
