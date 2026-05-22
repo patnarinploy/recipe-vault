@@ -1741,7 +1741,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         label="" text={slot.ingText} lh="1.6"
                         isRight={isRight} pn={si} density={flipType}
                         variant="ing" showMeta={slot.chunkIdx === 0}
-                        showRibbon={slot.chunkIdx === 0}
+                        showRibbon={slot.chunkIdx === 0 && favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "")}
                         instFirstChunk={slot.instFirstChunk}
                         instFirstStepImages={slot.instFirstStepImages}
                         youtubeUrl={slot.youtubeUrl}
@@ -1756,7 +1756,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                         youtubeUrl={slot.youtubeUrl}
                         stepImages={slot.stepImages}
                         variant="inst" showMeta={slot.showMeta ?? false}
-                        showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false)}
+                        showRibbon={slot.chunkIdx === 0 && (slot.showMeta ?? false) && favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "")}
                         onPlayVideo={setYtModal}
                         lookupCategory={lookupCategory} />
       );
