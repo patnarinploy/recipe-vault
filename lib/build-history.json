@@ -1,5 +1,12 @@
 [
   {
+    "build": 129,
+    "timestamp": "2026-05-22T13:30:30.000Z",
+    "subject": "Fix modal data, recipe column name, backdrop, and store inline edit",
+    "hash": "bc5cea4",
+    "category": "fix"
+  },
+  {
     "build": 128,
     "timestamp": "2026-05-22T13:07:12.000Z",
     "subject": "Fix PresetDetailModal: correct table name, border, z-index, GPS layout",

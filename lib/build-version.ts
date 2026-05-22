@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 128;
-export const BUILD_TIMESTAMP = "2026-05-22T13:07:12.000Z";
-export const BUILD_TOOLTIP   = "Fix PresetDetailModal: correct table name, border, z-index, GPS layout";
+export const BUILD_NUMBER    = 129;
+export const BUILD_TIMESTAMP = "2026-05-22T13:30:30.000Z";
+export const BUILD_TOOLTIP   = "Fix modal data, recipe column name, backdrop, and store inline edit";
