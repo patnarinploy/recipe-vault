@@ -77,10 +77,9 @@ function Combobox({ value, onChange, options, placeholder = "", className = "", 
       <AnimatePresence>
         {open && (filtered.length > 0 || showCreate) && (
         <motion.div
-          initial={{ opacity: 0, y: -6, scaleY: 0.94 }}
-          animate={{ opacity: 1, y: 0, scaleY: 1 }}
-          exit={{ opacity: 0, y: -4, scaleY: 0.96 }}
-          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, scale: 0.96, y: -4 }}
+          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } }}
+          exit={{ opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.1, ease: [0.4, 0, 1, 1] } }}
           style={{ transformOrigin: "top", maxHeight: "12rem" }}
           className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto">
           {!query && placeholder && (
