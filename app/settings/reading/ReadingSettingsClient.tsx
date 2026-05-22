@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { ArrowLeft, BookOpen, Sun, Moon, Monitor, Globe, Type } from "lucide-react";
 import Link from "next/link";
 import { useTheme, type Theme } from "@/lib/theme";
@@ -115,21 +116,26 @@ export default function ReadingSettingsClient({
               <p className="text-xs text-muted mt-0.5">{s.flipType.description}</p>
             </div>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-outline mb-3">
-            {(["soft", "hard"] as const).map((type, i) => (
+          <div className="relative flex rounded-xl border border-outline bg-elevated p-1 gap-1 mb-3">
+            {(["soft", "hard"] as const).map((type) => (
               <button
                 key={type}
                 type="button"
                 onClick={() => handleFlipType(type)}
-                className={`flex-1 py-3.5 text-sm font-medium transition-colors ${
-                  i === 1 ? "border-l border-outline" : ""
-                } ${
-                  flipType === type
-                    ? "bg-orange-500 text-white"
-                    : "bg-surface text-secondary hover:bg-elevated"
-                }`}
+                className="relative flex-1 py-3 text-sm font-medium rounded-lg"
               >
-                {type === "soft" ? s.flipType.soft : s.flipType.hard}
+                {flipType === type && (
+                  <motion.div
+                    layoutId="flip-pill"
+                    className="absolute inset-0 bg-orange-500 rounded-lg"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className={`relative z-10 transition-colors duration-150 ${
+                  flipType === type ? "text-white" : "text-secondary"
+                }`}>
+                  {type === "soft" ? s.flipType.soft : s.flipType.hard}
+                </span>
               </button>
             ))}
           </div>
@@ -149,22 +155,27 @@ export default function ReadingSettingsClient({
               <p className="text-xs text-muted mt-0.5">{s.theme.description}</p>
             </div>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-outline">
-            {THEME_OPTIONS.map(({ value, Icon, label }, i) => (
+          <div className="relative flex rounded-xl border border-outline bg-elevated p-1 gap-1">
+            {THEME_OPTIONS.map(({ value, Icon, label }) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => handleTheme(value)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-medium transition-colors ${
-                  i > 0 ? "border-l border-outline" : ""
-                } ${
-                  activeTheme === value
-                    ? "bg-orange-500 text-white"
-                    : "bg-surface text-secondary hover:bg-elevated"
-                }`}
+                className="relative flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium rounded-lg"
               >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
+                {activeTheme === value && (
+                  <motion.div
+                    layoutId="theme-pill"
+                    className="absolute inset-0 bg-orange-500 rounded-lg"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className={`relative z-10 flex items-center gap-1.5 transition-colors duration-150 ${
+                  activeTheme === value ? "text-white" : "text-secondary"
+                }`}>
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                </span>
               </button>
             ))}
           </div>
@@ -181,21 +192,26 @@ export default function ReadingSettingsClient({
               <p className="text-xs text-muted mt-0.5">{s.language.description}</p>
             </div>
           </div>
-          <div className="flex rounded-xl overflow-hidden border border-outline">
-            {(["th", "en"] as const).map((lang, i) => (
+          <div className="relative flex rounded-xl border border-outline bg-elevated p-1 gap-1">
+            {(["th", "en"] as const).map((lang) => (
               <button
                 key={lang}
                 type="button"
                 onClick={() => handleLocale(lang)}
-                className={`flex-1 py-3.5 text-sm font-medium transition-colors ${
-                  i === 1 ? "border-l border-outline" : ""
-                } ${
-                  activeLocale === lang
-                    ? "bg-orange-500 text-white"
-                    : "bg-surface text-secondary hover:bg-elevated"
-                }`}
+                className="relative flex-1 py-3 text-sm font-medium rounded-lg"
               >
-                {lang === "th" ? s.language.th : s.language.en}
+                {activeLocale === lang && (
+                  <motion.div
+                    layoutId="locale-pill"
+                    className="absolute inset-0 bg-orange-500 rounded-lg"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className={`relative z-10 transition-colors duration-150 ${
+                  activeLocale === lang ? "text-white" : "text-secondary"
+                }`}>
+                  {lang === "th" ? s.language.th : s.language.en}
+                </span>
               </button>
             ))}
           </div>
