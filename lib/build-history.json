@@ -1,5 +1,12 @@
 [
   {
+    "build": 132,
+    "timestamp": "2026-05-22T15:10:17.000Z",
+    "subject": "Rename tables and migrate ingredient store prefs to use UUID FK",
+    "hash": "e580c93",
+    "category": "internal"
+  },
+  {
     "build": 131,
     "timestamp": "2026-05-22T14:24:54.000Z",
     "subject": "Fix ingredient-store key mismatch between shopping and presets pages",
