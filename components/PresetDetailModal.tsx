@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, ChefHat, Loader2 } from "lucide-react";
+import { X, ChefHat, Loader2, ExternalLink } from "lucide-react";
 import { useLocale } from "@/lib/locale";
 import type { UserStore } from "@/lib/types";
 import {
@@ -77,7 +77,7 @@ export default function PresetDetailModal(props: Props) {
     : secondaryName(props.nameTh, props.nameEn);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={props.onClose}>
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={props.onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
         className="relative bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
@@ -127,12 +127,16 @@ export default function PresetDetailModal(props: Props) {
           {props.kind === "store" && props.store.latitude != null && (
             <div>
               <p className="text-xs font-semibold text-muted uppercase tracking-widest mb-2">{d.storeLocationLabel}</p>
+              <p className="text-sm font-mono text-foreground mb-2">
+                {props.store.latitude.toFixed(5)}, {props.store.longitude?.toFixed(5)}
+              </p>
               <a
                 href={`https://www.google.com/maps?q=${props.store.latitude},${props.store.longitude}`}
                 target="_blank" rel="noopener noreferrer"
-                className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               >
-                {props.store.latitude.toFixed(5)}, {props.store.longitude?.toFixed(5)} ↗
+                <ExternalLink className="w-3 h-3" />
+                Google Maps
               </a>
             </div>
           )}
@@ -157,9 +161,9 @@ export default function PresetDetailModal(props: Props) {
             </div>
           )}
 
-          {/* Recipes divider */}
+          {/* Recipes section — border-t only for ingredient (has store chips above it) */}
           {props.kind !== "store" && (
-            <div className="border-t border-border pt-4">
+            <div className={props.kind === "ingredient" ? "border-t border-border pt-4" : "pt-1"}>
               <div className="flex items-center gap-2 mb-3">
                 <ChefHat className="w-3.5 h-3.5 text-muted" />
                 <p className="text-xs font-semibold text-muted uppercase tracking-widest">{t.common.usedInRecipes}</p>

@@ -287,38 +287,38 @@ export async function getRecipesByIngredientId(ingredientId: string): Promise<Re
   const user = await getSession();
   if (!user) return [];
   const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from("ingredients")
+    .select("recipe_id")
+    .eq("ingredient_preset_id", ingredientId);
+  if (!rows || rows.length === 0) return [];
+  const ids = [...new Set(rows.map(r => r.recipe_id))];
   const { data } = await supabase
-    .from("ingredient_rows")
-    .select("recipe_id, recipes!inner(id, name_th, name_en, user_id)")
-    .eq("ingredient_preset_id", ingredientId)
-    .eq("recipes.user_id", user.id);
-  if (!data) return [];
-  const seen = new Set<string>();
-  return data.flatMap(r => {
-    const rec = r.recipes as unknown as RecipeRef & { user_id: string };
-    if (!rec || seen.has(rec.id)) return [];
-    seen.add(rec.id);
-    return [{ id: rec.id, name_th: rec.name_th, name_en: rec.name_en }];
-  });
+    .from("recipes")
+    .select("id, name_th, name_en")
+    .in("id", ids)
+    .eq("user_id", user.id)
+    .order("name_th");
+  return (data ?? []) as RecipeRef[];
 }
 
 export async function getRecipesByUnitId(unitId: string): Promise<RecipeRef[]> {
   const user = await getSession();
   if (!user) return [];
   const supabase = await createClient();
+  const { data: rows } = await supabase
+    .from("ingredients")
+    .select("recipe_id")
+    .eq("ingredient_unit_id", unitId);
+  if (!rows || rows.length === 0) return [];
+  const ids = [...new Set(rows.map(r => r.recipe_id))];
   const { data } = await supabase
-    .from("ingredient_rows")
-    .select("recipe_id, recipes!inner(id, name_th, name_en, user_id)")
-    .eq("ingredient_unit_id", unitId)
-    .eq("recipes.user_id", user.id);
-  if (!data) return [];
-  const seen = new Set<string>();
-  return data.flatMap(r => {
-    const rec = r.recipes as unknown as RecipeRef & { user_id: string };
-    if (!rec || seen.has(rec.id)) return [];
-    seen.add(rec.id);
-    return [{ id: rec.id, name_th: rec.name_th, name_en: rec.name_en }];
-  });
+    .from("recipes")
+    .select("id, name_th, name_en")
+    .in("id", ids)
+    .eq("user_id", user.id)
+    .order("name_th");
+  return (data ?? []) as RecipeRef[];
 }
 
 export async function getRecipesByCategoryId(categoryId: string): Promise<RecipeRef[]> {
@@ -344,11 +344,12 @@ export async function getIngredientsByStoreId(storeId: string): Promise<{ key: s
     .eq("store_id", storeId)
     .eq("user_id", user.id);
   if (!data || data.length === 0) return [];
-  const keys = data.map(r => r.ingredient_key);
+  const keys = new Set(data.map(r => r.ingredient_key));
   const { data: presets } = await supabase
     .from("preset_ingredients")
     .select("name_th, name_en")
-    .eq("user_id", user.id)
-    .in("name_th", keys);
-  return (presets ?? []).map(p => ({ key: (p.name_th || p.name_en).toLowerCase(), name_th: p.name_th, name_en: p.name_en }));
+    .eq("user_id", user.id);
+  return (presets ?? [])
+    .filter(p => keys.has((p.name_th || p.name_en || "").toLowerCase()))
+    .map(p => ({ key: (p.name_th || p.name_en).toLowerCase(), name_th: p.name_th, name_en: p.name_en }));
 }
