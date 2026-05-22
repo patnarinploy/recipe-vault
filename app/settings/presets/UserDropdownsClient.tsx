@@ -297,8 +297,9 @@ function PresetsTable({
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted">{countLabel}</p>
       {/* Search + Add row */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 -mt-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -313,7 +314,6 @@ function PresetsTable({
           </button>
         )}
       </div>
-      <p className="text-xs text-muted -mt-2">{countLabel}</p>
 
       {/* Add form at top when open */}
       {adding && (
@@ -506,8 +506,9 @@ function IngredientsTable({
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted">{countLabel}</p>
       {/* Search + Add row */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 -mt-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -522,7 +523,6 @@ function IngredientsTable({
           </button>
         )}
       </div>
-      <p className="text-xs text-muted -mt-2">{countLabel}</p>
 
       {/* Add form at top when open */}
       {adding && (
@@ -611,8 +611,9 @@ function StoresTable({
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted">{countText}</p>
       {/* Search + Add row */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 -mt-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -626,7 +627,6 @@ function StoresTable({
           </button>
         )}
       </div>
-      <p className="text-xs text-muted -mt-2">{countText}</p>
 
       {isFormOpen && (
         <StoreFormInline

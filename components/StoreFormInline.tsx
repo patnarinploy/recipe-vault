@@ -13,6 +13,8 @@ const DynamicLocationPicker = dynamic(() => import("@/components/LocationPicker"
 export const STORE_COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e",
   "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
+  "#f43f5e", "#06b6d4", "#84cc16", "#f59e0b",
+  "#6366f1", "#10b981", "#0ea5e9", "#64748b",
 ];
 
 export default function StoreFormInline({
@@ -25,7 +27,7 @@ export default function StoreFormInline({
   const { t } = useLocale();
   const s = t.shopping;
   const [name, setName]             = useState(store?.name ?? "");
-  const [color, setColor]           = useState(store?.color ?? STORE_COLORS[4]);
+  const [color, setColor]           = useState(store?.color ?? STORE_COLORS[0]);
   const [lat, setLat]               = useState(store?.latitude  != null ? String(store.latitude)  : "");
   const [lng, setLng]               = useState(store?.longitude != null ? String(store.longitude) : "");
   const [mapPickerOpen, setMapOpen] = useState(false);
