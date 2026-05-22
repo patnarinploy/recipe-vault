@@ -1,5 +1,12 @@
 [
   {
+    "build": 122,
+    "timestamp": "2026-05-22T12:23:56.000Z",
+    "subject": "fix: make map location button more visible in StoreFormInline",
+    "hash": "fc41196",
+    "category": "fix"
+  },
+  {
     "build": 121,
     "timestamp": "2026-05-22T12:22:48.000Z",
     "subject": "feat: add search bar to Stores tab; show count at top of all tabs",

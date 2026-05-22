@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 121;
-export const BUILD_TIMESTAMP = "2026-05-22T12:22:48.000Z";
-export const BUILD_TOOLTIP   = "feat: add search bar to Stores tab; show count at top of all tabs";
+export const BUILD_NUMBER    = 122;
+export const BUILD_TIMESTAMP = "2026-05-22T12:23:56.000Z";
+export const BUILD_TOOLTIP   = "fix: make map location button more visible in StoreFormInline";
