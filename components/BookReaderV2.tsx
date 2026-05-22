@@ -1739,14 +1739,6 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     router.refresh();
   }, [fetchData, router]);
 
-  function resetMobileZoom() {
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
-    if (!meta) return;
-    const original = meta.content;
-    meta.content = original + ', maximum-scale=1';
-    requestAnimationFrame(() => { meta.content = original; });
-  }
-
   // ─────────────────────────────────────────────────────────────────
   if (!ready || loading || !displayBook) return <SkeletonOpenBook pageW={pageW} pageH={pageH} portrait={portrait} />;
 
@@ -1996,18 +1988,18 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       </div>
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
-      <Modal open={newRecipeOpen} onClose={() => { resetMobileZoom(); setNewRecipeOpen(false); }} title={t.library.addRecipe} disableBackdropClick>
+      <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
         <RecipeForm bookId={bookId} inModal presetUnits={presetUnits} presetCategories={presetCategories} ingredientNameOptions={ingredientNames}
-          onSuccess={() => { resetMobileZoom(); setNewRecipeOpen(false); refreshAndReset(2); }}
-          onCancel={() => { resetMobileZoom(); setNewRecipeOpen(false); }} />
+          onSuccess={() => { setNewRecipeOpen(false); refreshAndReset(2); }}
+          onCancel={() => setNewRecipeOpen(false)} />
       </Modal>
 
       {currentRecipe && (
-        <Modal open={editRecipeOpen} onClose={() => { resetMobileZoom(); setEditRecipeOpen(false); }} title={t.library.editRecipeTitle} disableBackdropClick>
+        <Modal open={editRecipeOpen} onClose={() => setEditRecipeOpen(false)} title={t.library.editRecipeTitle} disableBackdropClick>
           <RecipeForm recipe={currentRecipe} bookId={bookId} inModal showDelete presetUnits={presetUnits} presetCategories={presetCategories} ingredientNameOptions={ingredientNames}
-            onSuccess={() => { resetMobileZoom(); setEditRecipeOpen(false); refreshAndReset(currentPage); }}
-            onCancel={() => { resetMobileZoom(); setEditRecipeOpen(false); }}
-            onDeleted={() => { resetMobileZoom(); setEditRecipeOpen(false); refreshAndReset(2); }} />
+            onSuccess={() => { setEditRecipeOpen(false); refreshAndReset(currentPage); }}
+            onCancel={() => setEditRecipeOpen(false)}
+            onDeleted={() => { setEditRecipeOpen(false); refreshAndReset(2); }} />
         </Modal>
       )}
 
