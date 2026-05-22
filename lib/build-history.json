@@ -1,5 +1,12 @@
 [
   {
+    "build": 140,
+    "timestamp": "2026-05-22T19:57:20.000Z",
+    "subject": "Reset mobile viewport zoom when recipe form modals close",
+    "hash": "8922c3d",
+    "category": "internal"
+  },
+  {
     "build": 139,
     "timestamp": "2026-05-22T19:40:56.000Z",
     "subject": "Fix iOS Safari auto-zoom on input focus in recipe form",
