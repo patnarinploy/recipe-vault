@@ -78,8 +78,8 @@ export function SkeletonBookGrid({ count = 8 }: { count?: number }) {
 }
 
 // Solid shimmer colours for use against any background (including dark modal overlay).
-const PAGE_SHIMMER = "linear-gradient(90deg,#e0dbd7 0%,#ede9e5 50%,#e0dbd7 100%)";
-const LINE_SHIMMER = "linear-gradient(90deg,#cac5c1 0%,#d8d2ce 50%,#cac5c1 100%)";
+const PAGE_SHIMMER = "var(--sk-book-page)";
+const LINE_SHIMMER = "var(--sk-book-line)";
 const SHIMMER_ANIM = "skeleton-shimmer 1.4s linear infinite";
 
 // Open-book shimmer for V2 modal loading state.
@@ -116,7 +116,7 @@ export function SkeletonOpenBook({
         {!portrait && (
           <>
             <div style={{ ...shimPage, borderRadius: "6px 0 0 6px" }} />
-            <div style={{ width: 3, flexShrink: 0, background: "#b8b2ac" }} />
+            <div style={{ width: 3, flexShrink: 0, background: "var(--sk-book-spine)" }} />
           </>
         )}
         {/* Right / only page — content shimmer with line placeholders */}
@@ -132,7 +132,7 @@ export function SkeletonOpenBook({
         </div>
       </div>
       {/* Ground shadow */}
-      <div style={{ width: spreadW, height: 14, marginTop: 2, borderRadius: "50%", background: "#222", filter: "blur(18px)", opacity: 0.5 }} />
+      <div style={{ width: spreadW, height: 14, marginTop: 2, borderRadius: "50%", background: "var(--sk-book-shadow)", filter: "blur(18px)" }} />
     </div>
   );
 }

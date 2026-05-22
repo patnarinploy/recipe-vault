@@ -19,6 +19,12 @@
     /* Book reader paper tokens */
     --book-ink:   #2c1e14;   /* warm dark ink — recipe page text */
     --book-ink-2: #8a7354;   /* warm medium   — labels / decorations */
+
+  /* Book-open skeleton shimmer */
+  --sk-book-page:   linear-gradient(90deg, #e0dbd7 0%, #ede9e5 50%, #e0dbd7 100%);
+  --sk-book-line:   linear-gradient(90deg, #cac5c1 0%, #d8d2ce 50%, #cac5c1 100%);
+  --sk-book-spine:  #b8b2ac;
+  --sk-book-shadow: rgba(34,34,34,0.5);
   }
 
   /* ── Dark-mode overrides ─────────────────────────────────────────────────
@@ -36,6 +42,11 @@
     /* Book reader paper tokens — warm dark ebook */
     --book-ink:   #e2d8ce;
     --book-ink-2: #c4a46e;
+
+  --sk-book-page:   linear-gradient(90deg, #2a2420 0%, #332e2a 50%, #2a2420 100%);
+  --sk-book-line:   linear-gradient(90deg, #3c3530 0%, #4a433d 50%, #3c3530 100%);
+  --sk-book-spine:  #3a322c;
+  --sk-book-shadow: rgba(0,0,0,0.7);
   }
 
   body {
