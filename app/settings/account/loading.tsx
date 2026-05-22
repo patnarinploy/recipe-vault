@@ -1,7 +1,7 @@
 // Matches real AccountForm: email readonly + contact (tel) + personal (dob/country/lang) + social links + save
 export default function AccountLoading() {
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="skeleton h-4 w-16 rounded mb-6" />
       <div className="skeleton h-8 w-32 rounded-lg mb-1" />
       <div className="skeleton h-4 w-64 rounded mb-6" />

@@ -1,7 +1,7 @@
 // Matches real ReadingPage: 4 cards — page flip, theme, language, reading font grid
 export default function ReadingLoading() {
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="skeleton h-4 w-16 rounded mb-6" />
       <div className="skeleton h-8 w-44 rounded-lg mb-6" />
 

@@ -45,7 +45,7 @@ export default function AccountForm({
   const labelCls = "block text-sm font-semibold text-secondary mb-1";
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto">
       <Link
         href="/settings"
         className="inline-flex items-center gap-1.5 text-muted hover:text-foreground text-sm mb-6 transition-colors"

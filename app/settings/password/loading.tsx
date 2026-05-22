@@ -1,7 +1,7 @@
 // Matches real PasswordPage: icon header card + 3 password inputs + submit
 export default function PasswordLoading() {
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto">
       <div className="skeleton h-4 w-16 rounded mb-6" />
       <div className="skeleton h-8 w-28 rounded-lg mb-6" />
 

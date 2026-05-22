@@ -1,6 +1,6 @@
 export default function PresetsLoading() {
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto">
       {/* Back link */}
       <div className="skeleton h-4 w-20 rounded mb-6" />
 
