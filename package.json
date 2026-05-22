@@ -17,6 +17,7 @@
     "next": "^16.2.2",
     "react": "^18",
     "react-dom": "^18",
+    "react-joyride": "^3.1.0",
     "react-leaflet": "^4.2.1",
     "react-pageflip": "^2.0.3",
     "react-sortablejs": "^6.1.4",

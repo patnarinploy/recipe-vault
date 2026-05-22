@@ -15,6 +15,7 @@ import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart, ShoppingCart } from "lucide-react";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
+import BookTour from "./BookTour";
 import { useLocale, type Dict } from "@/lib/locale";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -1413,6 +1414,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   // Page tracking
   const [currentPage, setCurrentPage] = useState(0);
 
+  const [tourRun, setTourRun] = useState(false);
+
   // FAB
   const [fabOpen,         setFabOpen]         = useState(false);
   const [newRecipeOpen,   setNewRecipeOpen]   = useState(false);
@@ -1666,6 +1669,21 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     if (autoNewRecipe && !loading && book) setNewRecipeOpen(true);
   }, [autoNewRecipe, loading, book]);
 
+  // Product tour — show on first visit
+  useEffect(() => {
+    if (!loading && book) {
+      const key = `rv_book_tour_${bookId}`;
+      if (!localStorage.getItem(key)) {
+        setTimeout(() => setTourRun(true), 800);
+      }
+    }
+  }, [loading, book, bookId]);
+
+  function handleTourFinish() {
+    setTourRun(false);
+    localStorage.setItem(`rv_book_tour_${bookId}`, "1");
+  }
+
   // Close FAB menu on outside click
   useEffect(() => {
     if (!fabOpen) return;
@@ -1831,7 +1849,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     <>
       {/* Book container — relative so the FAB can be absolutely positioned
           at the bottom-right of the right page without overlapping content */}
-      <div ref={bookWrapRef} className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
+      <div ref={bookWrapRef} data-tour="book-pages" className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}
@@ -1990,6 +2008,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
           {/* FAB trigger */}
           <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
+                  data-tour="fab-menu"
                   style={{ width: 30, height: 30 }}
                   className={`rounded-full shadow-xl flex items-center justify-center transition-all ${
                     fabOpen
@@ -2041,6 +2060,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           </div>
         </Modal>
       )}
+
+      <BookTour run={tourRun} onFinish={handleTourFinish} />
 
       {/* ── YouTube in-book modal ──────────────────────────── */}
       {ytModal && (() => {
