@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 119;
-export const BUILD_TIMESTAMP = "2026-05-22T12:16:09.000Z";
-export const BUILD_TOOLTIP   = "fix: always show save button as active in StoreFormInline";
+export const BUILD_NUMBER    = 120;
+export const BUILD_TIMESTAMP = "2026-05-22T12:18:11.000Z";
+export const BUILD_TOOLTIP   = "fix: unify page width across all settings pages to max-w-2xl";
