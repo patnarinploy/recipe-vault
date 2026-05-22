@@ -1,5 +1,12 @@
 [
   {
+    "build": 149,
+    "timestamp": "2026-05-22T23:40:12.000Z",
+    "subject": "Unify modal & dropdown animations: scale+fade pattern system-wide",
+    "hash": "5d80fee",
+    "category": "internal"
+  },
+  {
     "build": 148,
     "timestamp": "2026-05-22T23:29:21.000Z",
     "subject": "Polish modal animation to Bootstrap-style slide-down (no scale)",
