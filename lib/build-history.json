@@ -1,5 +1,12 @@
 [
   {
+    "build": 148,
+    "timestamp": "2026-05-22T23:29:21.000Z",
+    "subject": "Polish modal animation to Bootstrap-style slide-down (no scale)",
+    "hash": "e0af771",
+    "category": "improve"
+  },
+  {
     "build": 147,
     "timestamp": "2026-05-22T23:20:36.000Z",
     "subject": "Add theme transition (View Transition API) and polish modal exit animati",

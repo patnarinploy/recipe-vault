@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 147;
-export const BUILD_TIMESTAMP = "2026-05-22T23:20:36.000Z";
-export const BUILD_TOOLTIP   = "Add theme transition (View Transition API) and polish modal exit animati";
+export const BUILD_NUMBER    = 148;
+export const BUILD_TIMESTAMP = "2026-05-22T23:29:21.000Z";
+export const BUILD_TOOLTIP   = "Polish modal animation to Bootstrap-style slide-down (no scale)";
