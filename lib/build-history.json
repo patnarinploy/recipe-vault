@@ -1,5 +1,12 @@
 [
   {
+    "build": 143,
+    "timestamp": "2026-05-22T20:46:53.000Z",
+    "subject": "Fix pinch-to-zoom on book reader: intercept multi-touch before page-flip",
+    "hash": "7f42103",
+    "category": "fix"
+  },
+  {
     "build": 142,
     "timestamp": "2026-05-22T20:38:03.000Z",
     "subject": "Enable native pinch-to-zoom on book reader pages",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 142;
-export const BUILD_TIMESTAMP = "2026-05-22T20:38:03.000Z";
-export const BUILD_TOOLTIP   = "Enable native pinch-to-zoom on book reader pages"Fix iOS Safari auto-zoom on input focus in recipe form"";
+export const BUILD_NUMBER    = 143;
+export const BUILD_TIMESTAMP = "2026-05-22T20:46:53.000Z";
+export const BUILD_TOOLTIP   = "Fix pinch-to-zoom on book reader: intercept multi-touch before page-flip"Fix iOS Safari auto-zoom on input focus in recipe form"";
