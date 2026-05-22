@@ -339,7 +339,7 @@ export async function getIngredientsByStoreId(storeId: string): Promise<{ key: s
   if (!user) return [];
   const supabase = await createClient();
   const { data } = await supabase
-    .from("ingredient_store_prefs")
+    .from("ingredient_store_pref")
     .select("ingredient_key")
     .eq("store_id", storeId)
     .eq("user_id", user.id);

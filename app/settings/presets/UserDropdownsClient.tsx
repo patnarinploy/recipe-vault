@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, MapPin, Info } from "lucide-react";
+import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, ExternalLink, Info } from "lucide-react";
 import PresetDetailModal from "@/components/PresetDetailModal";
 import type { IngredientDetailProps, UnitDetailProps, CategoryDetailProps, StoreDetailProps } from "@/components/PresetDetailModal";
 import {
@@ -676,11 +676,14 @@ function StoresTable({
                 <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-foreground">{store.name}</p>
-                  {store.latitude != null && store.longitude != null && (
-                    <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3" />
-                      {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
-                    </p>
+                  {store.latitude != null && store.longitude != null ? (
+                    <a href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-blue-400 hover:text-blue-500 flex items-center gap-0.5 mt-0.5 transition-colors">
+                      <ExternalLink className="w-3 h-3" /> Google Maps
+                    </a>
+                  ) : (
+                    <p className="text-xs text-muted mt-0.5">{t.shopping.noLocation}</p>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">

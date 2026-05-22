@@ -130,13 +130,10 @@ export default function PresetDetailModal(props: Props) {
           {props.kind === "store" && props.store.latitude != null && (
             <div>
               <p className="text-xs font-semibold text-muted uppercase tracking-widest mb-2">{d.storeLocationLabel}</p>
-              <p className="text-sm font-mono text-foreground mb-2">
-                {props.store.latitude.toFixed(5)}, {props.store.longitude?.toFixed(5)}
-              </p>
               <a
                 href={`https://www.google.com/maps?q=${props.store.latitude},${props.store.longitude}`}
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                className="text-sm text-blue-400 hover:text-blue-500 flex items-center gap-0.5 transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
                 Google Maps
