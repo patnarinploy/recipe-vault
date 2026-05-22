@@ -1,5 +1,12 @@
 [
   {
+    "build": 141,
+    "timestamp": "2026-05-22T20:04:33.000Z",
+    "subject": "Revert \"Fix iOS Safari auto-zoom on input focus in recipe form\"",
+    "hash": "2f89aa8",
+    "category": "internal"
+  },
+  {
     "build": 140,
     "timestamp": "2026-05-22T19:57:20.000Z",
     "subject": "Reset mobile viewport zoom when recipe form modals close",
