@@ -59,6 +59,7 @@ export const en = {
     emptyMySubtitle: "Create your first recipe book to get started",
     emptyPublicTitle: "No books found",
     emptyPublicSubtitle: "Try a different search, or wait for authors to share recipes",
+    searchNoResults: "No books match your search",
     createFirst: "Create your first book",
     addRecipe: "Add recipe to this book",
     editCover: "Edit book cover",

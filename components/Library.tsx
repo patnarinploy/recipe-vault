@@ -181,16 +181,17 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
 
       {/* Grid of books */}
       {books.length === 0 ? (
-        <div className="text-center py-20">
-          <BookOpen className="w-16 h-16 mx-auto text-muted mb-4" />
-          <p className="text-secondary font-medium mb-1">
-            {tab === "mine" ? lib.emptyMyTitle : lib.emptyPublicTitle}
-          </p>
-          <p className="text-sm text-muted">
-            {tab === "mine" ? lib.emptyMySubtitle : lib.emptyPublicSubtitle}
-          </p>
-          {tab === "mine" && !isGuest && (
-            <div className="flex justify-center mt-10">
+        <>
+          {/* Search returned nothing — show "not found" */}
+          {rawBooks.length > 0 && (
+            <div className="text-center py-20">
+              <p className="text-secondary font-medium">{lib.searchNoResults}</p>
+            </div>
+          )}
+
+          {/* Truly empty shelf — show only create card, no icon/text */}
+          {rawBooks.length === 0 && tab === "mine" && !isGuest && (
+            <div className="flex justify-center mt-4">
               <div className="flex flex-col items-center">
                 <button onClick={() => requireAuth(() => setNewBookOpen(true))}
                   className="w-40 h-[220px] rounded-md border-2 border-dashed border-outline hover:border-orange-400 bg-elevated hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-center justify-center gap-2 text-muted hover:text-orange-500 transition-all group">
@@ -201,7 +202,15 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
               </div>
             </div>
           )}
-        </div>
+
+          {/* Public tab: no books at all */}
+          {rawBooks.length === 0 && tab === "public" && (
+            <div className="text-center py-20">
+              <p className="text-secondary font-medium mb-1">{lib.emptyPublicTitle}</p>
+              <p className="text-sm text-muted">{lib.emptyPublicSubtitle}</p>
+            </div>
+          )}
+        </>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
           {books.map((book, i) => {

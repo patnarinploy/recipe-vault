@@ -59,6 +59,7 @@ export const th = {
     emptyMySubtitle: "เริ่มสร้างหนังสือสูตรเล่มแรกของคุณ",
     emptyPublicTitle: "ไม่พบหนังสือ",
     emptyPublicSubtitle: "ลองเปลี่ยนคำค้นหา หรือรอนักเขียนแชร์สูตร",
+    searchNoResults: "ไม่พบหนังสือที่ตรงกับคำค้นหา",
     createFirst: "สร้างหนังสือเล่มแรก",
     addRecipe: "เพิ่มสูตรในเล่มนี้",
     editCover: "แก้ไขปกหนังสือ",
