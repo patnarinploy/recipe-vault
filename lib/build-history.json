@@ -1,5 +1,12 @@
 [
   {
+    "build": 123,
+    "timestamp": "2026-05-22T12:25:12.000Z",
+    "subject": "fix: improve readability of 'no store assigned' text in dark mode",
+    "hash": "00a5fbb",
+    "category": "fix"
+  },
+  {
     "build": 122,
     "timestamp": "2026-05-22T12:23:56.000Z",
     "subject": "fix: make map location button more visible in StoreFormInline",
