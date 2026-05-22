@@ -10,7 +10,7 @@ export async function getUserStores(): Promise<UserStore[]> {
   if (!user) return [];
   const sb = await createClient();
   const { data } = await sb
-    .from("user_stores")
+    .from("preset_stores")
     .select("*")
     .eq("user_id", user.id)
     .order("sort_order", { ascending: true, nullsFirst: false })
@@ -29,11 +29,11 @@ export async function createUserStore(
   if (!name.trim()) return { error: "name_required" };
   const sb = await createClient();
   const { count } = await sb
-    .from("user_stores")
+    .from("preset_stores")
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id);
   const { data, error } = await sb
-    .from("user_stores")
+    .from("preset_stores")
     .insert({
       user_id: user.id,
       name: name.trim(),
@@ -59,7 +59,7 @@ export async function updateUserStore(
   const update: Record<string, unknown> = { ...patch };
   if (patch.name) update.name = patch.name.trim();
   const { error } = await sb
-    .from("user_stores")
+    .from("preset_stores")
     .update(update)
     .eq("id", id)
     .eq("user_id", user.id);
@@ -73,7 +73,7 @@ export async function deleteUserStore(id: string): Promise<{ success: true } | {
   if (!user) return { error: "not_authenticated" };
   const sb = await createClient();
   const { error } = await sb
-    .from("user_stores")
+    .from("preset_stores")
     .delete()
     .eq("id", id)
     .eq("user_id", user.id);
@@ -87,29 +87,30 @@ export async function getIngredientStorePrefs(): Promise<IngredientStorePref[]> 
   if (!user) return [];
   const sb = await createClient();
   const { data } = await sb
-    .from("ingredient_store_pref")
+    .from("preset_ingredient_stores")
     .select("*")
     .eq("user_id", user.id);
   return (data ?? []) as IngredientStorePref[];
 }
 
 export async function setIngredientStorePrefs(
-  ingredientKey: string,
+  presetIngredientId: string,
   storeIds: string[],
 ): Promise<{ success: true } | { error: string }> {
   const user = await getSession();
   if (!user) return { error: "not_authenticated" };
+  if (!presetIngredientId) return { error: "missing_ingredient_id" };
   const sb = await createClient();
 
   await sb
-    .from("ingredient_store_pref")
+    .from("preset_ingredient_stores")
     .delete()
     .eq("user_id", user.id)
-    .eq("ingredient_key", ingredientKey);
+    .eq("preset_ingredient_id", presetIngredientId);
 
   if (storeIds.length > 0) {
-    const { error } = await sb.from("ingredient_store_pref").insert(
-      storeIds.map(store_id => ({ user_id: user.id, ingredient_key: ingredientKey, store_id })),
+    const { error } = await sb.from("preset_ingredient_stores").insert(
+      storeIds.map(store_id => ({ user_id: user.id, preset_ingredient_id: presetIngredientId, store_id })),
     );
     if (error) return { error: error.message };
   }

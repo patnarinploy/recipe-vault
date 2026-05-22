@@ -75,7 +75,7 @@ export type UserStore = {
 export type IngredientStorePref = {
   id: string;
   user_id: string;
-  ingredient_key: string;
+  preset_ingredient_id: string;
   store_id: string;
   created_at: string;
 };

@@ -117,7 +117,7 @@ export async function getShoppingList(): Promise<ShoppingListEntry[]> {
       .in("id", recipeIds)
       .returns<Recipe[]>(),
     supabase
-      .from("ingredients")
+      .from("recipe_ingredients")
       .select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)")
       .in("recipe_id", recipeIds)
       .order("ingredient_sort")

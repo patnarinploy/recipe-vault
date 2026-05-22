@@ -71,7 +71,7 @@ export async function createRecipe(
         ingredient_sort: idx + 1,
       };
     }));
-    await supabase.from("ingredients").insert(rows);
+    await supabase.from("recipe_ingredients").insert(rows);
   }
 
   return { id: recipeId };
@@ -107,7 +107,7 @@ export async function updateRecipe(
   if (error) return { error: error.message };
 
   if (ingredientRows !== undefined) {
-    await supabase.from("ingredients").delete().eq("recipe_id", id);
+    await supabase.from("recipe_ingredients").delete().eq("recipe_id", id);
     if (ingredientRows.length > 0) {
       const rows = await Promise.all(ingredientRows.map(async (r, idx) => {
         let unitId = r.unitId ?? null;
@@ -123,7 +123,7 @@ export async function updateRecipe(
           ingredient_sort: idx + 1,
         };
       }));
-      await supabase.from("ingredients").insert(rows);
+      await supabase.from("recipe_ingredients").insert(rows);
     }
   }
 

@@ -744,11 +744,9 @@ export default function UserDropdownsClient({
   const [ingStorePrefs, setIngStorePrefs] = useState<Map<string, string[]>>(() => {
     const m = new Map<string, string[]>();
     for (const p of initialStorePrefs) {
-      // ingredient_key from shopping is "name:::unit"; strip the unit suffix
-      const nameKey = p.ingredient_key.split(":::")[0];
-      const arr = m.get(nameKey) ?? [];
+      const arr = m.get(p.preset_ingredient_id) ?? [];
       if (!arr.includes(p.store_id)) arr.push(p.store_id);
-      m.set(nameKey, arr);
+      m.set(p.preset_ingredient_id, arr);
     }
     return m;
   });
@@ -760,7 +758,7 @@ export default function UserDropdownsClient({
     nameTh: i.name_th,
     nameEn: i.name_en,
     isActive: i.is_active,
-    storeIds: ingStorePrefs.get((i.name_th || i.name_en).toLowerCase()) ?? [],
+    storeIds: ingStorePrefs.get(i.id) ?? [],
   }));
 
   // ─── Unit handlers ───────────────────────────────────────────────
@@ -828,18 +826,10 @@ export default function UserDropdownsClient({
   // ─── Ingredient handlers ─────────────────────────────────────────
 
   const saveIngredient = async (id: string, nameTh: string, nameEn: string, storeIds: string[]) => {
-    const existing = ingredients.find(i => i.id === id);
-    const oldKey = existing ? (existing.name_th || existing.name_en).toLowerCase() : "";
-    const newKey = (nameTh || nameEn).toLowerCase();
-
     const res = await updatePresetIngredient(id, { name_th: nameTh, name_en: nameEn });
     if ("error" in res) { toast.error(res.error); return; }
 
-    // If renamed, clear old store prefs first
-    if (oldKey && oldKey !== newKey) {
-      await setIngredientStorePrefs(oldKey, []);
-    }
-    await setIngredientStorePrefs(newKey, storeIds);
+    await setIngredientStorePrefs(id, storeIds);
 
     setIngredients(prev =>
       prev.map(i => i.id === id ? { ...i, name_th: nameTh, name_en: nameEn } : i)
@@ -847,12 +837,8 @@ export default function UserDropdownsClient({
     );
     setIngStorePrefs(prev => {
       const next = new Map(prev);
-      if (oldKey && oldKey !== newKey) next.delete(oldKey);
-      if (storeIds.length > 0) {
-        next.set(newKey, storeIds);
-      } else {
-        next.delete(newKey);
-      }
+      if (storeIds.length > 0) next.set(id, storeIds);
+      else next.delete(id);
       return next;
     });
     toast.success("บันทึกแล้ว");
@@ -870,20 +856,14 @@ export default function UserDropdownsClient({
   const addIngredient = async (nameTh: string, nameEn: string, storeIds: string[]) => {
     const res = await createPresetIngredient({ name_th: nameTh, name_en: nameEn });
     if ("error" in res) { toast.error(res.error); return; }
-    const key = (nameTh || nameEn).toLowerCase();
+    const newPreset = res as PresetIngredient;
     if (storeIds.length > 0) {
-      await setIngredientStorePrefs(key, storeIds);
+      await setIngredientStorePrefs(newPreset.id, storeIds);
+      setIngStorePrefs(prev => new Map(prev).set(newPreset.id, storeIds));
     }
     setIngredients(prev =>
-      [...prev, res as PresetIngredient].sort((a, b) => (a.name_th || a.name_en).localeCompare(b.name_th || b.name_en, "th"))
+      [...prev, newPreset].sort((a, b) => (a.name_th || a.name_en).localeCompare(b.name_th || b.name_en, "th"))
     );
-    if (storeIds.length > 0) {
-      setIngStorePrefs(prev => {
-        const next = new Map(prev);
-        next.set(key, storeIds);
-        return next;
-      });
-    }
     toast.success("เพิ่มวัตถุดิบแล้ว");
     router.refresh();
   };

@@ -49,7 +49,7 @@ export default function PresetDetailModal(props: Props) {
   const { t, locale } = useLocale();
   const d = t.settings.dropdowns;
   const [recipes, setRecipes] = useState<RecipeRef[] | null>(null);
-  const [storeIngredients, setStoreIngredients] = useState<{ key: string; name_th: string; name_en: string }[] | null>(null);
+  const [storeIngredients, setStoreIngredients] = useState<{ id: string; name_th: string; name_en: string }[] | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function PresetDetailModal(props: Props) {
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {storeIngredients.map(ing => (
-                    <span key={ing.key} className="text-xs px-2.5 py-1 rounded-full bg-elevated border border-border text-foreground">
+                    <span key={ing.id} className="text-xs px-2.5 py-1 rounded-full bg-elevated border border-border text-foreground">
                       {primaryName(ing.name_th, ing.name_en)}
                     </span>
                   ))}

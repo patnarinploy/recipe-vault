@@ -288,7 +288,7 @@ export async function getRecipesByIngredientId(ingredientId: string): Promise<Re
   if (!user) return [];
   const supabase = await createClient();
   const { data: rows } = await supabase
-    .from("ingredients")
+    .from("recipe_ingredients")
     .select("recipe_id")
     .eq("ingredient_preset_id", ingredientId);
   if (!rows || rows.length === 0) return [];
@@ -307,7 +307,7 @@ export async function getRecipesByUnitId(unitId: string): Promise<RecipeRef[]> {
   if (!user) return [];
   const supabase = await createClient();
   const { data: rows } = await supabase
-    .from("ingredients")
+    .from("recipe_ingredients")
     .select("recipe_id")
     .eq("ingredient_unit_id", unitId);
   if (!rows || rows.length === 0) return [];
@@ -334,23 +334,21 @@ export async function getRecipesByCategoryId(categoryId: string): Promise<Recipe
   return (data ?? []) as RecipeRef[];
 }
 
-export async function getIngredientsByStoreId(storeId: string): Promise<{ key: string; name_th: string; name_en: string }[]> {
+export async function getIngredientsByStoreId(storeId: string): Promise<{ id: string; name_th: string; name_en: string }[]> {
   const user = await getSession();
   if (!user) return [];
   const supabase = await createClient();
   const { data } = await supabase
-    .from("ingredient_store_pref")
-    .select("ingredient_key")
+    .from("preset_ingredient_stores")
+    .select("preset_ingredient_id")
     .eq("store_id", storeId)
     .eq("user_id", user.id);
   if (!data || data.length === 0) return [];
-  // ingredient_key from shopping page is "name:::unit"; extract name prefix for matching
-  const nameKeys = new Set(data.map(r => r.ingredient_key.split(":::")[0]));
+  const ids = data.map(r => r.preset_ingredient_id);
   const { data: presets } = await supabase
     .from("preset_ingredients")
-    .select("name_th, name_en")
+    .select("id, name_th, name_en")
+    .in("id", ids)
     .eq("user_id", user.id);
-  return (presets ?? [])
-    .filter(p => nameKeys.has((p.name_th || p.name_en || "").toLowerCase()))
-    .map(p => ({ key: (p.name_th || p.name_en).toLowerCase(), name_th: p.name_th, name_en: p.name_en }));
+  return (presets ?? []) as { id: string; name_th: string; name_en: string }[];
 }

@@ -96,7 +96,7 @@ export async function getFavoriteRecipes(): Promise<Recipe[]> {
       .in("id", recipeIds)
       .returns<Recipe[]>(),
     supabase
-      .from("ingredients")
+      .from("recipe_ingredients")
       .select("*, preset_units(*)")
       .in("recipe_id", recipeIds)
       .order("ingredient_sort")

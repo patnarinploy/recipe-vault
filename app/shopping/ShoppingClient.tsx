@@ -40,6 +40,7 @@ function formatAmount(n: number): string {
 
 interface CombinedIng {
   key: string;
+  presetIngredientId: string;
   name: string;
   unit: string;
   totalAmount: number | null;
@@ -61,7 +62,7 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
   for (const item of items) {
     for (const ing of item.recipe.ingredient_rows ?? []) {
       const name = getIngredientName(ing, locale);
-      // ingredient_key for store prefs always uses TH name for consistency
+      const presetIngredientId = ing.preset_ingredients?.id ?? "";
       const keyName = (ing.preset_ingredients?.name_th || ing.preset_ingredients?.name_en || "").toLowerCase().trim();
       const unit = ing.preset_units
         ? (locale === "th" ? ing.preset_units.unit_name_th : ing.preset_units.unit_name_en)
@@ -78,7 +79,7 @@ function buildCombined(items: ShoppingListEntry[], locale: "th" | "en"): Combine
           existing.totalAmount = null;
         }
       } else {
-        map.set(key, { key, name, unit, totalAmount: parsed !== null ? parsed * item.quantity : null, sources: [source] });
+        map.set(key, { key, presetIngredientId, name, unit, totalAmount: parsed !== null ? parsed * item.quantity : null, sources: [source] });
       }
     }
   }
@@ -97,7 +98,7 @@ function computeRoute(
   const unassigned: CombinedIng[] = [];
 
   for (const c of combined) {
-    const ids = storePrefs.get(c.key) ?? new Set<string>();
+    const ids = storePrefs.get(c.presetIngredientId) ?? new Set<string>();
     if (ids.size === 0) { unassigned.push(c); continue; }
     for (const sid of ids) {
       if (!storeMap.has(sid)) continue; // skip stale refs to deleted stores
@@ -109,7 +110,7 @@ function computeRoute(
 
   const remaining = new Set(
     combined.filter(c => {
-      const ids = storePrefs.get(c.key) ?? new Set<string>();
+      const ids = storePrefs.get(c.presetIngredientId) ?? new Set<string>();
       return [...ids].some(sid => storeMap.has(sid));
     }).map(c => c.key),
   );
@@ -446,7 +447,7 @@ function CombinedView({
     const amountDisplay = c.totalAmount !== null
       ? `${formatAmount(c.totalAmount)}${c.unit ? ` ${c.unit}` : ""}`
       : c.sources.map(src => `${src.amount}${c.unit ? ` ${c.unit}` : ""} ×${src.qty}`).join(" + ");
-    const currentStoreIds = storePrefs.get(c.key) ?? new Set<string>();
+    const currentStoreIds = storePrefs.get(c.presetIngredientId) ?? new Set<string>();
 
     return (
       <div key={c.key} className={`flex items-start gap-3 px-4 py-3 transition-colors ${isChecked ? "opacity-50" : ""}`}>
@@ -472,7 +473,7 @@ function CombinedView({
         <StorePills
           storeIds={currentStoreIds}
           storeMap={storeMap}
-          onClick={() => onPickStore(c.key, c.name, currentStoreIds)}
+          onClick={() => onPickStore(c.presetIngredientId, c.name, currentStoreIds)}
         />
       </div>
     );
@@ -523,7 +524,7 @@ function StoresTab({
   // Coverage count per store for the store cards
   const storeItemCounts: Record<string, number> = {};
   for (const c of combined) {
-    for (const sid of (storePrefs.get(c.key) ?? new Set())) {
+    for (const sid of (storePrefs.get(c.presetIngredientId) ?? new Set())) {
       storeItemCounts[sid] = (storeItemCounts[sid] ?? 0) + 1;
     }
   }
@@ -707,16 +708,16 @@ export default function ShoppingClient({
   const [storePrefs, setStorePrefs] = useState<Map<string, Set<string>>>(() => {
     const map = new Map<string, Set<string>>();
     for (const p of initialStorePrefs) {
-      const set = map.get(p.ingredient_key) ?? new Set<string>();
+      const set = map.get(p.preset_ingredient_id) ?? new Set<string>();
       set.add(p.store_id);
-      map.set(p.ingredient_key, set);
+      map.set(p.preset_ingredient_id, set);
     }
     return map;
   });
   const [tab, setTab] = useState<"per" | "combined" | "map">("per");
   const [clearSignal, setClearSignal] = useState(0);
   const [, startTransition] = useTransition();
-  const [picker, setPicker] = useState<{ key: string; name: string; storeIds: Set<string> } | null>(null);
+  const [picker, setPicker] = useState<{ presetIngredientId: string; name: string; storeIds: Set<string> } | null>(null);
 
   const handleQuantityChange = (recipeId: string, qty: number) => {
     if (qty < 1) { handleRemove(recipeId); return; }
@@ -744,13 +745,13 @@ export default function ShoppingClient({
     if ("error" in res) { toast.error(res.error); router.refresh(); }
   };
 
-  const handlePickStore = (key: string, name: string, currentStoreIds: Set<string>) =>
-    setPicker({ key, name, storeIds: currentStoreIds });
+  const handlePickStore = (presetIngredientId: string, name: string, currentStoreIds: Set<string>) =>
+    setPicker({ presetIngredientId, name, storeIds: currentStoreIds });
 
-  const handleStoreAssign = async (key: string, storeIds: Set<string>) => {
-    setStorePrefs(prev => new Map(prev).set(key, storeIds));
+  const handleStoreAssign = async (presetIngredientId: string, storeIds: Set<string>) => {
+    setStorePrefs(prev => new Map(prev).set(presetIngredientId, storeIds));
     const { setIngredientStorePrefs } = await import("@/app/actions/stores");
-    const res = await setIngredientStorePrefs(key, [...storeIds]);
+    const res = await setIngredientStorePrefs(presetIngredientId, [...storeIds]);
     if ("error" in res) toast.error(res.error);
   };
 
@@ -839,7 +840,7 @@ export default function ShoppingClient({
           open
           onClose={() => setPicker(null)}
           ingredientName={picker.name}
-          ingredientKey={picker.key}
+          ingredientKey={picker.presetIngredientId}
           stores={stores}
           currentStoreIds={picker.storeIds}
           onSave={handleStoreAssign}
