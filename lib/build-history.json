@@ -1,5 +1,12 @@
 [
   {
+    "build": 150,
+    "timestamp": "2026-05-22T23:51:56.000Z",
+    "subject": "Inline store edit & expand animations for all add/edit forms",
+    "hash": "e27ad8a",
+    "category": "internal"
+  },
+  {
     "build": 149,
     "timestamp": "2026-05-22T23:40:12.000Z",
     "subject": "Unify modal & dropdown animations: scale+fade pattern system-wide",

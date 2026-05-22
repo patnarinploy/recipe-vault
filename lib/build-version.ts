@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 149;
-export const BUILD_TIMESTAMP = "2026-05-22T23:40:12.000Z";
-export const BUILD_TOOLTIP   = "Unify modal & dropdown animations: scale+fade pattern system-wide";
+export const BUILD_NUMBER    = 150;
+export const BUILD_TIMESTAMP = "2026-05-22T23:51:56.000Z";
+export const BUILD_TOOLTIP   = "Inline store edit & expand animations for all add/edit forms";
