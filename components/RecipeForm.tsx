@@ -417,7 +417,7 @@ export default function RecipeForm({
     });
   }
 
-  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
   const labelCls = "block text-sm font-medium text-secondary mb-1.5";
 
   return (
@@ -569,7 +569,7 @@ export default function RecipeForm({
                 {/* Step text */}
                 <textarea value={step.text} onChange={e => updateStep(i, "text", e.target.value)}
                   placeholder={r.stepPlaceholder.replace("{n}", String(i + 1))} rows={2}
-                  className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-surface text-foreground placeholder:text-muted border-0" />
+                  className="w-full px-3 py-2.5 text-base md:text-sm focus:outline-none resize-none bg-surface text-foreground placeholder:text-muted border-0" />
                 {/* Step image */}
                 <StepImageUpload
                   value={step.image_url}
@@ -597,7 +597,7 @@ export default function RecipeForm({
                 value={form.recipe_youtube}
                 onChange={set("recipe_youtube")}
                 placeholder={r.youtubePlaceholder}
-                className="flex-1 text-sm bg-transparent focus:outline-none text-secondary placeholder:text-muted"
+                className="flex-1 text-base md:text-sm bg-transparent focus:outline-none text-secondary placeholder:text-muted"
               />
               {form.recipe_youtube && (
                 <button type="button" onClick={() => setForm(p => ({ ...p, recipe_youtube: "" }))}
