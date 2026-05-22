@@ -1,5 +1,12 @@
 [
   {
+    "build": 142,
+    "timestamp": "2026-05-22T20:38:03.000Z",
+    "subject": "Enable native pinch-to-zoom on book reader pages",
+    "hash": "b6d796b",
+    "category": "internal"
+  },
+  {
     "build": 141,
     "timestamp": "2026-05-22T20:04:33.000Z",
     "subject": "Revert \"Fix iOS Safari auto-zoom on input focus in recipe form\"",
