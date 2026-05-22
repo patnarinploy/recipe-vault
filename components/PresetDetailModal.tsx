@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, ChefHat, Loader2, ExternalLink } from "lucide-react";
 import { useLocale } from "@/lib/locale";
 import type { UserStore } from "@/lib/types";
@@ -11,7 +12,7 @@ import {
   getIngredientsByStoreId,
 } from "@/app/actions/user-presets";
 
-type RecipeRef = { id: string; name_th: string; name_en: string };
+type RecipeRef = { id: string; title: string };
 
 interface BaseProps {
   onClose: () => void;
@@ -49,8 +50,10 @@ export default function PresetDetailModal(props: Props) {
   const d = t.settings.dropdowns;
   const [recipes, setRecipes] = useState<RecipeRef[] | null>(null);
   const [storeIngredients, setStoreIngredients] = useState<{ key: string; name_th: string; name_en: string }[] | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (props.kind === "ingredient") {
       getRecipesByIngredientId(props.id).then(setRecipes);
     } else if (props.kind === "unit") {
@@ -66,9 +69,7 @@ export default function PresetDetailModal(props: Props) {
   const primaryName = (th: string, en: string) => locale === "en" ? (en || th) : (th || en);
   const secondaryName = (th: string, en: string) => locale === "en" ? th : en;
 
-  const recipeName = (r: RecipeRef) => locale === "en" ? (r.name_en || r.name_th) : (r.name_th || r.name_en);
-
-  const title = props.kind === "store"
+  const modalTitle = props.kind === "store"
     ? props.store.name
     : primaryName(props.nameTh, props.nameEn);
 
@@ -76,7 +77,9 @@ export default function PresetDetailModal(props: Props) {
     ? undefined
     : secondaryName(props.nameTh, props.nameEn);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={props.onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
@@ -89,7 +92,7 @@ export default function PresetDetailModal(props: Props) {
             <span className="w-5 h-5 rounded-full shrink-0 mt-0.5" style={{ background: props.store.color }} />
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-semibold text-foreground leading-tight">{title}</h2>
+            <h2 className="text-base font-semibold text-foreground leading-tight">{modalTitle}</h2>
             {subtitle && <p className="text-xs text-muted mt-0.5">{subtitle}</p>}
           </div>
           <button onClick={props.onClose} className="p-1 text-muted hover:text-foreground transition-colors shrink-0">
@@ -176,7 +179,7 @@ export default function PresetDetailModal(props: Props) {
                 <div className="flex flex-wrap gap-1.5">
                   {recipes.map(r => (
                     <span key={r.id} className="text-xs px-2.5 py-1 rounded-full bg-elevated border border-border text-foreground">
-                      {recipeName(r)}
+                      {r.title}
                     </span>
                   ))}
                 </div>
@@ -194,7 +197,7 @@ export default function PresetDetailModal(props: Props) {
               <div className="flex flex-wrap gap-1.5">
                 {recipes.map(r => (
                   <span key={r.id} className="text-xs px-2.5 py-1 rounded-full bg-elevated border border-border text-foreground">
-                    {recipeName(r)}
+                    {r.title}
                   </span>
                 ))}
               </div>
@@ -202,6 +205,7 @@ export default function PresetDetailModal(props: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

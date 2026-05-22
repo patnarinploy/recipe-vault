@@ -621,7 +621,6 @@ function StoresTable({
     startTransition(async () => { await onDelete(store.id); });
   };
 
-  const isFormOpen = adding || editingStore != null;
   const countText = countLabel.replace("{n}", String(stores.length));
   const [detail, setDetail] = useState<StoreDetailProps | null>(null);
 
@@ -636,19 +635,19 @@ function StoresTable({
             placeholder={t.settings.dropdowns.storeName}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
-        {!isFormOpen && (
-          <button onClick={() => { setEditingStore(null); setAdding(true); }}
+        {!adding && (
+          <button onClick={() => setAdding(true)}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
             <Plus className="w-4 h-4" /> {addLabel}
           </button>
         )}
       </div>
 
-      {isFormOpen && (
+      {/* Add form at top — only for new store, not for editing */}
+      {adding && (
         <StoreFormInline
-          store={editingStore ?? undefined}
-          onSave={(saved) => { onSave(saved); setAdding(false); setEditingStore(null); }}
-          onCancel={() => { setAdding(false); setEditingStore(null); }}
+          onSave={(saved) => { onSave(saved); setAdding(false); }}
+          onCancel={() => setAdding(false)}
         />
       )}
 
@@ -657,7 +656,7 @@ function StoresTable({
       )}
 
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {filteredStores.length === 0 && !isFormOpen && (
+        {filteredStores.length === 0 && !adding && (
           <div className="flex flex-col items-center gap-2 py-10 text-muted">
             <Layers className="w-8 h-8 opacity-30" />
             <p className="text-sm">{emptyLabel}</p>
@@ -665,31 +664,41 @@ function StoresTable({
         )}
 
         {filteredStores.map(store => (
-          <div key={store.id} className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-elevated/50 transition-colors">
-            <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground">{store.name}</p>
-              {store.latitude != null && store.longitude != null && (
-                <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3" />
-                  {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <button onClick={() => setDetail({ kind: "store", store, onClose: () => setDetail(null) })}
-                className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
-                <Info className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => { setAdding(false); setEditingStore(store); }}
-                className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => handleDelete(store)} disabled={pending}
-                className="p-1.5 rounded-lg text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          <div key={store.id} className="border-b border-border last:border-0">
+            {editingStore?.id === store.id ? (
+              <StoreFormInline
+                store={store}
+                onSave={(saved) => { onSave(saved); setEditingStore(null); }}
+                onCancel={() => setEditingStore(null)}
+              />
+            ) : (
+              <div className="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50 transition-colors">
+                <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">{store.name}</p>
+                  {store.latitude != null && store.longitude != null && (
+                    <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" />
+                      {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={() => setDetail({ kind: "store", store, onClose: () => setDetail(null) })}
+                    className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => { setAdding(false); setEditingStore(store); }}
+                    className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => handleDelete(store)} disabled={pending}
+                    className="p-1.5 rounded-lg text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

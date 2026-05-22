@@ -281,7 +281,7 @@ export async function ensurePresetUnit(
 
 // ─── Detail queries (used by preset detail modal) ─────────────────
 
-type RecipeRef = { id: string; name_th: string; name_en: string };
+type RecipeRef = { id: string; title: string };
 
 export async function getRecipesByIngredientId(ingredientId: string): Promise<RecipeRef[]> {
   const user = await getSession();
@@ -295,10 +295,10 @@ export async function getRecipesByIngredientId(ingredientId: string): Promise<Re
   const ids = [...new Set(rows.map(r => r.recipe_id))];
   const { data } = await supabase
     .from("recipes")
-    .select("id, name_th, name_en")
+    .select("id, title")
     .in("id", ids)
     .eq("user_id", user.id)
-    .order("name_th");
+    .order("title");
   return (data ?? []) as RecipeRef[];
 }
 
@@ -314,10 +314,10 @@ export async function getRecipesByUnitId(unitId: string): Promise<RecipeRef[]> {
   const ids = [...new Set(rows.map(r => r.recipe_id))];
   const { data } = await supabase
     .from("recipes")
-    .select("id, name_th, name_en")
+    .select("id, title")
     .in("id", ids)
     .eq("user_id", user.id)
-    .order("name_th");
+    .order("title");
   return (data ?? []) as RecipeRef[];
 }
 
@@ -327,10 +327,10 @@ export async function getRecipesByCategoryId(categoryId: string): Promise<Recipe
   const supabase = await createClient();
   const { data } = await supabase
     .from("recipes")
-    .select("id, name_th, name_en")
+    .select("id, title")
     .eq("category_id", categoryId)
     .eq("user_id", user.id)
-    .order("name_th");
+    .order("title");
   return (data ?? []) as RecipeRef[];
 }
 
