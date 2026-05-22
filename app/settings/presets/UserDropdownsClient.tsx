@@ -305,6 +305,7 @@ function PresetsTable({
             placeholder={col1Label + " / " + col2Label}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
+        <span className="text-xs text-muted shrink-0">{countLabel}</span>
         {!adding && (
           <button onClick={() => setAdding(true)}
                   className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
@@ -513,6 +514,7 @@ function IngredientsTable({
             placeholder={col1Label + " / " + col2Label}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
+        <span className="text-xs text-muted shrink-0">{countLabel}</span>
         {!adding && (
           <button onClick={() => setAdding(true)}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
@@ -590,9 +592,14 @@ function StoresTable({
   onDelete: (id: string) => Promise<void>;
   addLabel: string; deleteConfirm: string; emptyLabel: string; countLabel: string;
 }) {
+  const { t } = useLocale();
   const [adding, setAdding] = useState(false);
   const [editingStore, setEditingStore] = useState<UserStore | null>(null);
   const [pending, startTransition] = useTransition();
+  const [search, setSearch] = useState("");
+
+  const q = search.toLowerCase();
+  const filteredStores = stores.filter(s => !q || s.name.toLowerCase().includes(q));
 
   const handleDelete = (store: UserStore) => {
     if (!confirm(deleteConfirm)) return;
@@ -600,13 +607,22 @@ function StoresTable({
   };
 
   const isFormOpen = adding || editingStore != null;
+  const countText = countLabel.replace("{n}", String(stores.length));
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Search + Add row */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={t.settings.dropdowns.storeName}
+            className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+        </div>
+        <span className="text-xs text-muted shrink-0">{countText}</span>
         {!isFormOpen && (
           <button onClick={() => { setEditingStore(null); setAdding(true); }}
-            className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
+            className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
             <Plus className="w-4 h-4" /> {addLabel}
           </button>
         )}
@@ -625,14 +641,14 @@ function StoresTable({
       )}
 
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {stores.length === 0 && !isFormOpen && (
+        {filteredStores.length === 0 && !isFormOpen && (
           <div className="flex flex-col items-center gap-2 py-10 text-muted">
             <Layers className="w-8 h-8 opacity-30" />
             <p className="text-sm">{emptyLabel}</p>
           </div>
         )}
 
-        {stores.map(store => (
+        {filteredStores.map(store => (
           <div key={store.id} className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-elevated/50 transition-colors">
             <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
             <div className="flex-1 min-w-0">
@@ -658,7 +674,7 @@ function StoresTable({
         ))}
       </div>
 
-      <p className="text-xs text-muted">{countLabel.replace("{n}", String(stores.length))}</p>
+      <p className="text-xs text-muted">{countText}</p>
     </div>
   );
 }
