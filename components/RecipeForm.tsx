@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 import { type Recipe, type PresetUnit, type PresetCategory, type DbIngredient } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
@@ -73,9 +74,15 @@ function Combobox({ value, onChange, options, placeholder = "", className = "", 
       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
         <ChevronDown className="w-4 h-4" />
       </div>
-      {open && (filtered.length > 0 || showCreate) && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto"
-             style={{ maxHeight: "12rem" }}>
+      <AnimatePresence>
+        {open && (filtered.length > 0 || showCreate) && (
+        <motion.div
+          initial={{ opacity: 0, y: -6, scaleY: 0.94 }}
+          animate={{ opacity: 1, y: 0, scaleY: 1 }}
+          exit={{ opacity: 0, y: -4, scaleY: 0.96 }}
+          transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
+          style={{ transformOrigin: "top", maxHeight: "12rem" }}
+          className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto">
           {!query && placeholder && (
             <button type="button" onClick={() => select("")}
               className="w-full text-left px-3 py-2 text-sm text-muted hover:bg-elevated">
@@ -95,8 +102,9 @@ function Combobox({ value, onChange, options, placeholder = "", className = "", 
               {t.recipe.createOption} &ldquo;{query.trim()}&rdquo;
             </button>
           )}
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
