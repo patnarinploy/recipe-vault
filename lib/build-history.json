@@ -1,5 +1,12 @@
 [
   {
+    "build": 119,
+    "timestamp": "2026-05-22T12:16:09.000Z",
+    "subject": "fix: always show save button as active in StoreFormInline",
+    "hash": "0c4e5be",
+    "category": "fix"
+  },
+  {
     "build": 118,
     "timestamp": "2026-05-22T12:07:02.000Z",
     "subject": "fix: move map between header and store list on both pages",
