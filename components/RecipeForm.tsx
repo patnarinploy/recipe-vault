@@ -286,16 +286,14 @@ export default function RecipeForm({
     })
     .map(u => locale === "th" ? u.unit_name_th : (u.unit_name_en || u.unit_name_th));
 
-  const categoryOptions = presetCategories.length > 0
-    ? [...presetCategories]
-        .filter(c => c.is_active)
-        .sort((a, b) => {
-          const aName = locale === "th" ? a.name_th : (a.name_en || a.name_th);
-          const bName = locale === "th" ? b.name_th : (b.name_en || b.name_th);
-          return aName.localeCompare(bName, locale === "th" ? "th" : "en");
-        })
-        .map(c => locale === "th" ? c.name_th : (c.name_en || c.name_th))
-    : (r.categories as unknown as string[]);
+  const categoryOptions = [...presetCategories]
+    .filter(c => c.is_active)
+    .sort((a, b) => {
+      const aName = locale === "th" ? a.name_th : (a.name_en || a.name_th);
+      const bName = locale === "th" ? b.name_th : (b.name_en || b.name_th);
+      return aName.localeCompare(bName, locale === "th" ? "th" : "en");
+    })
+    .map(c => locale === "th" ? c.name_th : (c.name_en || c.name_th));
 
   const categoryDisplay = (id: string) => {
     const cat = presetCategories.find(c => c.id === id);
@@ -436,13 +434,22 @@ export default function RecipeForm({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className={labelCls}>{r.categoryLabel}</label>
-            <Combobox
-              value={categoryDisplay(form.category_id)}
-              onChange={handleCategoryChange}
-              options={categoryOptions}
-              placeholder={r.categoryPlaceholder}
-              className={inputCls}
-            />
+            {presetCategories.length === 0 ? (
+              <input
+                disabled
+                value=""
+                placeholder={r.categoryNoOptions}
+                className={`${inputCls} opacity-50 cursor-not-allowed`}
+              />
+            ) : (
+              <Combobox
+                value={categoryDisplay(form.category_id)}
+                onChange={handleCategoryChange}
+                options={categoryOptions}
+                placeholder={r.categoryPlaceholder}
+                className={inputCls}
+              />
+            )}
           </div>
           <div>
             <label className={labelCls}>{r.cookTimeLabel}</label>

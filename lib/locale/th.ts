@@ -420,6 +420,7 @@ export const th = {
     descLabel: "คำอธิบาย",
     categoryLabel: "หมวดหมู่",
     categoryPlaceholder: "เลือกหมวดหมู่",
+    categoryNoOptions: "เพิ่มหมวดหมู่ใน Settings ก่อน",
     cookTimeLabel: "เวลาทำ (นาที)",
     servingsLabel: "จำนวนที่เสิร์ฟ",
     ingredientsLabel: "ส่วนผสม",
