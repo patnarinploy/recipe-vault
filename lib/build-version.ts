@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 138;
-export const BUILD_TIMESTAMP = "2026-05-22T19:30:29.000Z";
-export const BUILD_TOOLTIP   = "Allow creating preset categories inline from recipe form category dropdo";
+export const BUILD_NUMBER    = 139;
+export const BUILD_TIMESTAMP = "2026-05-22T19:40:56.000Z";
+export const BUILD_TOOLTIP   = "Fix iOS Safari auto-zoom on input focus in recipe form";
