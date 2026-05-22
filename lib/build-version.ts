@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 113;
-export const BUILD_TIMESTAMP = "2026-05-22T08:34:58.000Z";
-export const BUILD_TOOLTIP   = "fix: responsive layout for presets table on small screens";
+export const BUILD_NUMBER    = 114;
+export const BUILD_TIMESTAMP = "2026-05-22T10:24:52.000Z";
+export const BUILD_TOOLTIP   = "feat: add Stores tab to presets settings page";
