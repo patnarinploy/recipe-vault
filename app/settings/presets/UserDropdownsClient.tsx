@@ -253,19 +253,23 @@ function PresetsTable({
           </div>
         </div>
       ) : (
-        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm text-foreground truncate">{primaryName(item)}</span>
-            {!item.isActive && (
-              <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
-                {archivedLabel}
+        <div className={`flex items-center gap-2 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+              <div className="sm:flex-1 min-w-0 flex items-center gap-2">
+                <span className="text-sm text-foreground truncate">{primaryName(item)}</span>
+                {!item.isActive && (
+                  <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
+                    {archivedLabel}
+                  </span>
+                )}
+              </div>
+              <span className="sm:flex-1 text-xs sm:text-sm text-muted truncate">
+                {secondaryName(item) || <span className="hidden sm:inline italic text-muted/50">—</span>}
               </span>
-            )}
+            </div>
           </div>
-          <span className="text-sm text-muted truncate">
-            {secondaryName(item) || <span className="italic text-muted/50">—</span>}
-          </span>
-          <div className="flex gap-1 justify-end">
+          <div className="flex gap-1 shrink-0">
             {item.isActive && (
               <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn })}
                       className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
@@ -340,7 +344,7 @@ function PresetsTable({
 
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {activeItems.length > 0 && (
-          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+          <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
             <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
             <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
             <span />
@@ -456,19 +460,24 @@ function IngredientsTable({
           stores={stores} storeMap={storeMap} pending={pending}
         />
       ) : (
-        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-x-3 items-start px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
-          <div className="min-w-0">
-            <span className="text-sm text-foreground">{primaryName(item)}</span>
-            {!item.isActive && (
-              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
-                {archivedLabel}
+        <div className={`flex items-start gap-2 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+          <div className="flex-1 min-w-0 py-0.5">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3">
+              <div className="sm:flex-1 min-w-0">
+                <span className="text-sm text-foreground">{primaryName(item)}</span>
+                {!item.isActive && (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
+                    {archivedLabel}
+                  </span>
+                )}
+              </div>
+              <span className="sm:flex-1 text-xs sm:text-sm text-muted truncate mt-0.5 sm:mt-0">
+                {secondaryName(item) || <span className="hidden sm:inline italic text-muted/50">—</span>}
               </span>
-            )}
+            </div>
+            <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
-          <span className="text-sm text-muted truncate pt-0.5">
-            {secondaryName(item) || <span className="italic text-muted/50">—</span>}
-          </span>
-          <div className="flex gap-1 justify-end">
+          <div className="flex gap-1 shrink-0">
             {item.isActive && (
               <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds })}
                 className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
@@ -484,10 +493,6 @@ function IngredientsTable({
               }`}>
               {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
-          </div>
-          {/* Store chips span both name columns */}
-          <div className="col-span-2 pb-2">
-            <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
         </div>
       )}
@@ -532,7 +537,7 @@ function IngredientsTable({
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {/* Column headers */}
         {(activeItems.length > 0 || archivedItems.length > 0) && (
-          <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+          <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
             <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
             <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
             <span />
