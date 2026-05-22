@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 127;
-export const BUILD_TIMESTAMP = "2026-05-22T12:53:07.000Z";
-export const BUILD_TOOLTIP   = "fix: separate empty shelf vs search-no-results states in Library";
+export const BUILD_NUMBER    = 128;
+export const BUILD_TIMESTAMP = "2026-05-22T13:07:12.000Z";
+export const BUILD_TOOLTIP   = "Fix PresetDetailModal: correct table name, border, z-index, GPS layout";
