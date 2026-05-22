@@ -1,5 +1,12 @@
 [
   {
+    "build": 134,
+    "timestamp": "2026-05-22T17:55:27.000Z",
+    "subject": "Add clickable author byline on recipe pages; Esc closes preset modal",
+    "hash": "ca1e77d",
+    "category": "feat"
+  },
+  {
     "build": 133,
     "timestamp": "2026-05-22T17:47:37.000Z",
     "subject": "Show book ribbon only on favorited recipes",
