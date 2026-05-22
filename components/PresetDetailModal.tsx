@@ -63,6 +63,9 @@ export default function PresetDetailModal(props: Props) {
     } else if (props.kind === "store") {
       getIngredientsByStoreId(props.store.id).then(setStoreIngredients);
     }
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") props.onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

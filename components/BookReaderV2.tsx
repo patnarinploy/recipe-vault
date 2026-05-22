@@ -566,7 +566,10 @@ function Pn({ n, right }: { n: number; right?: boolean }) {
 }
 
 // ─── Author button — uses native listener so pageflip never sees mousedown ───
-function AuthorClickButton({ label, onClick }: { label: string; onClick: () => void }) {
+function AuthorClickButton({ label, onClick, className, style }: {
+  label: string; onClick: () => void;
+  className?: string; style?: React.CSSProperties;
+}) {
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -583,8 +586,8 @@ function AuthorClickButton({ label, onClick }: { label: string; onClick: () => v
     <button
       ref={ref}
       onClick={onClick}
-      className="text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"
-      style={{ fontSize: "clamp(9px,2vmin,14px)", fontFamily: "Georgia,'Times New Roman',serif" }}
+      className={className ?? "text-white/50 hover:text-white/80 italic tracking-widest transition-colors text-left block"}
+      style={style ?? { fontSize: "clamp(9px,2vmin,14px)", fontFamily: "Georgia,'Times New Roman',serif" }}
     >
       by {label}
     </button>
@@ -909,8 +912,8 @@ function YoutubeBlock({ url, onPlay }: { url?: string | null; onPlay?: (url: str
 // ─── Left recipe cover page — full-bleed editorial image ──────────
 const PageRecipeFirst = forwardRef<
   HTMLDivElement,
-  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (catObj: PresetCategory | null | undefined) => string; favorited?: boolean; onToggleFavorite?: (id: string) => void; favoriteLabel?: string }
->(({ recipe: r, pn, coverColor, density, lookupCategory, favorited, onToggleFavorite, favoriteLabel }, ref) => {
+  { recipe: Recipe; ingText: string; pn: number; coverColor: string; density: "soft" | "hard"; lookupCategory: (catObj: PresetCategory | null | undefined) => string; favorited?: boolean; onToggleFavorite?: (id: string) => void; favoriteLabel?: string; authorName?: string; onAuthorClick?: () => void }
+>(({ recipe: r, pn, coverColor, density, lookupCategory, favorited, onToggleFavorite, favoriteLabel, authorName, onAuthorClick }, ref) => {
   const { t, locale } = useLocale();
   const imgRef       = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1000,19 +1003,35 @@ const PageRecipeFirst = forwardRef<
             </p>
           )}
 
-          {/* Gold rule + timestamp on the same row */}
+          {/* Gold rule + author + timestamp */}
           <div className="mt-[clamp(6px,1.2vw,12px)] flex items-center min-w-0"
                style={{ gap: "clamp(6px,1vw,10px)" }}>
             <div className="shrink-0"
                  style={{ width: "clamp(20px,4vw,36px)", height: 1, background: "rgba(255,191,0,0.55)" }} />
-            <p title="Last updated"
-               className="text-white/40 tracking-wide truncate min-w-0"
-               style={{ fontSize: "clamp(7px,1.1vw,10px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
-              {new Date(r.updated_at ?? r.created_at).toLocaleString("en-GB", {
-                day: "numeric", month: "short", year: "numeric",
-                hour: "2-digit", minute: "2-digit", second: "2-digit",
-              }).replace(", ", " · ")}
-            </p>
+            <div className="flex items-center gap-[0.5em] min-w-0 truncate"
+                 style={{ fontSize: "clamp(7px,1.1vw,10px)", fontFamily: "var(--font-jetbrains,'JetBrains Mono',monospace)" }}>
+              {authorName && (
+                <>
+                  {onAuthorClick ? (
+                    <AuthorClickButton
+                      label={authorName}
+                      onClick={onAuthorClick}
+                      className="text-white/40 hover:text-white/70 tracking-wide transition-colors shrink-0"
+                      style={{ fontSize: "inherit", fontFamily: "inherit" }}
+                    />
+                  ) : (
+                    <span className="text-white/40 tracking-wide shrink-0">by {authorName}</span>
+                  )}
+                  <span className="text-white/25 shrink-0">·</span>
+                </>
+              )}
+              <span title="Last updated" className="text-white/40 tracking-wide truncate min-w-0">
+                {new Date(r.updated_at ?? r.created_at).toLocaleString("en-GB", {
+                  day: "numeric", month: "short", year: "numeric",
+                  hour: "2-digit", minute: "2-digit", second: "2-digit",
+                }).replace(", ", " · ")}
+              </span>
+            </div>
           </div>
 
           <p className="mt-[clamp(3px,0.6vw,6px)] text-white/25 tracking-widest"
@@ -1733,7 +1752,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                          lookupCategory={lookupCategory}
                          favorited={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "")}
                          onToggleFavorite={handleToggleFavorite}
-                         favoriteLabel={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "") ? t.library.favoriteRemove : t.library.favoriteAdd} />
+                         favoriteLabel={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "") ? t.library.favoriteRemove : t.library.favoriteAdd}
+                         authorName={isFavBook ? undefined : authorName}
+                         onAuthorClick={!isFavBook && writerInfo ? () => setWriterCardOpen(true) : undefined} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
