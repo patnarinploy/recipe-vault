@@ -1,5 +1,12 @@
 [
   {
+    "build": 144,
+    "timestamp": "2026-05-22T21:02:18.000Z",
+    "subject": "Fix build-version.ts corrupted by Revert commit messages containing quot",
+    "hash": "6c4ad80",
+    "category": "fix"
+  },
+  {
     "build": 143,
     "timestamp": "2026-05-22T20:46:53.000Z",
     "subject": "Fix pinch-to-zoom on book reader: intercept multi-touch before page-flip",
