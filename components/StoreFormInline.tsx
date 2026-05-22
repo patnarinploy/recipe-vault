@@ -99,7 +99,7 @@ export default function StoreFormInline({
             </div>
           )}
           <button type="button" onClick={() => setMapOpen(true)}
-            className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl border border-dashed border-border hover:bg-elevated text-sm text-muted hover:text-foreground transition-colors">
+            className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl border border-dashed border-orange-400 hover:bg-orange-100/60 dark:hover:bg-orange-900/20 text-sm text-orange-500 hover:text-orange-600 transition-colors">
             <MapPin className="w-4 h-4" />
             {lat && lng ? s.changeLocation : s.setOnMap}
           </button>
