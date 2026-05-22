@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 110;
-export const BUILD_TIMESTAMP = "2026-05-22T03:38:37.000Z";
-export const BUILD_TOOLTIP   = "feat: locale-aware columns, search, skeleton, UX polish";
+export const BUILD_NUMBER    = 111;
+export const BUILD_TIMESTAMP = "2026-05-22T08:22:05.000Z";
+export const BUILD_TOOLTIP   = "refactor: drop recipes.ingredients text cache, use FK rows throughout";
