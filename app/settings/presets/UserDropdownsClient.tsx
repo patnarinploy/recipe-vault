@@ -456,7 +456,7 @@ function IngredientsTable({
           stores={stores} storeMap={storeMap} pending={pending}
         />
       ) : (
-        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-start px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
+        <div className={`grid grid-cols-[1fr_1fr_5rem] gap-x-3 items-start px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
           <div className="min-w-0">
             <span className="text-sm text-foreground">{primaryName(item)}</span>
             {!item.isActive && (
@@ -464,7 +464,6 @@ function IngredientsTable({
                 {archivedLabel}
               </span>
             )}
-            <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
           <span className="text-sm text-muted truncate pt-0.5">
             {secondaryName(item) || <span className="italic text-muted/50">—</span>}
@@ -485,6 +484,10 @@ function IngredientsTable({
               }`}>
               {item.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
+          </div>
+          {/* Store chips span both name columns */}
+          <div className="col-span-2 pb-2">
+            <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
         </div>
       )}
