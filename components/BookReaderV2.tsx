@@ -1471,10 +1471,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         setLoading(false);
         return;
       }
-      const [recipesRes, ingRes] = await Promise.all([
+      const [recipesRes, ingRes, favCatsRes] = await Promise.all([
         sb.from("recipes").select("*, preset_categories!category_id(*)").in("id", favIds).returns<Recipe[]>(),
-        sb.from("ingredients").select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
+        sb.from("recipe_ingredients").select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
+        sb.from("preset_categories").select("*"),
       ]);
+      const favCats = (favCatsRes.data ?? []) as PresetCategory[];
       const ingByRecipe = new Map<string, DbIngredient[]>();
       for (const row of ingRes.data ?? []) {
         const arr = ingByRecipe.get(row.recipe_id) ?? [];
@@ -1485,7 +1487,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const ordered = favIds
         .map(id => (recipesRes.data ?? []).find(r => r.id === id))
         .filter((r): r is Recipe => !!r)
-        .map(r => ({ ...r, ingredient_rows: ingByRecipe.get(r.id) ?? [] }));
+        .map(r => ({
+          ...r,
+          preset_categories: r.preset_categories ?? favCats.find(c => c.id === r.category_id) ?? null,
+          ingredient_rows: ingByRecipe.get(r.id) ?? [],
+        }));
       setRecipes(ordered);
       setLoading(false);
       return;
@@ -1500,6 +1506,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
+    let rawCategories: PresetCategory[] = [];
     if (bk.data) {
       setBook(bk.data as Book);
       // Fetch this user's presets (for RecipeForm combobox — only needed when owner)
@@ -1511,7 +1518,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           sb.from("preset_ingredients").select("name_th").eq("user_id", bookUserId).eq("is_active", true).order("name_th"),
         ]);
         if (unitsRes.data) setPresetUnits(unitsRes.data as PresetUnit[]);
-        if (catsRes.data) setPresetCategories(catsRes.data as PresetCategory[]);
+        if (catsRes.data) { setPresetCategories(catsRes.data as PresetCategory[]); rawCategories = catsRes.data as PresetCategory[]; }
         if (ingNamesRes.data) setIngredientNames(ingNamesRes.data.map((r: { name_th: string }) => r.name_th));
       }
       const u = (bk.data as any).users;
@@ -1546,7 +1553,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     if (rawRecipes.length > 0) {
       const recipeIds = rawRecipes.map(r => r.id);
       const { data: ingData } = await sb
-        .from("ingredients")
+        .from("recipe_ingredients")
         .select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)")
         .in("recipe_id", recipeIds)
         .order("ingredient_sort");
@@ -1556,7 +1563,11 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         arr.push(row);
         ingByRecipe.set(row.recipe_id, arr);
       }
-      setRecipes(rawRecipes.map(r => ({ ...r, ingredient_rows: ingByRecipe.get(r.id) ?? [] })));
+      setRecipes(rawRecipes.map(r => ({
+        ...r,
+        preset_categories: r.preset_categories ?? rawCategories.find(c => c.id === r.category_id) ?? null,
+        ingredient_rows: ingByRecipe.get(r.id) ?? [],
+      })));
     } else {
       setRecipes([]);
     }
