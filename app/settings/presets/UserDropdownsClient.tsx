@@ -305,7 +305,6 @@ function PresetsTable({
             placeholder={col1Label + " / " + col2Label}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
-        <span className="text-xs text-muted shrink-0">{countLabel}</span>
         {!adding && (
           <button onClick={() => setAdding(true)}
                   className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
@@ -314,6 +313,7 @@ function PresetsTable({
           </button>
         )}
       </div>
+      <p className="text-xs text-muted -mt-2">{countLabel}</p>
 
       {/* Add form at top when open */}
       {adding && (
@@ -514,7 +514,6 @@ function IngredientsTable({
             placeholder={col1Label + " / " + col2Label}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
-        <span className="text-xs text-muted shrink-0">{countLabel}</span>
         {!adding && (
           <button onClick={() => setAdding(true)}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
@@ -523,6 +522,7 @@ function IngredientsTable({
           </button>
         )}
       </div>
+      <p className="text-xs text-muted -mt-2">{countLabel}</p>
 
       {/* Add form at top when open */}
       {adding && (
@@ -619,7 +619,6 @@ function StoresTable({
             placeholder={t.settings.dropdowns.storeName}
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
-        <span className="text-xs text-muted shrink-0">{countText}</span>
         {!isFormOpen && (
           <button onClick={() => { setEditingStore(null); setAdding(true); }}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
@@ -627,6 +626,7 @@ function StoresTable({
           </button>
         )}
       </div>
+      <p className="text-xs text-muted -mt-2">{countText}</p>
 
       {isFormOpen && (
         <StoreFormInline
