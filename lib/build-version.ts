@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 144;
-export const BUILD_TIMESTAMP = "2026-05-22T21:02:18.000Z";
-export const BUILD_TOOLTIP   = "Fix build-version.ts corrupted by Revert commit messages containing quot";
+export const BUILD_NUMBER    = 145;
+export const BUILD_TIMESTAMP = "2026-05-22T22:57:26.000Z";
+export const BUILD_TOOLTIP   = "Add slide-in animation to Combobox dropdown; polish Modal entrance";

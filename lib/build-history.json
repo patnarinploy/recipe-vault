@@ -1,5 +1,12 @@
 [
   {
+    "build": 145,
+    "timestamp": "2026-05-22T22:57:26.000Z",
+    "subject": "Add slide-in animation to Combobox dropdown; polish Modal entrance",
+    "hash": "b43e5dd",
+    "category": "feat"
+  },
+  {
     "build": 144,
     "timestamp": "2026-05-22T21:02:18.000Z",
     "subject": "Fix build-version.ts corrupted by Revert commit messages containing quot",
