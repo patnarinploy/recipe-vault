@@ -278,3 +278,77 @@ export async function ensurePresetUnit(
     .single();
   return created?.id ?? null;
 }
+
+// ─── Detail queries (used by preset detail modal) ─────────────────
+
+type RecipeRef = { id: string; name_th: string; name_en: string };
+
+export async function getRecipesByIngredientId(ingredientId: string): Promise<RecipeRef[]> {
+  const user = await getSession();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ingredient_rows")
+    .select("recipe_id, recipes!inner(id, name_th, name_en, user_id)")
+    .eq("ingredient_preset_id", ingredientId)
+    .eq("recipes.user_id", user.id);
+  if (!data) return [];
+  const seen = new Set<string>();
+  return data.flatMap(r => {
+    const rec = r.recipes as unknown as RecipeRef & { user_id: string };
+    if (!rec || seen.has(rec.id)) return [];
+    seen.add(rec.id);
+    return [{ id: rec.id, name_th: rec.name_th, name_en: rec.name_en }];
+  });
+}
+
+export async function getRecipesByUnitId(unitId: string): Promise<RecipeRef[]> {
+  const user = await getSession();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ingredient_rows")
+    .select("recipe_id, recipes!inner(id, name_th, name_en, user_id)")
+    .eq("ingredient_unit_id", unitId)
+    .eq("recipes.user_id", user.id);
+  if (!data) return [];
+  const seen = new Set<string>();
+  return data.flatMap(r => {
+    const rec = r.recipes as unknown as RecipeRef & { user_id: string };
+    if (!rec || seen.has(rec.id)) return [];
+    seen.add(rec.id);
+    return [{ id: rec.id, name_th: rec.name_th, name_en: rec.name_en }];
+  });
+}
+
+export async function getRecipesByCategoryId(categoryId: string): Promise<RecipeRef[]> {
+  const user = await getSession();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recipes")
+    .select("id, name_th, name_en")
+    .eq("category_id", categoryId)
+    .eq("user_id", user.id)
+    .order("name_th");
+  return (data ?? []) as RecipeRef[];
+}
+
+export async function getIngredientsByStoreId(storeId: string): Promise<{ key: string; name_th: string; name_en: string }[]> {
+  const user = await getSession();
+  if (!user) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ingredient_store_prefs")
+    .select("ingredient_key")
+    .eq("store_id", storeId)
+    .eq("user_id", user.id);
+  if (!data || data.length === 0) return [];
+  const keys = data.map(r => r.ingredient_key);
+  const { data: presets } = await supabase
+    .from("preset_ingredients")
+    .select("name_th, name_en")
+    .eq("user_id", user.id)
+    .in("name_th", keys);
+  return (presets ?? []).map(p => ({ key: (p.name_th || p.name_en).toLowerCase(), name_th: p.name_th, name_en: p.name_en }));
+}

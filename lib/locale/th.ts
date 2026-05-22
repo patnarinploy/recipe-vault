@@ -18,6 +18,9 @@ export const th = {
     banned: "บัญชีถูกระงับ",
     bannedReason: "เหตุผล",
     bannedContact: "หากคิดว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลระบบ",
+    recipes: "เมนูอาหาร",
+    usedInRecipes: "ใช้ในเมนูอาหาร",
+    ingredients: "วัตถุดิบ",
   },
   status: {
     online: "ออนไลน์",

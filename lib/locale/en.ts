@@ -18,6 +18,9 @@ export const en = {
     banned: "Account Suspended",
     bannedReason: "Reason",
     bannedContact: "If you think this is a mistake, please contact an administrator",
+    recipes: "Recipes",
+    usedInRecipes: "Used in recipes",
+    ingredients: "Ingredients",
   },
   status: {
     online: "Online",

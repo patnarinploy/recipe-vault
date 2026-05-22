@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, MapPin } from "lucide-react";
+import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, MapPin, Info } from "lucide-react";
+import PresetDetailModal from "@/components/PresetDetailModal";
+import type { IngredientDetailProps, UnitDetailProps, CategoryDetailProps, StoreDetailProps } from "@/components/PresetDetailModal";
 import {
   createPresetUnit, updatePresetUnit, setPresetUnitActive,
   createPresetCategory, updatePresetCategory, setPresetCategoryActive,
@@ -149,6 +151,7 @@ function EditForm({
 // ─── PresetsTable ─────────────────────────────────────────────────
 
 function PresetsTable({
+  kind,
   items,
   onSaveEdit,
   onArchive,
@@ -165,6 +168,7 @@ function PresetsTable({
   emptyLabel,
   requireOneNameError,
 }: {
+  kind: "unit" | "category";
   items: { id: string; nameTh: string; nameEn: string; isActive: boolean }[];
   onSaveEdit: (id: string, nameTh: string, nameEn: string) => Promise<void>;
   onArchive: (id: string, newActive: boolean) => Promise<void>;
@@ -187,6 +191,7 @@ function PresetsTable({
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const [detail, setDetail] = useState<UnitDetailProps | CategoryDetailProps | null>(null);
   const { locale } = useLocale();
 
   const [col1Label, col2Label] = locale === "en" ? [enLabel, thLabel] : [thLabel, enLabel];
@@ -274,6 +279,10 @@ function PresetsTable({
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
+            <button onClick={() => setDetail({ kind, id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, onClose: () => setDetail(null) } as UnitDetailProps | CategoryDetailProps)}
+                    className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+              <Info className="w-3.5 h-3.5" />
+            </button>
             {item.isActive && (
               <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn })}
                       className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
@@ -381,6 +390,7 @@ function PresetsTable({
       </div>
 
       <p className="text-xs text-muted">{countLabel}</p>
+      {detail && <PresetDetailModal {...detail} />}
     </div>
   );
 }
@@ -413,6 +423,7 @@ function IngredientsTable({
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
+  const [detail, setDetail] = useState<IngredientDetailProps | null>(null);
   const { locale } = useLocale();
 
   const storeMap = new Map(stores.map(s => [s.id, s]));
@@ -483,6 +494,10 @@ function IngredientsTable({
             <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
           <div className="flex gap-1 shrink-0">
+            <button onClick={() => setDetail({ kind: "ingredient", id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds, storeMap, onClose: () => setDetail(null) })}
+              className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+              <Info className="w-3.5 h-3.5" />
+            </button>
             {item.isActive && (
               <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds })}
                 className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
@@ -575,11 +590,11 @@ function IngredientsTable({
       </div>
 
       <p className="text-xs text-muted">{countLabel}</p>
+      {detail && <PresetDetailModal {...detail} />}
     </div>
   );
 }
 
-// ─── Color palette shared with ShoppingClient ────────────────────
 // ─── StoresTable ──────────────────────────────────────────────────
 
 function StoresTable({
@@ -608,6 +623,7 @@ function StoresTable({
 
   const isFormOpen = adding || editingStore != null;
   const countText = countLabel.replace("{n}", String(stores.length));
+  const [detail, setDetail] = useState<StoreDetailProps | null>(null);
 
   return (
     <div className="space-y-4">
@@ -661,6 +677,10 @@ function StoresTable({
               )}
             </div>
             <div className="flex gap-1 shrink-0">
+              <button onClick={() => setDetail({ kind: "store", store, onClose: () => setDetail(null) })}
+                className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                <Info className="w-3.5 h-3.5" />
+              </button>
               <button onClick={() => { setAdding(false); setEditingStore(store); }}
                 className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
                 <Pencil className="w-3.5 h-3.5" />
@@ -675,6 +695,7 @@ function StoresTable({
       </div>
 
       <p className="text-xs text-muted">{countText}</p>
+      {detail && <PresetDetailModal {...detail} />}
     </div>
   );
 }
@@ -921,6 +942,7 @@ export default function UserDropdownsClient({
 
       {activeTab === "units" && (
         <PresetsTable
+          kind="unit"
           items={unitItems}
           onSaveEdit={saveUnit}
           onArchive={archiveUnit}
@@ -941,6 +963,7 @@ export default function UserDropdownsClient({
 
       {activeTab === "categories" && (
         <PresetsTable
+          kind="category"
           items={categoryItems}
           onSaveEdit={saveCategory}
           onArchive={archiveCategory}
