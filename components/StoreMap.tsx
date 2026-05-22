@@ -31,8 +31,8 @@ function FitBounds({ stores }: { stores: UserStore[] }) {
 
 interface Props {
   stores: UserStore[];
-  storeItemCounts: Record<string, number>;
-  itemsLabel: string;
+  storeItemCounts?: Record<string, number>;
+  itemsLabel?: string;
 }
 
 export default function StoreMap({ stores, storeItemCounts, itemsLabel }: Props) {
@@ -62,10 +62,11 @@ export default function StoreMap({ stores, storeItemCounts, itemsLabel }: Props)
           <Popup>
             <strong style={{ color: store.color }}>{store.name}</strong>
             <br />
-            <span style={{ fontSize: 12 }}>
-              {itemsLabel.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
-            </span>
-            <br />
+            {itemsLabel && storeItemCounts && (
+              <><span style={{ fontSize: 12 }}>
+                {itemsLabel.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
+              </span><br /></>
+            )}
             <a
               href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
               target="_blank"

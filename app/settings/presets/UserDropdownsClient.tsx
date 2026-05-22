@@ -13,6 +13,9 @@ import { setIngredientStorePrefs, deleteUserStore } from "@/app/actions/stores";
 import type { PresetCategory, PresetUnit, PresetIngredient, UserStore, IngredientStorePref } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 import StoreFormInline from "@/components/StoreFormInline";
+import dynamic from "next/dynamic";
+
+const DynamicMap = dynamic(() => import("@/components/StoreMap"), { ssr: false });
 
 type Tab = "ingredients" | "units" | "categories" | "stores";
 type EditState = { id: string; nameTh: string; nameEn: string };
@@ -650,6 +653,10 @@ function StoresTable({
           </div>
         ))}
       </div>
+
+      {stores.some(st => st.latitude !== null) && (
+        <DynamicMap stores={stores} />
+      )}
 
       <p className="text-xs text-muted">{countLabel.replace("{n}", String(stores.length))}</p>
     </div>
