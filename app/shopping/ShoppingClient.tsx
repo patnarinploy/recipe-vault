@@ -609,11 +609,6 @@ function StoresTab({
         </div>
       )}
 
-      {/* ── Leaflet map ─────────────────────────────────────────── */}
-      {stores.some(st => st.latitude !== null) && (
-        <DynamicMap stores={stores} storeItemCounts={storeItemCounts} itemsLabel={s.itemsAt} />
-      )}
-
       {/* ── Store list ──────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -635,6 +630,13 @@ function StoresTab({
               onSave={handleSaveStore}
               onCancel={() => { setFormOpen(false); setEditStore(undefined); }}
             />
+          </div>
+        )}
+
+        {/* ── Leaflet map (between header and list) ── */}
+        {stores.some(st => st.latitude !== null) && (
+          <div className="mb-3">
+            <DynamicMap stores={stores} storeItemCounts={storeItemCounts} itemsLabel={s.itemsAt} />
           </div>
         )}
 

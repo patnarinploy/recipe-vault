@@ -620,6 +620,10 @@ function StoresTable({
         />
       )}
 
+      {stores.some(st => st.latitude !== null) && (
+        <DynamicMap stores={stores} />
+      )}
+
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {stores.length === 0 && !isFormOpen && (
           <div className="flex flex-col items-center gap-2 py-10 text-muted">
@@ -653,10 +657,6 @@ function StoresTable({
           </div>
         ))}
       </div>
-
-      {stores.some(st => st.latitude !== null) && (
-        <DynamicMap stores={stores} />
-      )}
 
       <p className="text-xs text-muted">{countLabel.replace("{n}", String(stores.length))}</p>
     </div>
