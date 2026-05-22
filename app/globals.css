@@ -274,3 +274,9 @@ button, a {
 .dark input[type="date"] {
   color-scheme: dark;
 }
+
+/* ─── Allow native pinch-to-zoom on the book reader ────────────── */
+.stf__parent {
+  -ms-touch-action: pan-y pinch-zoom !important;
+  touch-action: pan-y pinch-zoom !important;
+}
