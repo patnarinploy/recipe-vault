@@ -7,6 +7,7 @@ import { type Recipe, type PresetUnit, type PresetCategory, type DbIngredient } 
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
+import { createPresetCategory } from "@/app/actions/user-presets";
 import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
 import { ReactSortable } from "react-sortablejs";
@@ -240,6 +241,7 @@ export default function RecipeForm({
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
+  const [localCategories, setLocalCategories] = useState<PresetCategory[]>(presetCategories);
 
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => {
     // Primary path: structured rows from DB
@@ -286,7 +288,7 @@ export default function RecipeForm({
     })
     .map(u => locale === "th" ? u.unit_name_th : (u.unit_name_en || u.unit_name_th));
 
-  const categoryOptions = [...presetCategories]
+  const categoryOptions = [...localCategories]
     .filter(c => c.is_active)
     .sort((a, b) => {
       const aName = locale === "th" ? a.name_th : (a.name_en || a.name_th);
@@ -296,16 +298,26 @@ export default function RecipeForm({
     .map(c => locale === "th" ? c.name_th : (c.name_en || c.name_th));
 
   const categoryDisplay = (id: string) => {
-    const cat = presetCategories.find(c => c.id === id);
+    const cat = localCategories.find(c => c.id === id);
     if (!cat) return "";
     return locale === "th" ? cat.name_th : (cat.name_en || cat.name_th);
   };
 
-  const handleCategoryChange = (display: string) => {
-    const cat = presetCategories.find(c =>
+  const handleCategoryChange = async (display: string) => {
+    if (!display.trim()) { setForm(p => ({ ...p, category_id: "" })); return; }
+    const existing = localCategories.find(c =>
       (locale === "th" ? c.name_th : (c.name_en || c.name_th)) === display
     );
-    setForm(p => ({ ...p, category_id: cat ? cat.id : "" }));
+    if (existing) { setForm(p => ({ ...p, category_id: existing.id })); return; }
+    // New name typed → create preset category on-the-fly
+    const result = await createPresetCategory(
+      locale === "th"
+        ? { name_th: display, name_en: "" }
+        : { name_th: display, name_en: display }
+    );
+    if ("error" in result) { toast.error(result.error); return; }
+    setLocalCategories(prev => [...prev, result]);
+    setForm(p => ({ ...p, category_id: result.id }));
   };
 
   function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
@@ -434,22 +446,13 @@ export default function RecipeForm({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className={labelCls}>{r.categoryLabel}</label>
-            {presetCategories.length === 0 ? (
-              <input
-                disabled
-                value=""
-                placeholder={r.categoryNoOptions}
-                className={`${inputCls} opacity-50 cursor-not-allowed`}
-              />
-            ) : (
-              <Combobox
-                value={categoryDisplay(form.category_id)}
-                onChange={handleCategoryChange}
-                options={categoryOptions}
-                placeholder={r.categoryPlaceholder}
-                className={inputCls}
-              />
-            )}
+            <Combobox
+              value={categoryDisplay(form.category_id)}
+              onChange={handleCategoryChange}
+              options={categoryOptions}
+              placeholder={r.categoryPlaceholder}
+              className={inputCls}
+            />
           </div>
           <div>
             <label className={labelCls}>{r.cookTimeLabel}</label>

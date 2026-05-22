@@ -420,7 +420,6 @@ export const en = {
     descLabel: "Description",
     categoryLabel: "Category",
     categoryPlaceholder: "Select category",
-    categoryNoOptions: "Add categories in Settings first",
     cookTimeLabel: "Cook time (min)",
     servingsLabel: "Servings",
     ingredientsLabel: "Ingredients",
