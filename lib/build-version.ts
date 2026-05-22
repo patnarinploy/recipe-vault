@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 124;
-export const BUILD_TIMESTAMP = "2026-05-22T12:32:59.000Z";
-export const BUILD_TOOLTIP   = "fix: move count label below search bar (left-aligned) on all preset tabs";
+export const BUILD_NUMBER    = 125;
+export const BUILD_TIMESTAMP = "2026-05-22T12:43:18.000Z";
+export const BUILD_TOOLTIP   = "fix: default store color to first (red), add 8 more colors, move count a";
