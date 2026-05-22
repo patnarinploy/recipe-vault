@@ -1,5 +1,12 @@
 [
   {
+    "build": 121,
+    "timestamp": "2026-05-22T12:22:48.000Z",
+    "subject": "feat: add search bar to Stores tab; show count at top of all tabs",
+    "hash": "e7416a0",
+    "category": "feat"
+  },
+  {
     "build": 120,
     "timestamp": "2026-05-22T12:18:11.000Z",
     "subject": "fix: unify page width across all settings pages to max-w-2xl",
