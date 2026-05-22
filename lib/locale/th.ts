@@ -154,6 +154,9 @@ export const th = {
     clearStores: "ล้างทั้งหมด",
     doneBtn: "เลือก {n} ร้าน",
     multiStores: "{n} ร้าน",
+    allDone: "ช้อปครบแล้ว! 🎉",
+    finishShopping: "เสร็จ & ล้างรายการ",
+    keepList: "เก็บไว้ใช้ครั้งหน้า",
   },
   settings: {
     title: "ตั้งค่า",

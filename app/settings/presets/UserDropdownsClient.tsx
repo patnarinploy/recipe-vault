@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search } from "lucide-react";
 import {
   createPresetUnit, updatePresetUnit, setPresetUnitActive,
   createPresetCategory, updatePresetCategory, setPresetCategoryActive,
@@ -38,7 +38,7 @@ function StoreChips({
   noStoreLabel: string;
 }) {
   if (ids.length === 0) {
-    return muted ? <span className="text-xs text-muted/50 italic">{noStoreLabel}</span> : null;
+    return muted ? <div className="text-xs text-muted/50 italic mt-0.5">{noStoreLabel}</div> : null;
   }
   return (
     <div className="flex flex-wrap gap-1 mt-0.5">
@@ -182,9 +182,21 @@ function PresetsTable({
   const [newRow, setNewRow] = useState({ nameTh: "", nameEn: "" });
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
+  const { locale } = useLocale();
 
-  const activeItems = items.filter(i => i.isActive);
-  const archivedItems = items.filter(i => !i.isActive);
+  const [col1Label, col2Label] = locale === "en" ? [enLabel, thLabel] : [thLabel, enLabel];
+  const primaryName  = (it: { nameTh: string; nameEn: string }) =>
+    locale === "en" ? (it.nameEn || it.nameTh) : (it.nameTh || it.nameEn);
+  const secondaryName = (it: { nameTh: string; nameEn: string }) =>
+    locale === "en" ? it.nameTh : it.nameEn;
+
+  const q = search.toLowerCase();
+  const filterItem = (it: { nameTh: string; nameEn: string }) =>
+    !q || it.nameTh.toLowerCase().includes(q) || it.nameEn.toLowerCase().includes(q);
+
+  const activeItems = items.filter(i => i.isActive && filterItem(i));
+  const archivedItems = items.filter(i => !i.isActive && filterItem(i));
 
   const saveEdit = () => {
     if (!editing) return;
@@ -243,7 +255,7 @@ function PresetsTable({
       ) : (
         <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-center px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm text-foreground truncate">{item.nameTh || item.nameEn}</span>
+            <span className="text-sm text-foreground truncate">{primaryName(item)}</span>
             {!item.isActive && (
               <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
                 {archivedLabel}
@@ -251,7 +263,7 @@ function PresetsTable({
             )}
           </div>
           <span className="text-sm text-muted truncate">
-            {item.nameEn || <span className="italic text-muted/50">—</span>}
+            {secondaryName(item) || <span className="italic text-muted/50">—</span>}
           </span>
           <div className="flex gap-1 justify-end">
             {item.isActive && (
@@ -277,14 +289,22 @@ function PresetsTable({
 
   return (
     <div className="space-y-4">
-      {/* Add button at top */}
-      {!adding && (
-        <button onClick={() => setAdding(true)}
-                className="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
-          <Plus className="w-4 h-4" />
-          {addLabel}
-        </button>
-      )}
+      {/* Search + Add row */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={col1Label + " / " + col2Label}
+            className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)}
+                  className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
+            <Plus className="w-4 h-4" />
+            {addLabel}
+          </button>
+        )}
+      </div>
 
       {/* Add form at top when open */}
       {adding && (
@@ -321,8 +341,8 @@ function PresetsTable({
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {activeItems.length > 0 && (
           <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{thLabel}</span>
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{enLabel}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
             <span />
           </div>
         )}
@@ -383,11 +403,23 @@ function IngredientsTable({
   const [newRow, setNewRow] = useState({ nameTh: "", nameEn: "", storeIds: [] as string[] });
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
+  const { locale } = useLocale();
 
   const storeMap = new Map(stores.map(s => [s.id, s]));
 
-  const activeItems = items.filter(i => i.isActive);
-  const archivedItems = items.filter(i => !i.isActive);
+  const [col1Label, col2Label] = locale === "en" ? [enLabel, thLabel] : [thLabel, enLabel];
+  const primaryName = (it: IngItem) =>
+    locale === "en" ? (it.nameEn || it.nameTh) : (it.nameTh || it.nameEn);
+  const secondaryName = (it: IngItem) =>
+    locale === "en" ? it.nameTh : it.nameEn;
+
+  const q = search.toLowerCase();
+  const filterItem = (it: IngItem) =>
+    !q || it.nameTh.toLowerCase().includes(q) || it.nameEn.toLowerCase().includes(q);
+
+  const activeItems = items.filter(i => i.isActive && filterItem(i));
+  const archivedItems = items.filter(i => !i.isActive && filterItem(i));
 
   const saveEdit = () => {
     if (!editing || (!editing.nameTh.trim() && !editing.nameEn.trim())) { toast.error(requireOneNameError); return; }
@@ -426,7 +458,7 @@ function IngredientsTable({
       ) : (
         <div className={`grid grid-cols-[1fr_1fr_5rem] gap-3 items-start px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
           <div className="min-w-0">
-            <span className="text-sm text-foreground">{item.nameTh || item.nameEn}</span>
+            <span className="text-sm text-foreground">{primaryName(item)}</span>
             {!item.isActive && (
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted font-medium">
                 {archivedLabel}
@@ -435,7 +467,7 @@ function IngredientsTable({
             <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
           </div>
           <span className="text-sm text-muted truncate pt-0.5">
-            {item.nameEn || <span className="italic text-muted/50">—</span>}
+            {secondaryName(item) || <span className="italic text-muted/50">—</span>}
           </span>
           <div className="flex gap-1 justify-end">
             {item.isActive && (
@@ -461,14 +493,22 @@ function IngredientsTable({
 
   return (
     <div className="space-y-4">
-      {/* Add button at top */}
-      {!adding && (
-        <button onClick={() => setAdding(true)}
-          className="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
-          <Plus className="w-4 h-4" />
-          {addLabel}
-        </button>
-      )}
+      {/* Search + Add row */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={col1Label + " / " + col2Label}
+            className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
+            <Plus className="w-4 h-4" />
+            {addLabel}
+          </button>
+        )}
+      </div>
 
       {/* Add form at top when open */}
       {adding && (
@@ -490,8 +530,8 @@ function IngredientsTable({
         {/* Column headers */}
         {(activeItems.length > 0 || archivedItems.length > 0) && (
           <div className="grid grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{thLabel}</span>
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{enLabel}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
             <span />
           </div>
         )}

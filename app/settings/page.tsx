@@ -51,7 +51,7 @@ export default async function SettingsPage() {
       label: s.sections.usage,
       items: [
         { href: "/settings/reading",    icon: BookOpen, label: s.display.label,     sub: s.display.sub },
-        { href: "/settings/dropdowns",  icon: SlidersHorizontal, label: s.dropdowns.label, sub: s.dropdowns.sub },
+        { href: "/settings/presets",  icon: SlidersHorizontal, label: s.dropdowns.label, sub: s.dropdowns.sub },
       ],
     },
   ];

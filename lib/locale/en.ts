@@ -154,6 +154,9 @@ export const en = {
     clearStores: "Clear all",
     doneBtn: "{n} stores selected",
     multiStores: "{n} stores",
+    allDone: "All done! 🎉",
+    finishShopping: "Done & clear list",
+    keepList: "Keep for next time",
   },
   settings: {
     title: "Settings",

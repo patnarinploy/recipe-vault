@@ -1855,7 +1855,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                 )}
 
                 {/* ถูกใจ / เลิกถูกใจ — recipe */}
-                {ctx === "recipe" && currentRecipe && (
+                {isLoggedIn && ctx === "recipe" && currentRecipe && (
                   <button onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl"
                           style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}>
@@ -1892,7 +1892,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               )}
 
               {/* ถูกใจ / เลิกถูกใจ — non-owner (public book / favorites book) */}
-              {!isOwner && ctx === "recipe" && currentRecipe && (
+              {isLoggedIn && !isOwner && ctx === "recipe" && currentRecipe && (
                 <button onClick={() => { setFabOpen(false); handleToggleFavorite(currentRecipe.id); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl"
                         style={{ color: favoriteIds.has(currentRecipe.id) ? "#e74c3c" : undefined }}>

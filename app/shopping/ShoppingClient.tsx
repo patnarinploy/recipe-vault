@@ -522,13 +522,14 @@ function StorePills({
 // ── CombinedView ──────────────────────────────────────────────────
 
 function CombinedView({
-  items, locale, stores, storePrefs, onPickStore,
+  items, locale, stores, storePrefs, onPickStore, onClearAll,
 }: {
   items: ShoppingListEntry[];
   locale: "th" | "en";
   stores: UserStore[];
   storePrefs: Map<string, Set<string>>;
   onPickStore: (key: string, name: string, currentStoreIds: Set<string>) => void;
+  onClearAll: () => void;
 }) {
   const { t } = useLocale();
   const s = t.shopping;
@@ -558,9 +559,29 @@ function CombinedView({
   const combined = buildCombined(items, locale);
   const unchecked = combined.filter(c => !checked.has(c.key));
   const checkedItems = combined.filter(c => checked.has(c.key));
+  const allDone = combined.length > 0 && unchecked.length === 0;
 
   if (combined.length === 0) {
     return <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>;
+  }
+
+  if (allDone) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-12 text-center">
+        <p className="text-2xl font-bold text-foreground">{s.allDone}</p>
+        <p className="text-sm text-muted">{s.totalIngredients.replace("{n}", String(combined.length))}</p>
+        <div className="flex gap-3 mt-2">
+          <button onClick={clearChecked}
+            className="px-4 py-2 rounded-xl text-sm border border-border text-muted hover:bg-elevated transition-colors">
+            {s.keepList}
+          </button>
+          <button onClick={onClearAll}
+            className="px-4 py-2 rounded-xl text-sm bg-orange-500 text-white font-medium hover:bg-orange-600 transition-colors">
+            {s.finishShopping}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const storeMap = new Map(stores.map(st => [st.id, st]));
@@ -941,7 +962,7 @@ export default function ShoppingClient({
           <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>
         ) : (
           <CombinedView key={clearSignal} items={items} locale={locale} stores={stores}
-            storePrefs={storePrefs} onPickStore={handlePickStore} />
+            storePrefs={storePrefs} onPickStore={handlePickStore} onClearAll={handleClearAll} />
         )
       )}
 

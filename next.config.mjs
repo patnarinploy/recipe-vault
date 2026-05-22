@@ -1,6 +1,11 @@
 
 
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: "/settings/dropdowns", destination: "/settings/presets", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {
