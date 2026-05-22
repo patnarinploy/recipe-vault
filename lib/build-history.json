@@ -1,5 +1,12 @@
 [
   {
+    "build": 131,
+    "timestamp": "2026-05-22T14:24:54.000Z",
+    "subject": "Fix ingredient-store key mismatch between shopping and presets pages",
+    "hash": "bda2145",
+    "category": "fix"
+  },
+  {
     "build": 130,
     "timestamp": "2026-05-22T13:39:55.000Z",
     "subject": "Fix store ingredient query table name and Google Maps link style",

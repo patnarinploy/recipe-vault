@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 130;
-export const BUILD_TIMESTAMP = "2026-05-22T13:39:55.000Z";
-export const BUILD_TOOLTIP   = "Fix store ingredient query table name and Google Maps link style";
+export const BUILD_NUMBER    = 131;
+export const BUILD_TIMESTAMP = "2026-05-22T14:24:54.000Z";
+export const BUILD_TOOLTIP   = "Fix ingredient-store key mismatch between shopping and presets pages";
