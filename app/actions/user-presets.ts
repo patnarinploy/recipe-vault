@@ -344,12 +344,13 @@ export async function getIngredientsByStoreId(storeId: string): Promise<{ key: s
     .eq("store_id", storeId)
     .eq("user_id", user.id);
   if (!data || data.length === 0) return [];
-  const keys = new Set(data.map(r => r.ingredient_key));
+  // ingredient_key from shopping page is "name:::unit"; extract name prefix for matching
+  const nameKeys = new Set(data.map(r => r.ingredient_key.split(":::")[0]));
   const { data: presets } = await supabase
     .from("preset_ingredients")
     .select("name_th, name_en")
     .eq("user_id", user.id);
   return (presets ?? [])
-    .filter(p => keys.has((p.name_th || p.name_en || "").toLowerCase()))
+    .filter(p => nameKeys.has((p.name_th || p.name_en || "").toLowerCase()))
     .map(p => ({ key: (p.name_th || p.name_en).toLowerCase(), name_th: p.name_th, name_en: p.name_en }));
 }

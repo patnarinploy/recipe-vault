@@ -744,9 +744,11 @@ export default function UserDropdownsClient({
   const [ingStorePrefs, setIngStorePrefs] = useState<Map<string, string[]>>(() => {
     const m = new Map<string, string[]>();
     for (const p of initialStorePrefs) {
-      const arr = m.get(p.ingredient_key) ?? [];
-      arr.push(p.store_id);
-      m.set(p.ingredient_key, arr);
+      // ingredient_key from shopping is "name:::unit"; strip the unit suffix
+      const nameKey = p.ingredient_key.split(":::")[0];
+      const arr = m.get(nameKey) ?? [];
+      if (!arr.includes(p.store_id)) arr.push(p.store_id);
+      m.set(nameKey, arr);
     }
     return m;
   });
