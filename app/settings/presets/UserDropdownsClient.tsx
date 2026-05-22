@@ -3,17 +3,17 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, MapPin } from "lucide-react";
 import {
   createPresetUnit, updatePresetUnit, setPresetUnitActive,
   createPresetCategory, updatePresetCategory, setPresetCategoryActive,
   createPresetIngredient, updatePresetIngredient, setPresetIngredientActive,
 } from "@/app/actions/user-presets";
-import { setIngredientStorePrefs } from "@/app/actions/stores";
+import { setIngredientStorePrefs, createUserStore, updateUserStore, deleteUserStore } from "@/app/actions/stores";
 import type { PresetCategory, PresetUnit, PresetIngredient, UserStore, IngredientStorePref } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 
-type Tab = "ingredients" | "units" | "categories";
+type Tab = "ingredients" | "units" | "categories" | "stores";
 type EditState = { id: string; nameTh: string; nameEn: string };
 
 // ─── Module-level sub-components for IngredientsTable ────────────
@@ -573,6 +573,171 @@ function IngredientsTable({
   );
 }
 
+// ─── Color palette shared with ShoppingClient ────────────────────
+const STORE_COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e",
+  "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
+];
+
+// ─── StoresTable ──────────────────────────────────────────────────
+
+function StoresTable({
+  stores: initialStores,
+  onAdd, onUpdate, onDelete,
+  addLabel, nameLabel, namePh, colorLabel,
+  locationLabel, deleteConfirm, emptyLabel, countLabel,
+}: {
+  stores: UserStore[];
+  onAdd: (name: string, color: string, lat: number | null, lng: number | null) => Promise<void>;
+  onUpdate: (id: string, name: string, color: string, lat: number | null, lng: number | null) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  addLabel: string; nameLabel: string; namePh: string; colorLabel: string;
+  locationLabel: string; deleteConfirm: string; emptyLabel: string; countLabel: string;
+}) {
+  type StoreEdit = { id: string; name: string; color: string; lat: string; lng: string };
+  const [stores, setStores] = useState(initialStores);
+  const [editing, setEditing] = useState<StoreEdit | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newRow, setNewRow] = useState({ name: "", color: STORE_COLORS[4], lat: "", lng: "" });
+  const [pending, startTransition] = useTransition();
+
+  const parseCoord = (v: string) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+
+  const saveNew = () => {
+    if (!newRow.name.trim()) { toast.error(nameLabel); return; }
+    startTransition(async () => {
+      await onAdd(newRow.name.trim(), newRow.color, parseCoord(newRow.lat), parseCoord(newRow.lng));
+      setNewRow({ name: "", color: STORE_COLORS[4], lat: "", lng: "" });
+      setAdding(false);
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editing || !editing.name.trim()) { toast.error(nameLabel); return; }
+    startTransition(async () => {
+      await onUpdate(editing.id, editing.name.trim(), editing.color, parseCoord(editing.lat), parseCoord(editing.lng));
+      setEditing(null);
+    });
+  };
+
+  const handleDelete = (store: UserStore) => {
+    if (!confirm(deleteConfirm)) return;
+    startTransition(async () => { await onDelete(store.id); });
+  };
+
+  const StoreForm = ({ value, onChange, onSave, onCancel }: {
+    value: { name: string; color: string; lat: string; lng: string };
+    onChange: (v: Partial<typeof value>) => void;
+    onSave: () => void; onCancel: () => void;
+  }) => (
+    <div className="flex flex-col gap-3 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10 border-t border-border">
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-muted">{nameLabel}</label>
+        <input value={value.name} onChange={e => onChange({ name: e.target.value })}
+          placeholder={namePh} autoFocus
+          className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+          onKeyDown={e => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-muted">{colorLabel}</label>
+        <div className="flex gap-2 flex-wrap">
+          {STORE_COLORS.map(c => (
+            <button key={c} type="button" onClick={() => onChange({ color: c })}
+              className="w-7 h-7 rounded-full transition-transform hover:scale-110 shrink-0"
+              style={{ background: c, outline: value.color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }} />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-muted">{locationLabel}</label>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={value.lat} onChange={e => onChange({ lat: e.target.value })}
+            placeholder="Lat"
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+          <input value={value.lng} onChange={e => onChange({ lng: e.target.value })}
+            placeholder="Lng"
+            className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button onClick={onCancel}
+          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+          ยกเลิก
+        </button>
+        <button onClick={onSave} disabled={pending}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+          <Check className="w-4 h-4" /> บันทึก
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {!adding && (
+        <button onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors">
+          <Plus className="w-4 h-4" /> {addLabel}
+        </button>
+      )}
+
+      {adding && (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          <StoreForm
+            value={newRow} onChange={v => setNewRow(r => ({ ...r, ...v }))}
+            onSave={saveNew} onCancel={() => { setAdding(false); setNewRow({ name: "", color: STORE_COLORS[4], lat: "", lng: "" }); }}
+          />
+        </div>
+      )}
+
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+        {stores.length === 0 && !adding && (
+          <div className="flex flex-col items-center gap-2 py-10 text-muted">
+            <Layers className="w-8 h-8 opacity-30" />
+            <p className="text-sm">{emptyLabel}</p>
+          </div>
+        )}
+
+        {stores.map(store => (
+          <div key={store.id} className="border-b border-border last:border-0">
+            {editing?.id === store.id ? (
+              <StoreForm
+                value={editing} onChange={v => setEditing(e => e && ({ ...e, ...v }))}
+                onSave={saveEdit} onCancel={() => setEditing(null)}
+              />
+            ) : (
+              <div className="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50 transition-colors">
+                <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">{store.name}</p>
+                  {store.latitude != null && store.longitude != null && (
+                    <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3" />
+                      {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={() => setEditing({ id: store.id, name: store.name, color: store.color, lat: store.latitude != null ? String(store.latitude) : "", lng: store.longitude != null ? String(store.longitude) : "" })}
+                    className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => handleDelete(store)} disabled={pending}
+                    className="p-1.5 rounded-lg text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-muted">{countLabel.replace("{n}", String(stores.length))}</p>
+    </div>
+  );
+}
+
 // ─── Main client component ────────────────────────────────────────
 
 export default function UserDropdownsClient({
@@ -747,15 +912,50 @@ export default function UserDropdownsClient({
     router.refresh();
   };
 
+  // ─── Store handlers ──────────────────────────────────────────────
+
+  const [stores, setStores] = useState<UserStore[]>(initialStores);
+
+  const addStore = async (name: string, color: string, lat: number | null, lng: number | null) => {
+    const res = await createUserStore(name, color, lat, lng);
+    if ("error" in res) { toast.error(res.error); return; }
+    setStores(prev => [...prev, res as UserStore]);
+    toast.success("เพิ่มร้านค้าแล้ว");
+    router.refresh();
+  };
+
+  const updateStore = async (id: string, name: string, color: string, lat: number | null, lng: number | null) => {
+    const res = await updateUserStore(id, { name, color, latitude: lat, longitude: lng });
+    if ("error" in res) { toast.error(res.error); return; }
+    setStores(prev => prev.map(s => s.id === id ? { ...s, name, color, latitude: lat, longitude: lng } : s));
+    toast.success("บันทึกแล้ว");
+    router.refresh();
+  };
+
+  const removeStore = async (id: string) => {
+    const res = await deleteUserStore(id);
+    if ("error" in res) { toast.error(res.error); return; }
+    setStores(prev => prev.filter(s => s.id !== id));
+    toast.success("ลบร้านค้าแล้ว");
+    router.refresh();
+  };
+
+  const TAB_LABELS: Record<Tab, string> = {
+    ingredients: d.ingredientsTab,
+    units: d.unitsTab,
+    categories: d.categoriesTab,
+    stores: d.storesTab,
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex gap-1 border-b border-border">
-        {(["ingredients", "units", "categories"] as Tab[]).map(tab => (
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
+        {(["ingredients", "units", "categories", "stores"] as Tab[]).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative shrink-0 ${
                     activeTab === tab ? "text-orange-500" : "text-muted hover:text-foreground"
                   }`}>
-            {tab === "ingredients" ? d.ingredientsTab : tab === "units" ? d.unitsTab : d.categoriesTab}
+            {TAB_LABELS[tab]}
             {activeTab === tab && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500 rounded-full" />
             )}
@@ -823,6 +1023,23 @@ export default function UserDropdownsClient({
           archivedLabel={d.archived}
           emptyLabel={d.emptyCategories}
           requireOneNameError={d.requireOneName}
+        />
+      )}
+
+      {activeTab === "stores" && (
+        <StoresTable
+          stores={stores}
+          onAdd={addStore}
+          onUpdate={updateStore}
+          onDelete={removeStore}
+          addLabel={d.addStore}
+          nameLabel={d.storeName}
+          namePh={d.storeNamePh}
+          colorLabel={d.storeColor}
+          locationLabel={d.storeLocationLabel}
+          deleteConfirm={d.storeDeleteConfirm}
+          emptyLabel={d.emptyStores}
+          countLabel={d.countStores}
         />
       )}
     </div>
