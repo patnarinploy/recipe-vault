@@ -1,5 +1,12 @@
 [
   {
+    "build": 115,
+    "timestamp": "2026-05-22T10:46:23.000Z",
+    "subject": "refactor: use shared StoreFormInline with inline map picker on shopping ",
+    "hash": "757f510",
+    "category": "refactor"
+  },
+  {
     "build": 114,
     "timestamp": "2026-05-22T10:24:52.000Z",
     "subject": "feat: add Stores tab to presets settings page",
