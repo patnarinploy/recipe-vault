@@ -1,5 +1,12 @@
 [
   {
+    "build": 137,
+    "timestamp": "2026-05-22T19:16:00.000Z",
+    "subject": "Fix category dropdown showing fake locale options for users with no pres",
+    "hash": "390fd9b",
+    "category": "fix"
+  },
+  {
     "build": 136,
     "timestamp": "2026-05-22T18:42:18.000Z",
     "subject": "Fix category showing global data and not saving in book reader",
