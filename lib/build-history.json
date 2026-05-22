@@ -1,5 +1,12 @@
 [
   {
+    "build": 117,
+    "timestamp": "2026-05-22T11:55:45.000Z",
+    "subject": "fix: move map above store list on shopping page; add map to presets stor",
+    "hash": "cee658c",
+    "category": "fix"
+  },
+  {
     "build": 116,
     "timestamp": "2026-05-22T10:46:40.000Z",
     "subject": "feat: add StoreFormInline shared component",
