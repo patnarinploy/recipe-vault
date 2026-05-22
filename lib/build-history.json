@@ -1,5 +1,12 @@
 [
   {
+    "build": 126,
+    "timestamp": "2026-05-22T12:48:35.000Z",
+    "subject": "feat: add detail modal to all preset tabs with recipe/ingredient lists",
+    "hash": "6217401",
+    "category": "feat"
+  },
+  {
     "build": 125,
     "timestamp": "2026-05-22T12:43:18.000Z",
     "subject": "fix: default store color to first (red), add 8 more colors, move count a",
