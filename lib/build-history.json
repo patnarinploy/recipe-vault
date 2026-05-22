@@ -1,5 +1,12 @@
 [
   {
+    "build": 135,
+    "timestamp": "2026-05-22T18:14:31.000Z",
+    "subject": "Fix ingredients and category not showing in book reader",
+    "hash": "dcacf4a",
+    "category": "fix"
+  },
+  {
     "build": 134,
     "timestamp": "2026-05-22T17:55:27.000Z",
     "subject": "Add clickable author byline on recipe pages; Esc closes preset modal",
