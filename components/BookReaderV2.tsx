@@ -319,8 +319,10 @@ function ShareBadge({ coverColor, solid }: { coverColor: string; solid?: boolean
   );
 }
 
+type RecipeForReader = Recipe & { ingText: string };
+
 function buildSlots(
-  recipes: Recipe[],
+  recipes: RecipeForReader[],
   pageH: number,
   pageW: number,
   portrait: boolean,
@@ -382,11 +384,11 @@ function buildSlots(
     // All ingredients go to recipe-ing slots; recipe-first is image-only.
     // When ≥5 items the renderer uses 2-col layout (2 items per row), so double
     // the row-count limits to get the correct item-count limits.
-    const ingItemCount = (r.ingredients || "").split("\n").filter(l => l.trim()).length;
+    const ingItemCount = r.ingText.split("\n").filter(l => l.trim()).length;
     const will2Col     = ingItemCount >= 5;
     const maxIngFirst  = will2Col ? contLinesIngFirst * 2 : contLinesIngFirst;
     const maxIngCont   = will2Col ? contLinesIngCont  * 2 : contLinesIngCont;
-    const ingAllChunks = toChunks(r.ingredients || "", charsPerLine, maxIngFirst, maxIngCont, will2Col ? measureIng2Col : measureIng)
+    const ingAllChunks = toChunks(r.ingText, charsPerLine, maxIngFirst, maxIngCont, will2Col ? measureIng2Col : measureIng)
                            .filter(c => c.trim().length > 0);
     const fullInstText = instPlainText(r.instructions || "");
     const stepImages   = instStepImages(r.instructions || "");
@@ -1544,12 +1546,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
   useEffect(() => { setLoading(true); fetchData(); }, [fetchData, dataVersion]);
 
-  // Build locale-aware ingredient text from structured rows so the book reader
-  // displays translated unit names (e.g. "g" instead of "กรัม" in EN mode).
-  // Falls back to the raw ingredients text cache for recipes with no rows.
-  const localizedRecipes = useMemo(() => recipes.map(r => {
-    if (!r.ingredient_rows?.length) return r;
-    const lines = r.ingredient_rows.map(row => {
+  // Build locale-aware ingredient text from structured FK rows for pagination.
+  const localizedRecipes = useMemo<RecipeForReader[]>(() => recipes.map(r => {
+    const lines = (r.ingredient_rows ?? []).map(row => {
       const unit = row.preset_units
         ? (locale === "th" ? row.preset_units.unit_name_th : (row.preset_units.unit_name_en || row.preset_units.unit_name_th))
         : "";
@@ -1560,7 +1559,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         : "";
       return [name, row.ingredient_amount, unit].filter(Boolean).join(" ");
     });
-    return { ...r, ingredients: lines.join("\n") };
+    return { ...r, ingText: lines.join("\n") };
   }), [recipes, locale]);
 
   // ── Slot-based page layout ────────────────────────────────────────

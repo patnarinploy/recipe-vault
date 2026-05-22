@@ -16,7 +16,6 @@ type IngredientRowInput = {
 type RecipePayload = {
   title: string;
   description: string | null;
-  ingredientsText: string;
   ingredientRows: IngredientRowInput[];
   instructions: string;
   image_url: string | null;
@@ -45,11 +44,11 @@ export async function createRecipe(
 
   if (!book || book.user_id !== user.id) return { error: "ไม่มีสิทธิ์เพิ่มสูตรในเล่มนี้" };
 
-  const { ingredientRows, ingredientsText, ...recipeFields } = payload;
+  const { ingredientRows, ...recipeFields } = payload;
 
   const { data, error } = await supabase
     .from("recipes")
-    .insert({ ...recipeFields, ingredients: ingredientsText, user_id: user.id })
+    .insert({ ...recipeFields, user_id: user.id })
     .select("id")
     .single();
 
@@ -97,15 +96,12 @@ export async function updateRecipe(
     return { error: "ไม่มีสิทธิ์แก้ไขสูตรนี้" };
   }
 
-  const { ingredientRows, ingredientsText, ...recipeFields } = payload;
+  const { ingredientRows, ...recipeFields } = payload;
 
   const updateData: Record<string, unknown> = {
     ...recipeFields,
     updated_at: new Date().toISOString(),
   };
-  if (ingredientsText !== undefined) {
-    updateData.ingredients = ingredientsText;
-  }
 
   const { error } = await supabase.from("recipes").update(updateData).eq("id", id);
   if (error) return { error: error.message };

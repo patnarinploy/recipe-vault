@@ -33,7 +33,6 @@ export type Recipe = {
   book_id: string;
   title: string;
   description: string | null;
-  ingredients: string;
   instructions: string;
   image_url: string | null;
   youtube_url: string | null;

@@ -11,22 +11,6 @@ import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-re
 import LoadingButton from "./ui/LoadingButton";
 import { ReactSortable } from "react-sortablejs";
 import { useLocale } from "@/lib/locale";
-import { translateUnit } from "@/lib/locale/unit-map";
-
-// Static TH units used for parsing stored ingredient strings (backward compat).
-// Display units come from t.recipe.units (locale-aware).
-const PARSE_UNITS = [
-  "กรัม", "กิโลกรัม", "ขีด",
-  "มิลลิลิตร", "ลิตร",
-  "ช้อนชา", "ช้อนโต๊ะ", "ถ้วย",
-  "ชิ้น", "ฝัก", "ต้น", "ใบ", "หัว", "ลูก", "กลีบ", "แผ่น",
-  "ฟอง", "เม็ด", "แว่น",
-  "g", "kg", "100g", "ml", "L", "tsp", "tbsp", "cup",
-  "piece", "pod", "stalk", "leaf", "head", "ball", "clove", "slice",
-  "egg", "seed", "round",
-];
-
-const NUM_RE = /^[\d.,\/½¼¾⅓⅔⅛⅜⅝⅞]+$/;
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 function ytVideoId(url: string): string | null {
@@ -191,42 +175,6 @@ function StepImageUpload({ value, onChange }: { value: string | null; onChange: 
 }
 
 // ─── Parsers ─────────────────────────────────────────────────────
-function parseIngredients(text: string): IngredientRow[] {
-  if (!text.trim()) return [{ id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }];
-  return text.split("\n").filter(l => l.trim()).map(line => {
-    const cleaned = line.trim().replace(/^[\d]+[.)]\s*|^[-•*]\s*/, "");
-    const parts = cleaned.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { id: uid(), name: cleaned, amount: "", unitId: null, unitFlex: "", unitDisplay: "" };
-
-    const last = parts[parts.length - 1];
-    const secondToLast = parts.length >= 2 ? parts[parts.length - 2] : null;
-
-    function makeRow(name: string, amount: string, unitDisplay: string): IngredientRow {
-      return { id: uid(), name, amount, unitId: null, unitFlex: unitDisplay, unitDisplay };
-    }
-
-    // Known unit at end
-    const knownUnit = PARSE_UNITS.find(u => last === u);
-    if (knownUnit) {
-      if (parts.length >= 3) return makeRow(parts.slice(0, -2).join(" "), parts[parts.length - 2], knownUnit);
-      if (parts.length === 2) return makeRow("", parts[0], knownUnit);
-      return makeRow(cleaned, "", knownUnit);
-    }
-
-    // Custom unit: last is non-number, second-to-last is number
-    if (secondToLast && NUM_RE.test(secondToLast) && !NUM_RE.test(last) && parts.length >= 3) {
-      return makeRow(parts.slice(0, -2).join(" "), secondToLast, last);
-    }
-
-    // Name + amount only: last token is a number
-    if (NUM_RE.test(last) && parts.length >= 2) {
-      return makeRow(parts.slice(0, -1).join(" "), last, "");
-    }
-
-    return makeRow(cleaned, "", "");
-  });
-}
-
 function parseInstructions(raw: string): InstructionStep[] {
   if (!raw.trim()) return [{ id: uid(), text: "", image_url: null }];
   try {
@@ -310,12 +258,8 @@ export default function RecipeForm({
         };
       });
     }
-    // Fallback: parse text blob for backward compat
-    return parseIngredients(recipe?.ingredients ?? "").map(row => ({
-      ...row,
-      unitDisplay: translateUnit(row.unitFlex, locale),
-      unitFlex: translateUnit(row.unitFlex, locale),
-    }));
+    // New recipe or recipe with no rows yet — start with one empty row
+    return [{ id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }];
   });
   const [instructionSteps, setInstructionSteps] = useState<InstructionStep[]>(
     () => parseInstructions(recipe?.instructions ?? "")
@@ -398,18 +342,8 @@ export default function RecipeForm({
 
     const validRows = ingredientRows.filter(row => row.name.trim());
 
-    // Build text cache: "name amount unitTh" per line
-    const ingredientsText = validRows
-      .map(row => {
-        const unitText = row.unitId
-          ? (presetUnits.find(u => u.id === row.unitId)?.unit_name_th ?? row.unitDisplay)
-          : row.unitFlex || row.unitDisplay;
-        return [row.name.trim(), row.amount.trim(), unitText.trim()].filter(Boolean).join(" ");
-      })
-      .join("\n");
-
     const validSteps = instructionSteps.filter(s => s.text.trim());
-    if (!form.title.trim() || !ingredientsText || validSteps.length === 0) {
+    if (!form.title.trim() || validRows.length === 0 || validSteps.length === 0) {
       toast.error(r.requiredError);
       return;
     }
@@ -433,7 +367,6 @@ export default function RecipeForm({
     const basePayload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
-      ingredientsText,
       ingredientRows: structuredRows,
       instructions: instructionsJson,
       category_id: form.category_id || null,

@@ -23,9 +23,6 @@ function parseInstructions(raw: string): InstructionStep[] {
   }));
 }
 
-function parseIngredients(raw: string): string[] {
-  return raw.split("\n").map(l => l.trim()).filter(Boolean);
-}
 
 function youtubeEmbedUrl(url: string): string | null {
   if (!url?.trim()) return null;
@@ -49,7 +46,15 @@ export default function RecipeViewV2({
 }) {
   const { locale } = useLocale();
   const steps       = useMemo(() => parseInstructions(recipe.instructions), [recipe.instructions]);
-  const ingredients = useMemo(() => parseIngredients(recipe.ingredients),   [recipe.ingredients]);
+  const ingredients = useMemo(() => (recipe.ingredient_rows ?? []).map(row => {
+    const name = row.preset_ingredients
+      ? (locale === "en" ? (row.preset_ingredients.name_en || row.preset_ingredients.name_th) : row.preset_ingredients.name_th)
+      : "";
+    const unit = row.preset_units
+      ? (locale === "en" ? (row.preset_units.unit_name_en || row.preset_units.unit_name_th) : row.preset_units.unit_name_th)
+      : "";
+    return [name, row.ingredient_amount, unit].filter(Boolean).join(" ");
+  }), [recipe.ingredient_rows, locale]);
 
   const cookTime = recipe.cook_time_minutes ? `${recipe.cook_time_minutes} นาที` : "—";
   const servings = recipe.servings          ? `${recipe.servings} ที่`           : "—";
