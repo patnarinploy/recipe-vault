@@ -1,5 +1,12 @@
 [
   {
+    "build": 133,
+    "timestamp": "2026-05-22T17:47:37.000Z",
+    "subject": "Show book ribbon only on favorited recipes",
+    "hash": "71f2548",
+    "category": "internal"
+  },
+  {
     "build": 132,
     "timestamp": "2026-05-22T15:10:17.000Z",
     "subject": "Rename tables and migrate ingredient store prefs to use UUID FK",

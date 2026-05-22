@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 132;
-export const BUILD_TIMESTAMP = "2026-05-22T15:10:17.000Z";
-export const BUILD_TOOLTIP   = "Rename tables and migrate ingredient store prefs to use UUID FK";
+export const BUILD_NUMBER    = 133;
+export const BUILD_TIMESTAMP = "2026-05-22T17:47:37.000Z";
+export const BUILD_TOOLTIP   = "Show book ribbon only on favorited recipes";
