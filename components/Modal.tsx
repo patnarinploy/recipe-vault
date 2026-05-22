@@ -101,9 +101,9 @@ export default function Modal({
           <div className="relative min-h-full flex items-center justify-center p-4 sm:p-6">
             <motion.div
               key="modal-panel"
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              initial={{ opacity: 0, y: 24, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.97 }}
+              exit={{ opacity: 0, y: -12, scale: 0.92 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className={`relative w-full ${maxWidth}`}
               onClick={(e) => e.stopPropagation()}

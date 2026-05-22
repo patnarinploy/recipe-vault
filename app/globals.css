@@ -286,6 +286,21 @@ button, a {
   color-scheme: dark;
 }
 
+/* ─── View Transition — theme change circle reveal ─────────────── */
+/* New theme expands as a circle from top-right (where the toggle lives).
+   Old snapshot stays frozen underneath while the new one reveals. */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: theme-reveal-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes theme-reveal-in {
+  from { clip-path: circle(0% at 85% 8%); }
+  to   { clip-path: circle(150% at 85% 8%); }
+}
+
 /* ─── Allow native pinch-to-zoom on the book reader ────────────── */
 /* page-flip sets touch-action:pan-y which blocks pinch zoom.
    Combined with the JS 2-finger stopPropagation in BookReaderV2,

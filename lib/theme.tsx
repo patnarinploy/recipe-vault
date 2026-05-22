@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 export type Theme = "system" | "light" | "dark";
 
@@ -22,19 +22,28 @@ function readStoredTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Read localStorage synchronously so the initial state matches THEME_SCRIPT's output.
-  // Avoids the double-render (system → stored) that caused a flash.
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);
   const [resolved, setResolved] = useState<"light" | "dark">("light");
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     const root = document.documentElement;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
-    function apply(t: Theme) {
-      const dark = t === "dark" || (t === "system" && mq.matches);
+    function applyDark(dark: boolean) {
       root.classList.toggle("dark", dark);
       setResolved(dark ? "dark" : "light");
+    }
+
+    function apply(t: Theme) {
+      const dark = t === "dark" || (t === "system" && mq.matches);
+      // Skip transition on first mount — avoid flash on page load
+      if (!isFirstRun.current && typeof document.startViewTransition === "function") {
+        document.startViewTransition(() => applyDark(dark));
+      } else {
+        applyDark(dark);
+      }
+      isFirstRun.current = false;
     }
 
     apply(theme);
