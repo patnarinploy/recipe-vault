@@ -32,7 +32,7 @@ export default function StoreFormInline({
   const [saving, setSaving]         = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (!name.trim()) { toast.error(s.storeName); return; }
     setSaving(true);
     const latNum = lat ? parseFloat(lat) : null;
     const lngNum = lng ? parseFloat(lng) : null;
@@ -111,7 +111,7 @@ export default function StoreFormInline({
             className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
             {t.common.cancel}
           </button>
-          <button type="button" onClick={handleSave} disabled={saving || !name.trim()}
+          <button type="button" onClick={handleSave} disabled={saving}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
             <Check className="w-4 h-4" /> {t.common.save}
           </button>
