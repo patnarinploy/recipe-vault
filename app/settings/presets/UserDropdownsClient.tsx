@@ -42,7 +42,7 @@ function StoreChips({
   noStoreLabel: string;
 }) {
   if (ids.length === 0) {
-    return muted ? <div className="text-xs text-muted/50 italic mt-0.5">{noStoreLabel}</div> : null;
+    return muted ? <div className="text-xs text-muted italic mt-0.5 opacity-60">{noStoreLabel}</div> : null;
   }
   return (
     <div className="flex flex-wrap gap-1 mt-0.5">
