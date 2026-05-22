@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 135;
-export const BUILD_TIMESTAMP = "2026-05-22T18:14:31.000Z";
-export const BUILD_TOOLTIP   = "Fix ingredients and category not showing in book reader";
+export const BUILD_NUMBER    = 136;
+export const BUILD_TIMESTAMP = "2026-05-22T18:42:18.000Z";
+export const BUILD_TOOLTIP   = "Fix category showing global data and not saving in book reader";
