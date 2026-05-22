@@ -1,5 +1,12 @@
 [
   {
+    "build": 113,
+    "timestamp": "2026-05-22T08:34:58.000Z",
+    "subject": "fix: responsive layout for presets table on small screens",
+    "hash": "4b9e599",
+    "category": "fix"
+  },
+  {
     "build": 112,
     "timestamp": "2026-05-22T08:27:05.000Z",
     "subject": "fix: store chips span both name columns in ingredients table",
