@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, ExternalLink, Info } from "lucide-react";
@@ -233,34 +234,40 @@ function PresetsTable({
   const renderItem = (item: { id: string; nameTh: string; nameEn: string; isActive: boolean }) => (
     <div key={item.id} className="border-b border-border last:border-0">
       {editing?.id === item.id ? (
-        <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted">{thLabel}</label>
-            <input value={editing.nameTh}
-              onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
-              placeholder={thLabel}
-              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-              autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+          style={{ overflow: "hidden" }}
+        >
+          <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted">{thLabel}</label>
+              <input value={editing.nameTh}
+                onChange={e => setEditing(v => v && ({ ...v, nameTh: e.target.value }))}
+                placeholder={thLabel}
+                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                autoFocus onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted">{enLabel}</label>
+              <input value={editing.nameEn}
+                onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
+                placeholder={enLabel}
+                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setEditing(null)}
+                      className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+                ยกเลิก
+              </button>
+              <button onClick={saveEdit} disabled={pending}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                <Check className="w-4 h-4" /> บันทึก
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted">{enLabel}</label>
-            <input value={editing.nameEn}
-              onChange={e => setEditing(v => v && ({ ...v, nameEn: e.target.value }))}
-              placeholder={enLabel}
-              className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-              onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditing(null); }} />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button onClick={() => setEditing(null)}
-                    className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
-              ยกเลิก
-            </button>
-            <button onClick={saveEdit} disabled={pending}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
-              <Check className="w-4 h-4" /> บันทึก
-            </button>
-          </div>
-        </div>
+        </motion.div>
       ) : (
         <div className={`flex items-center gap-2 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
           <div className="flex-1 min-w-0">
@@ -325,36 +332,45 @@ function PresetsTable({
       </div>
 
       {/* Add form at top when open */}
-      {adding && (
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-          <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted">{thLabel}</label>
-              <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
-                placeholder={thLabel}
-                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                autoFocus onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+      <AnimatePresence initial={false}>
+        {adding && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="bg-surface rounded-2xl border border-border overflow-hidden mb-0">
+              <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted">{thLabel}</label>
+                  <input value={newRow.nameTh} onChange={e => setNewRow(v => ({ ...v, nameTh: e.target.value }))}
+                    placeholder={thLabel}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    autoFocus onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted">{enLabel}</label>
+                  <input value={newRow.nameEn} onChange={e => setNewRow(v => ({ ...v, nameEn: e.target.value }))}
+                    placeholder={enLabel}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
+                    onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "" }); }}
+                          className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
+                    ยกเลิก
+                  </button>
+                  <button onClick={saveNew} disabled={pending}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
+                    <Check className="w-4 h-4" /> บันทึก
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted">{enLabel}</label>
-              <input value={newRow.nameEn} onChange={e => setNewRow(v => ({ ...v, nameEn: e.target.value }))}
-                placeholder={enLabel}
-                className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-                onKeyDown={e => { if (e.key === "Enter") saveNew(); if (e.key === "Escape") setAdding(false); }} />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button onClick={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "" }); }}
-                      className="px-4 py-2 rounded-xl text-sm text-muted bg-elevated hover:bg-border transition-colors">
-                ยกเลิก
-              </button>
-              <button onClick={saveNew} disabled={pending}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors">
-                <Check className="w-4 h-4" /> บันทึก
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {activeItems.length > 0 && (
@@ -466,15 +482,21 @@ function IngredientsTable({
   const renderItem = (item: IngItem) => (
     <div key={item.id} className="border-b border-border last:border-0">
       {editing?.id === item.id ? (
-        <EditForm
-          nameTh={editing.nameTh} nameEn={editing.nameEn} storeIds={editing.storeIds}
-          onNameTh={v => setEditing(e => e && ({ ...e, nameTh: v }))}
-          onNameEn={v => setEditing(e => e && ({ ...e, nameEn: v }))}
-          onStores={ids => setEditing(e => e && ({ ...e, storeIds: ids }))}
-          onSave={saveEdit} onCancel={() => setEditing(null)}
-          thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
-          stores={stores} storeMap={storeMap} pending={pending}
-        />
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+          style={{ overflow: "hidden" }}
+        >
+          <EditForm
+            nameTh={editing.nameTh} nameEn={editing.nameEn} storeIds={editing.storeIds}
+            onNameTh={v => setEditing(e => e && ({ ...e, nameTh: v }))}
+            onNameEn={v => setEditing(e => e && ({ ...e, nameEn: v }))}
+            onStores={ids => setEditing(e => e && ({ ...e, storeIds: ids }))}
+            onSave={saveEdit} onCancel={() => setEditing(null)}
+            thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
+            stores={stores} storeMap={storeMap} pending={pending}
+          />
+        </motion.div>
       ) : (
         <div className={`flex items-start gap-2 px-4 py-2.5 hover:bg-elevated/50 transition-colors ${!item.isActive ? "opacity-50" : ""}`}>
           <div className="flex-1 min-w-0 py-0.5">
@@ -540,20 +562,29 @@ function IngredientsTable({
       </div>
 
       {/* Add form at top when open */}
-      {adding && (
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-          <EditForm
-            nameTh={newRow.nameTh} nameEn={newRow.nameEn} storeIds={newRow.storeIds}
-            onNameTh={v => setNewRow(r => ({ ...r, nameTh: v }))}
-            onNameEn={v => setNewRow(r => ({ ...r, nameEn: v }))}
-            onStores={ids => setNewRow(r => ({ ...r, storeIds: ids }))}
-            onSave={saveNew}
-            onCancel={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "", storeIds: [] }); }}
-            thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
-            stores={stores} storeMap={storeMap} pending={pending}
-          />
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {adding && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+              <EditForm
+                nameTh={newRow.nameTh} nameEn={newRow.nameEn} storeIds={newRow.storeIds}
+                onNameTh={v => setNewRow(r => ({ ...r, nameTh: v }))}
+                onNameEn={v => setNewRow(r => ({ ...r, nameEn: v }))}
+                onStores={ids => setNewRow(r => ({ ...r, storeIds: ids }))}
+                onSave={saveNew}
+                onCancel={() => { setAdding(false); setNewRow({ nameTh: "", nameEn: "", storeIds: [] }); }}
+                thLabel={thLabel} enLabel={enLabel} storesLabel={storesLabel} noStoreLabel={noStoreLabel}
+                stores={stores} storeMap={storeMap} pending={pending}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {/* Column headers */}
@@ -644,12 +675,21 @@ function StoresTable({
       </div>
 
       {/* Add form at top — only for new store, not for editing */}
-      {adding && (
-        <StoreFormInline
-          onSave={(saved) => { onSave(saved); setAdding(false); }}
-          onCancel={() => setAdding(false)}
-        />
-      )}
+      <AnimatePresence initial={false}>
+        {adding && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            style={{ overflow: "hidden" }}
+          >
+            <StoreFormInline
+              onSave={(saved) => { onSave(saved); setAdding(false); }}
+              onCancel={() => setAdding(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {stores.some(st => st.latitude !== null) && (
         <DynamicMap stores={stores} />
@@ -666,11 +706,17 @@ function StoresTable({
         {filteredStores.map(store => (
           <div key={store.id} className="border-b border-border last:border-0">
             {editingStore?.id === store.id ? (
-              <StoreFormInline
-                store={store}
-                onSave={(saved) => { onSave(saved); setEditingStore(null); }}
-                onCancel={() => setEditingStore(null)}
-              />
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+                style={{ overflow: "hidden" }}
+              >
+                <StoreFormInline
+                  store={store}
+                  onSave={(saved) => { onSave(saved); setEditingStore(null); }}
+                  onCancel={() => setEditingStore(null)}
+                />
+              </motion.div>
             ) : (
               <div className="flex items-center gap-3 px-4 py-3 hover:bg-elevated/50 transition-colors">
                 <span className="w-4 h-4 rounded-full shrink-0" style={{ background: store.color }} />

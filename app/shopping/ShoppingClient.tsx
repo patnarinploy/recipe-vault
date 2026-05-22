@@ -14,6 +14,7 @@ import { deleteUserStore } from "@/app/actions/stores";
 import type { ShoppingListEntry, DbIngredient, UserStore, IngredientStorePref } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 import StoreFormInline, { STORE_COLORS } from "@/components/StoreFormInline";
+import { AnimatePresence, motion } from "framer-motion";
 
 const DynamicMap = dynamic(() => import("@/components/StoreMap"), { ssr: false });
 
@@ -614,9 +615,9 @@ function StoresTab({
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-foreground">{s.myStores}</h2>
-          {!formOpen && (
+          {!formOpen && !editStore && (
             <button
-              onClick={() => { setEditStore(undefined); setFormOpen(true); }}
+              onClick={() => setFormOpen(true)}
               className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />{s.addStore}
@@ -624,15 +625,22 @@ function StoresTab({
           )}
         </div>
 
-        {formOpen && (
-          <div className="mb-3">
-            <StoreFormInline
-              store={editStore}
-              onSave={handleSaveStore}
-              onCancel={() => { setFormOpen(false); setEditStore(undefined); }}
-            />
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {formOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+              exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+              style={{ overflow: "hidden" }}
+              className="mb-3"
+            >
+              <StoreFormInline
+                onSave={handleSaveStore}
+                onCancel={() => setFormOpen(false)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Leaflet map (between header and list) ── */}
         {stores.some(st => st.latitude !== null) && (
@@ -650,34 +658,50 @@ function StoresTab({
         ) : (
           <div className="space-y-2">
             {stores.map(store => (
-              <div key={store.id} className="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3">
-                <div className="w-3 h-3 rounded-full shrink-0" style={{ background: store.color }} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{store.name}</p>
-                  {store.latitude != null ? (
-                    <a href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-blue-400 hover:text-blue-500 flex items-center gap-0.5 transition-colors">
-                      <ExternalLink className="w-3 h-3" /> {s.viewGoogleMaps}
-                    </a>
-                  ) : (
-                    <p className="text-xs text-muted">{s.noLocation}</p>
-                  )}
-                </div>
-                {combined.length > 0 && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium text-white shrink-0"
-                    style={{ background: store.color }}>
-                    {s.itemsAt.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
-                  </span>
+              <div key={store.id}>
+                {editStore?.id === store.id ? (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <StoreFormInline
+                      store={store}
+                      onSave={handleSaveStore}
+                      onCancel={() => setEditStore(undefined)}
+                    />
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center gap-3 bg-surface rounded-xl border border-border px-4 py-3">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ background: store.color }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{store.name}</p>
+                      {store.latitude != null ? (
+                        <a href={`https://www.google.com/maps?q=${store.latitude},${store.longitude}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-blue-400 hover:text-blue-500 flex items-center gap-0.5 transition-colors">
+                          <ExternalLink className="w-3 h-3" /> {s.viewGoogleMaps}
+                        </a>
+                      ) : (
+                        <p className="text-xs text-muted">{s.noLocation}</p>
+                      )}
+                    </div>
+                    {combined.length > 0 && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium text-white shrink-0"
+                        style={{ background: store.color }}>
+                        {s.itemsAt.replace("{n}", String(storeItemCounts[store.id] ?? 0))}
+                      </span>
+                    )}
+                    <button onClick={() => { setFormOpen(false); setEditStore(store); }}
+                      className="p-1.5 text-muted hover:text-foreground transition-colors">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDeleteStore(store.id)}
+                      className="p-1.5 text-muted hover:text-red-500 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 )}
-                <button onClick={() => { setEditStore(store); setFormOpen(true); }}
-                  className="p-1.5 text-muted hover:text-foreground transition-colors">
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => handleDeleteStore(store.id)}
-                  className="p-1.5 text-muted hover:text-red-500 transition-colors">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
               </div>
             ))}
           </div>

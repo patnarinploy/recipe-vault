@@ -6,4 +6,4 @@
 
 export const BUILD_NUMBER    = 149;
 export const BUILD_TIMESTAMP = "2026-05-22T23:40:12.000Z";
-export const BUILD_TOOLTIP   = "Unify modal export const BUILD_TOOLTIP   = "Polish modal animation to Bootstrap-style slide-down (no scale)"; dropdown animations: scale+fade pattern system-wide";
+export const BUILD_TOOLTIP   = "Unify modal & dropdown animations: scale+fade pattern system-wide";
