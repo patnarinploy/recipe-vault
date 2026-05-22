@@ -1,5 +1,12 @@
 [
   {
+    "build": 110,
+    "timestamp": "2026-05-22T03:38:37.000Z",
+    "subject": "feat: locale-aware columns, search, skeleton, UX polish",
+    "hash": "7a1467a",
+    "category": "feat"
+  },
+  {
     "build": 109,
     "timestamp": "2026-05-21T20:44:28.000Z",
     "subject": "fix: autoFocus bug, UX improvements in settings & shopping",

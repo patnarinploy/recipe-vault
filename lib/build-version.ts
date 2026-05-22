@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 109;
-export const BUILD_TIMESTAMP = "2026-05-21T20:44:28.000Z";
-export const BUILD_TOOLTIP   = "fix: autoFocus bug, UX improvements in settings & shopping";
+export const BUILD_NUMBER    = 110;
+export const BUILD_TIMESTAMP = "2026-05-22T03:38:37.000Z";
+export const BUILD_TOOLTIP   = "feat: locale-aware columns, search, skeleton, UX polish";
