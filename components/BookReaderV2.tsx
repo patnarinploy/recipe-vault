@@ -1373,8 +1373,9 @@ interface Props {
 export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
-  const bookRef = useRef<any>(null);
-  const fabRef  = useRef<HTMLDivElement>(null);
+  const bookRef     = useRef<any>(null);
+  const fabRef      = useRef<HTMLDivElement>(null);
+  const bookWrapRef = useRef<HTMLDivElement>(null);
   const { pageW, pageH, portrait, ready, vwPx, vhPx } = usePageDimensions();
 
   const isFavBook = bookId === FAVORITES_BOOK_ID;
@@ -1739,6 +1740,19 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     router.refresh();
   }, [fetchData, router]);
 
+  // ── Block page-flip from intercepting 2-finger pinch gestures ─────
+  // page-flip captures all touchstart events; when ≥2 fingers are down
+  // we stop propagation (capture phase) so the browser handles pinch zoom.
+  useEffect(() => {
+    const el = bookWrapRef.current;
+    if (!el) return;
+    const handler = (e: TouchEvent) => {
+      if (e.touches.length >= 2) e.stopPropagation();
+    };
+    el.addEventListener("touchstart", handler, { capture: true, passive: true });
+    return () => el.removeEventListener("touchstart", handler, { capture: true });
+  }, []);
+
   // ─────────────────────────────────────────────────────────────────
   if (!ready || loading || !displayBook) return <SkeletonOpenBook pageW={pageW} pageH={pageH} portrait={portrait} />;
 
@@ -1817,7 +1831,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     <>
       {/* Book container — relative so the FAB can be absolutely positioned
           at the bottom-right of the right page without overlapping content */}
-      <div className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
+      <div ref={bookWrapRef} className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}

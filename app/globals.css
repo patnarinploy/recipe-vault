@@ -274,3 +274,12 @@ button, a {
 .dark input[type="date"] {
   color-scheme: dark;
 }
+
+/* ─── Allow native pinch-to-zoom on the book reader ────────────── */
+/* page-flip sets touch-action:pan-y which blocks pinch zoom.
+   Combined with the JS 2-finger stopPropagation in BookReaderV2,
+   this enables native iOS/Android pinch-to-zoom on the book pages. */
+.stf__parent {
+  -ms-touch-action: pan-y pinch-zoom !important;
+  touch-action: pan-y pinch-zoom !important;
+}
