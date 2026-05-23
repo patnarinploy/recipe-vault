@@ -1,11 +1,11 @@
 "use client";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 export type Theme = "system" | "light" | "dark";
 
 type ThemeCtx = {
   theme: Theme;
-  setTheme: (t: Theme) => void;
+  setTheme: (t: Theme, origin?: { x: number; y: number }) => void;
   resolved: "light" | "dark";
 };
 
@@ -25,6 +25,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);
   const [resolved, setResolved] = useState<"light" | "dark">("light");
   const isFirstRun = useRef(true);
+  const originRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Wrap state setter so callers can optionally pass the click origin for the
+  // view-transition circle, without changing the hook's external signature shape.
+  const setTheme = useCallback((t: Theme, origin?: { x: number; y: number }) => {
+    if (origin) originRef.current = origin;
+    setThemeState(t);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -39,6 +47,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const dark = t === "dark" || (t === "system" && mq.matches);
       // Skip transition on first mount — avoid flash on page load
       if (!isFirstRun.current && typeof document.startViewTransition === "function") {
+        const origin = originRef.current;
+        if (origin) {
+          root.style.setProperty("--vt-x", `${origin.x}px`);
+          root.style.setProperty("--vt-y", `${origin.y}px`);
+          originRef.current = null;
+        } else {
+          // No explicit origin — clear vars so CSS fallback takes over
+          root.style.removeProperty("--vt-x");
+          root.style.removeProperty("--vt-y");
+        }
         document.startViewTransition(() => applyDark(dark));
       } else {
         applyDark(dark);
@@ -57,7 +75,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   return (
-    <Ctx.Provider value={{ theme, setTheme: setThemeState, resolved }}>
+    <Ctx.Provider value={{ theme, resolved, setTheme }}>
       {children}
     </Ctx.Provider>
   );

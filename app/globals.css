@@ -287,8 +287,8 @@ button, a {
 }
 
 /* ─── View Transition — theme change circle reveal ─────────────── */
-/* New theme expands as a circle from top-right (where the toggle lives).
-   Old snapshot stays frozen underneath while the new one reveals. */
+/* Circle origin is set dynamically via --vt-x / --vt-y (button center in px).
+   Falls back to top-right corner when no origin is provided. */
 ::view-transition-old(root) {
   animation: none;
   mix-blend-mode: normal;
@@ -297,8 +297,8 @@ button, a {
   animation: theme-reveal-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes theme-reveal-in {
-  from { clip-path: circle(0% at 85% 8%); }
-  to   { clip-path: circle(150% at 85% 8%); }
+  from { clip-path: circle(0px    at var(--vt-x, 85%) var(--vt-y, 8%)); }
+  to   { clip-path: circle(200vmax at var(--vt-x, 85%) var(--vt-y, 8%)); }
 }
 
 /* ─── Allow native pinch-to-zoom on the book reader ────────────── */

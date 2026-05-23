@@ -66,8 +66,9 @@ export default function ReadingSettingsClient({
     updateReadingPreferences({ page_flip_type: type });
   }
 
-  function handleTheme(value: Theme) {
-    setTheme(value);
+  function handleTheme(value: Theme, e: React.MouseEvent<HTMLButtonElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    setTheme(value, { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) });
     updateReadingPreferences({ theme: value });
   }
 
@@ -160,7 +161,7 @@ export default function ReadingSettingsClient({
               <button
                 key={value}
                 type="button"
-                onClick={() => handleTheme(value)}
+                onClick={(e) => handleTheme(value, e)}
                 className="relative flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium rounded-lg"
               >
                 {activeTheme === value && (
