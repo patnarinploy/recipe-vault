@@ -219,10 +219,9 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     },
 
     // 1 — Right half: tap to go forward (2/5)
-    // Portrait: target body so the spotlight doesn't cover the full screen with no room for tooltip
     {
-      target: portrait ? "body" : "[data-tour='tour-right-half']",
-      placement: portrait ? "center" : "left",
+      target: "[data-tour='tour-right-half']",
+      placement: "auto",
       title: isTh
         ? (portrait ? "กดฝั่งขวาเพื่อไปหน้าถัดไป" : "หน้าขวา — ไปหน้าถัดไป")
         : (portrait ? "Tap right to go forward" : "Right page — next page"),
@@ -238,8 +237,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     // 2 — Left half: tap to go back (3/5)
     // Book is already flipped forward when this step shows (flip happens on leaving step 1).
     {
-      target: portrait ? "body" : "[data-tour='tour-left-half']",
-      placement: portrait ? "center" : "right",
+      target: "[data-tour='tour-left-half']",
+      placement: "auto",
       title: isTh
         ? (portrait ? "กดฝั่งซ้ายเพื่อย้อนกลับ" : "หน้าซ้าย — ย้อนกลับ")
         : (portrait ? "Tap left to go back" : "Left page — previous page"),
