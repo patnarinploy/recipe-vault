@@ -66,7 +66,7 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
             )}
           </div>
           {showPresence && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-stone-800 shadow flex items-center justify-center shrink-0">
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-stone-800 border-2 border-white dark:border-stone-600 shadow flex items-center justify-center shrink-0">
               <OnlineIndicator lastSeen={info.last_seen} size="md" />
             </div>
           )}
