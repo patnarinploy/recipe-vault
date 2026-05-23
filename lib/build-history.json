@@ -1,5 +1,12 @@
 [
   {
+    "build": 193,
+    "timestamp": "2026-05-23T23:28:25.000Z",
+    "subject": "Add animate-ui style animated UI components across the app",
+    "hash": "7333670",
+    "category": "feat"
+  },
+  {
     "build": 192,
     "timestamp": "2026-05-23T23:05:21.000Z",
     "subject": "feat: animate-ui–style HoverCard on achievement badges",
