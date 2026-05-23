@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 158;
-export const BUILD_TIMESTAMP = "2026-05-23T08:50:22.000Z";
-export const BUILD_TOOLTIP   = "fix: double-flip in 2-page tour to skip dark back-of-cover page";
+export const BUILD_NUMBER    = 159;
+export const BUILD_TIMESTAMP = "2026-05-23T09:10:57.000Z";
+export const BUILD_TOOLTIP   = "fix: single flip in tour + always-warm inside-cover page";
