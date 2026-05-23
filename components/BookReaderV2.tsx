@@ -1676,7 +1676,16 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const perBookKey = `rv_book_tour_${bookId}`;
       const alreadySeen = localStorage.getItem(perBookKey) || localStorage.getItem(TOUR_KEY_BOOK_READER);
       if (!alreadySeen) {
-        setTimeout(() => setTourRun(true), 800);
+        setTimeout(() => {
+          // In 2-page mode at the cover, pre-flip to first content spread so
+          // both left and right pages have real content during spotlight steps.
+          if (!portrait && currentPage === 0) {
+            bookRef.current?.pageFlip().flipNext();
+            setTimeout(() => setTourRun(true), 1000);
+          } else {
+            setTourRun(true);
+          }
+        }, 800);
       }
     }
   }, [loading, book, bookId]);

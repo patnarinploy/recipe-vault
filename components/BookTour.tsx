@@ -200,6 +200,11 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         blockTargetInteraction: true,
       }}
       styles={{
+        spotlight: {
+          // SVG stroke — orange ring so spotlight is visible on any background/theme
+          stroke: "rgba(249, 115, 22, 0.85)",
+          strokeWidth: 3,
+        },
         tooltip: {
           borderRadius: "16px",
           padding: "20px",
