@@ -1681,18 +1681,19 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
   function handleTourFinish() {
     setTourRun(false);
+    setFabOpen(false);
     localStorage.setItem(`rv_book_tour_${bookId}`, "1");
   }
 
-  // Close FAB menu on outside click
+  // Close FAB menu on outside click (disabled during tour to avoid interference)
   useEffect(() => {
-    if (!fabOpen) return;
+    if (!fabOpen || tourRun) return;
     function onDown(e: MouseEvent) {
       if (fabRef.current && !fabRef.current.contains(e.target as Node)) setFabOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [fabOpen]);
+  }, [fabOpen, tourRun]);
 
   const firstTocIdx = slots.findIndex(s => s.kind === "toc");
   const goToToC     = () => bookRef.current?.pageFlip().turnToPage(Math.max(0, firstTocIdx));
@@ -1874,11 +1875,19 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           {pages}
         </HTMLFlipBook>
 
+        {/* Tour navigation target overlays — left/right halves for spotlight highlighting */}
+        <div data-tour="tour-left-half"
+             className="absolute inset-y-0 left-0 pointer-events-none"
+             style={{ width: "50%", zIndex: 0 }} />
+        <div data-tour="tour-right-half"
+             className="absolute inset-y-0 right-0 pointer-events-none"
+             style={{ width: "50%", zIndex: 0 }} />
+
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
              style={{ bottom: 5, right: 5 }}>
           {fabOpen && (
-            <div ref={fabRef} className="anim-scale-in bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+            <div ref={fabRef} data-tour="fab-dropdown" className="anim-scale-in bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
               {/* owner-only actions (not available in favorites virtual book) */}
               {isOwner && !isFavBook && (<>
@@ -2061,7 +2070,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         </Modal>
       )}
 
-      <BookTour run={tourRun} onFinish={handleTourFinish} />
+      <BookTour
+        run={tourRun}
+        onFinish={handleTourFinish}
+        portrait={portrait}
+        onFlipNext={goToNext}
+        onFlipPrev={goToPrev}
+        onOpenFab={() => setFabOpen(true)}
+      />
 
       {/* ── YouTube in-book modal ──────────────────────────── */}
       {ytModal && (() => {
