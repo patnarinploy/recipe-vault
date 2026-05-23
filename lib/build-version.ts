@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 186;
-export const BUILD_TIMESTAMP = "2026-05-23T21:56:03.000Z";
-export const BUILD_TOOLTIP   = "fix: WriterCard always shows correct follow state when reopened";
+export const BUILD_NUMBER    = 187;
+export const BUILD_TIMESTAMP = "2026-05-23T22:01:46.000Z";
+export const BUILD_TOOLTIP   = "fix: remove online status label below name in WriterCard";
