@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 175;
-export const BUILD_TIMESTAMP = "2026-05-23T17:19:31.000Z";
-export const BUILD_TOOLTIP   = "fix: flip overlay — restore original wording (title+body) and fix z-in";
+export const BUILD_NUMBER    = 176;
+export const BUILD_TIMESTAMP = "2026-05-23T17:42:15.000Z";
+export const BUILD_TOOLTIP   = "fix: render flip overlay via portal into document.body to beat Joyride's";

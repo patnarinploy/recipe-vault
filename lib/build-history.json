@@ -1,5 +1,12 @@
 [
   {
+    "build": 176,
+    "timestamp": "2026-05-23T17:42:15.000Z",
+    "subject": "fix: render flip overlay via portal into document.body to beat Joyride's",
+    "hash": "c2fb3ce",
+    "category": "fix"
+  },
+  {
     "build": 175,
     "timestamp": "2026-05-23T17:19:31.000Z",
     "subject": "fix: flip overlay — restore original wording (title+body) and fix z-in",
