@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,7 @@ import {
   getUserPresetCategories,
   getUserPresetIngredients,
 } from "@/app/actions/user-presets";
+import { createClient } from "@/lib/supabase/client";
 
 interface BookWithCounts extends Book {
   recipe_count: number;
@@ -53,6 +54,25 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
   const [editCoverBook, setEditCoverBook]   = useState<BookWithCounts | null>(null);
   const [writerCard, setWriterCard]         = useState<WriterInfo | null>(null);
   const [authOpen, setAuthOpen]             = useState(false);
+
+  // Opens WriterCard and fetches is_following + follower_count client-side so the
+  // follow button always shows the correct state regardless of server-side cache.
+  const openWriterCard = useCallback(async (info: WriterInfo) => {
+    setWriterCard(info);
+    const viewerId = currentUser?.user_id;
+    const targetId = info.user_id;
+    if (!viewerId || !targetId || viewerId === targetId) return;
+    const sb = createClient();
+    const [followRes, followerRes] = await Promise.all([
+      sb.from("user_follows").select("id").eq("follower_id", viewerId).eq("following_id", targetId).maybeSingle(),
+      sb.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", targetId),
+    ]);
+    setWriterCard(prev => prev?.user_id === targetId ? {
+      ...prev,
+      is_following: !!followRes.data,
+      follower_count: followerRes.count ?? 0,
+    } : prev);
+  }, [currentUser?.user_id]);
   const [mySearch, setMySearch]             = useState("");
   const [pubSearch, setPubSearch]           = useState("");
 
@@ -266,7 +286,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
                   book={book} size="sm"
                   publicCount={book.public_count}
                   author={authorLabel}
-                  onAuthorClick={authorLabel ? () => setWriterCard(bookWriter) : undefined}
+                  onAuthorClick={authorLabel ? () => openWriterCard(bookWriter) : undefined}
                   onClick={() => setOpenBook({ id: book.id, isOwner: tab === "mine" })}
                 />
 
@@ -299,7 +319,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
                             <Palette className="w-4 h-4 text-muted shrink-0" />
                             {lib.editCover}
                           </button>
-                          <button onClick={() => { setSettingsBookId(null); setWriterCard(currentUser); }}
+                          <button onClick={() => { setSettingsBookId(null); if (currentUser) openWriterCard(currentUser); }}
                             className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
                             <User className="w-4 h-4 text-muted shrink-0" />
                             {lib.viewWriterCard}

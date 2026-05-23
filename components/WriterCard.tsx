@@ -6,7 +6,7 @@ import type { WriterInfo } from "@/lib/types";
 import OnlineIndicator from "./OnlineIndicator";
 import WriterAchievements from "./user/WriterAchievements";
 import { useLocale } from "@/lib/locale";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 export default function WriterCard({ info, onClose, statsLoading = false, currentUserId }: {
   info: WriterInfo;
@@ -23,6 +23,10 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
   const [isFollowing, setIsFollowing] = useState(info.is_following ?? false);
   const [followerCount, setFollowerCount] = useState(info.follower_count ?? 0);
   const [isPending, startTransition] = useTransition();
+
+  // Sync when parent resolves async stats (is_following / follower_count arrive later)
+  useEffect(() => { setIsFollowing(info.is_following ?? false); }, [info.is_following]);
+  useEffect(() => { setFollowerCount(info.follower_count ?? 0); }, [info.follower_count]);
 
   function handleFollow() {
     startTransition(async () => {
