@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 165;
+export const BUILD_NUMBER    = 167;
 export const BUILD_TIMESTAMP = "2026-05-23T15:08:36.000Z";
 export const BUILD_TOOLTIP   = "chore: reset build counter → hook will stamp as #165";
