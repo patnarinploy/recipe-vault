@@ -222,6 +222,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     {
       target: "[data-tour='tour-right-half']",
       placement: "auto",
+      offset: -140,
+      floatingOptions: { hideArrow: true },
       title: isTh
         ? (portrait ? "กดฝั่งขวาเพื่อไปหน้าถัดไป" : "หน้าขวา — ไปหน้าถัดไป")
         : (portrait ? "Tap right to go forward" : "Right page — next page"),
@@ -239,6 +241,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     {
       target: "[data-tour='tour-left-half']",
       placement: "auto",
+      offset: -140,
+      floatingOptions: { hideArrow: true },
       title: isTh
         ? (portrait ? "กดฝั่งซ้ายเพื่อย้อนกลับ" : "หน้าซ้าย — ย้อนกลับ")
         : (portrait ? "Tap left to go back" : "Left page — previous page"),
