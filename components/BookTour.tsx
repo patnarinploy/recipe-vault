@@ -102,75 +102,70 @@ function FabSwiper({ isTh }: { isTh: boolean }) {
   const total = slides.length;
   const slide = slides[idx];
 
+  const arrowBtn = (disabled: boolean, onClick: () => void, icon: React.ReactNode) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+        border: "1px solid rgba(0,0,0,0.12)", background: "transparent",
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.25 : 1,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      {icon}
+    </button>
+  );
+
   return (
     <div style={{ userSelect: "none", minWidth: 220 }}>
-      {/* Mockup button */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 7,
-          padding: "7px 14px", borderRadius: 10,
-          background: "rgba(249,115,22,0.10)",
-          border: "1px solid rgba(249,115,22,0.25)",
-          color: "#f97316", fontWeight: 600, fontSize: 13,
-          whiteSpace: "nowrap",
-        }}>
-          {slide.icon}
-          <span>{slide.label}</span>
+      {/* Arrows flank the body content, vertically centered */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        {arrowBtn(idx === 0, () => setIdx(i => i - 1), <ChevronLeft style={{ width: 14, height: 14 }} />)}
+
+        <div style={{ flex: 1 }}>
+          {/* Mockup button */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
+              padding: "7px 14px", borderRadius: 10,
+              background: "rgba(249,115,22,0.10)",
+              border: "1px solid rgba(249,115,22,0.25)",
+              color: "#f97316", fontWeight: 600, fontSize: 13,
+              whiteSpace: "nowrap",
+            }}>
+              {slide.icon}
+              <span>{slide.label}</span>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p style={{
+            textAlign: "center", fontSize: 12.5, lineHeight: 1.65,
+            color: "#6b7280", margin: 0,
+          }}>
+            {slide.desc}
+          </p>
         </div>
+
+        {arrowBtn(idx === total - 1, () => setIdx(i => i + 1), <ChevronRight style={{ width: 14, height: 14 }} />)}
       </div>
 
-      {/* Description */}
-      <p style={{
-        textAlign: "center", fontSize: 12.5, lineHeight: 1.65,
-        color: "#6b7280", margin: "0 0 14px",
-      }}>
-        {slide.desc}
-      </p>
-
-      {/* Prev / dots / Next */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button
-          onClick={() => setIdx(i => i - 1)}
-          disabled={idx === 0}
-          style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            border: "1px solid rgba(0,0,0,0.12)", background: "transparent",
-            cursor: idx === 0 ? "default" : "pointer",
-            opacity: idx === 0 ? 0.25 : 1,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <ChevronLeft style={{ width: 14, height: 14 }} />
-        </button>
-
-        <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-          {slides.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => setIdx(i)}
-              style={{
-                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
-                background: i === idx ? "#f97316" : "rgba(0,0,0,0.15)",
-                cursor: "pointer",
-                transition: "width 0.2s ease, background 0.2s ease",
-              }}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={() => setIdx(i => i + 1)}
-          disabled={idx === total - 1}
-          style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            border: "1px solid rgba(0,0,0,0.12)", background: "transparent",
-            cursor: idx === total - 1 ? "default" : "pointer",
-            opacity: idx === total - 1 ? 0.25 : 1,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <ChevronRight style={{ width: 14, height: 14 }} />
-        </button>
+      {/* Dots */}
+      <div style={{ display: "flex", gap: 5, alignItems: "center", justifyContent: "center" }}>
+        {slides.map((_, i) => (
+          <div
+            key={i}
+            onClick={() => setIdx(i)}
+            style={{
+              width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+              background: i === idx ? "#f97316" : "rgba(0,0,0,0.15)",
+              cursor: "pointer",
+              transition: "width 0.2s ease, background 0.2s ease",
+            }}
+          />
+        ))}
       </div>
     </div>
   );
