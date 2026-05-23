@@ -1,5 +1,12 @@
 [
   {
+    "build": 186,
+    "timestamp": "2026-05-23T21:56:03.000Z",
+    "subject": "fix: WriterCard always shows correct follow state when reopened",
+    "hash": "4420419",
+    "category": "fix"
+  },
+  {
     "build": 185,
     "timestamp": "2026-05-23T21:08:28.000Z",
     "subject": "feat: add follow system — follow authors, see their books in Following",

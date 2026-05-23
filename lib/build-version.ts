@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 185;
-export const BUILD_TIMESTAMP = "2026-05-23T21:08:28.000Z";
-export const BUILD_TOOLTIP   = "feat: add follow system — follow authors, see their books in Following";
+export const BUILD_NUMBER    = 186;
+export const BUILD_TIMESTAMP = "2026-05-23T21:56:03.000Z";
+export const BUILD_TOOLTIP   = "fix: WriterCard always shows correct follow state when reopened";
