@@ -1,5 +1,12 @@
 [
   {
+    "build": 181,
+    "timestamp": "2026-05-23T19:44:23.000Z",
+    "subject": "fix: WriterCard shows online status in book reader + favorites show reci",
+    "hash": "bc5aac6",
+    "category": "fix"
+  },
+  {
     "build": 180,
     "timestamp": "2026-05-23T19:33:36.000Z",
     "subject": "fix: block book interactions while tour is pending (800ms before Joyride",
