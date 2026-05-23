@@ -249,6 +249,7 @@ export default function RecipeForm({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
   const [localCategories, setLocalCategories] = useState<PresetCategory[]>(presetCategories);
+  const [pendingCategoryName, setPendingCategoryName] = useState<string>("");
 
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => {
     // Primary path: structured rows from DB
@@ -310,21 +311,23 @@ export default function RecipeForm({
     return locale === "th" ? cat.name_th : (cat.name_en || cat.name_th);
   };
 
-  const handleCategoryChange = async (display: string) => {
-    if (!display.trim()) { setForm(p => ({ ...p, category_id: "" })); return; }
+  const handleCategoryChange = (display: string) => {
+    if (!display.trim()) {
+      setForm(p => ({ ...p, category_id: "" }));
+      setPendingCategoryName("");
+      return;
+    }
     const existing = localCategories.find(c =>
       (locale === "th" ? c.name_th : (c.name_en || c.name_th)) === display
     );
-    if (existing) { setForm(p => ({ ...p, category_id: existing.id })); return; }
-    // New name typed → create preset category on-the-fly
-    const result = await createPresetCategory(
-      locale === "th"
-        ? { name_th: display, name_en: "" }
-        : { name_th: display, name_en: display }
-    );
-    if ("error" in result) { toast.error(result.error); return; }
-    setLocalCategories(prev => [...prev, result]);
-    setForm(p => ({ ...p, category_id: result.id }));
+    if (existing) {
+      setForm(p => ({ ...p, category_id: existing.id }));
+      setPendingCategoryName("");
+      return;
+    }
+    // New name typed → store as pending, create in DB only when recipe is saved
+    setForm(p => ({ ...p, category_id: "" }));
+    setPendingCategoryName(display.trim());
   };
 
   function addRow() { setIngredientRows(r => [...r, { id: uid(), name: "", amount: "", unitId: null, unitFlex: "", unitDisplay: "" }]); }
@@ -381,20 +384,33 @@ export default function RecipeForm({
       unitFlex: row.unitId ? "" : (row.unitFlex || row.unitDisplay),
     }));
 
-    const basePayload = {
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      ingredientRows: structuredRows,
-      instructions: instructionsJson,
-      category_id: form.category_id || null,
-      cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
-      servings: form.servings ? parseInt(form.servings) : null,
-      image_url: imageUrl,
-      youtube_url: form.recipe_youtube.trim() || null,
-      is_public: form.is_public,
-    };
-
     startTransition(async () => {
+      // Resolve pending new category (deferred from handleCategoryChange)
+      let finalCategoryId = form.category_id || null;
+      if (!finalCategoryId && pendingCategoryName) {
+        const catResult = await createPresetCategory(
+          locale === "th"
+            ? { name_th: pendingCategoryName, name_en: "" }
+            : { name_th: pendingCategoryName, name_en: pendingCategoryName }
+        );
+        if ("error" in catResult) { toast.error(catResult.error); return; }
+        setLocalCategories(prev => [...prev, catResult]);
+        finalCategoryId = catResult.id;
+      }
+
+      const basePayload = {
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        ingredientRows: structuredRows,
+        instructions: instructionsJson,
+        category_id: finalCategoryId,
+        cook_time_minutes: form.cook_time_minutes ? parseInt(form.cook_time_minutes) : null,
+        servings: form.servings ? parseInt(form.servings) : null,
+        image_url: imageUrl,
+        youtube_url: form.recipe_youtube.trim() || null,
+        is_public: form.is_public,
+      };
+
       const res = isEdit
         ? await updateRecipe(recipe.id, basePayload)
         : await createRecipe({ ...basePayload, book_id: bookId! });
@@ -424,7 +440,7 @@ export default function RecipeForm({
     });
   }
 
-  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
   const labelCls = "block text-sm font-medium text-secondary mb-1.5";
 
   return (
@@ -454,7 +470,7 @@ export default function RecipeForm({
           <div>
             <label className={labelCls}>{r.categoryLabel}</label>
             <Combobox
-              value={categoryDisplay(form.category_id)}
+              value={form.category_id ? categoryDisplay(form.category_id) : pendingCategoryName}
               onChange={handleCategoryChange}
               options={categoryOptions}
               placeholder={r.categoryPlaceholder}
