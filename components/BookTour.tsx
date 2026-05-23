@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Joyride, ACTIONS, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useLocale } from "@/lib/locale";
 import {
@@ -14,6 +14,7 @@ type FabSlide = { icon: React.ReactNode; label: string; desc: string };
 
 function FabSwiper({ isTh }: { isTh: boolean }) {
   const [idx, setIdx] = useState(0);
+  const touchX = useRef<number | null>(null);
 
   const slides: FabSlide[] = isTh ? [
     {
@@ -124,7 +125,17 @@ function FabSwiper({ isTh }: { isTh: boolean }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         {arrowBtn(idx === 0, () => setIdx(i => i - 1), <ChevronLeft style={{ width: 14, height: 14 }} />)}
 
-        <div style={{ flex: 1 }}>
+        <div
+          style={{ flex: 1 }}
+          onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            if (touchX.current === null) return;
+            const dx = e.changedTouches[0].clientX - touchX.current;
+            touchX.current = null;
+            if (dx < -40 && idx < total - 1) setIdx(i => i + 1);
+            if (dx >  40 && idx > 0)         setIdx(i => i - 1);
+          }}
+        >
           {/* Mockup button */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
             <div style={{
