@@ -24,7 +24,6 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
   const [followerCount, setFollowerCount] = useState(info.follower_count ?? 0);
   const [isPending, startTransition] = useTransition();
 
-  // Sync when parent resolves async stats (is_following / follower_count arrive later)
   useEffect(() => { setIsFollowing(info.is_following ?? false); }, [info.is_following]);
   useEffect(() => { setFollowerCount(info.follower_count ?? 0); }, [info.follower_count]);
 
@@ -52,7 +51,7 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
         </button>
       )}
 
-      {/* Avatar */}
+      {/* Avatar — status dot at top-right */}
       <div className="flex justify-center mb-4">
         <div className="relative">
           <div
@@ -66,7 +65,7 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
             )}
           </div>
           {showPresence && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-stone-800 border-2 border-white dark:border-stone-600 shadow flex items-center justify-center shrink-0">
+            <div className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-stone-800 border-2 border-white dark:border-stone-600 shadow flex items-center justify-center shrink-0">
               <OnlineIndicator lastSeen={info.last_seen} size="md" />
             </div>
           )}
@@ -77,6 +76,11 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
       <h3 className="text-xl font-bold text-foreground leading-tight">
         {info.display_name ?? ""}
       </h3>
+
+      {/* Bio — above divider, just below name */}
+      {info.bio && (
+        <p className="text-sm text-secondary leading-relaxed mt-2">{info.bio}</p>
+      )}
 
       {/* Follow button */}
       {canFollow && (
@@ -100,19 +104,14 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
 
       <div className="w-10 h-px bg-orange-200 dark:bg-stone-600/60 mx-auto mt-4 mb-4" />
 
-      {/* Bio */}
-      {info.bio && (
-        <p className="text-sm text-secondary leading-relaxed mb-4">{info.bio}</p>
-      )}
-
       {/* Follower count */}
       {!!info.user_id && (
-        <p className="text-xs text-muted mb-3">
+        <p className="text-xs text-muted mb-4">
           {t.library.followerCount.replace("{n}", String(followerCount))}
         </p>
       )}
 
-      {/* Role + Achievements */}
+      {/* Stats + Achievements */}
       <WriterAchievements
         isBanned={info.status === "banned"}
         booksCount={info.book_count}

@@ -13,23 +13,24 @@ export type WriterAchievementsProps = {
   statsLoading?: boolean;
 };
 
-const TIER_CHIP: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
-  1: "bg-stone-100 dark:bg-stone-700/60 text-stone-500 dark:text-stone-300",
-  2: "bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300",
-  3: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300",
-  4: "bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-300",
-  5: "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300",
-  special: "bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-300",
+// Soft pastel background per tier — badge circle fill
+const TIER_BG: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
+  1:       "bg-stone-200/80   dark:bg-stone-600/60",
+  2:       "bg-sky-200/80     dark:bg-sky-700/60",
+  3:       "bg-emerald-200/80 dark:bg-emerald-700/60",
+  4:       "bg-violet-200/80  dark:bg-violet-700/60",
+  5:       "bg-amber-200/80   dark:bg-amber-600/60",
+  special: "bg-rose-200/80    dark:bg-rose-700/60",
 };
 
-function BadgeChip({ badge, label, highlight }: { badge: AchievementBadge; label: string; highlight?: boolean }) {
+function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string }) {
   return (
-    <span
-      title={badge.tooltip}
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${TIER_CHIP[badge.tier]} ${highlight ? "ring-1 ring-amber-300/60 dark:ring-amber-600/40" : ""}`}
+    <div
+      title={`${label}\n${badge.tooltip}`}
+      className={`w-9 h-9 rounded-full flex items-center justify-center text-lg select-none cursor-default shadow-sm ${TIER_BG[badge.tier]}`}
     >
-      {badge.emoji} {label}
-    </span>
+      {badge.emoji}
+    </div>
   );
 }
 
@@ -50,21 +51,21 @@ export default function WriterAchievements({
     ? getAchievements({ book_count: booksCount, recipe_count: recipesCount, public_count: sharedCount, created_at: createdAt })
     : null;
 
-  const secondaryBadges: AchievementBadge[] = [];
+  // Collect all badges: primary first, then secondaries
+  const allBadges: AchievementBadge[] = [];
   if (achievements) {
     const { primaryTitle, bookTitle, recipeTitle, shareTitle, specialAchievements } = achievements;
+    if (primaryTitle) allBadges.push(primaryTitle);
     for (const b of [bookTitle, recipeTitle, shareTitle]) {
-      if (b && b !== primaryTitle) secondaryBadges.push(b);
+      if (b && b !== primaryTitle) allBadges.push(b);
     }
-    secondaryBadges.push(...specialAchievements);
+    allBadges.push(...specialAchievements);
   }
 
   if (statsLoading) {
     return (
-      <div className="space-y-3">
-        {isBanned && (
-          <p className="text-xs font-medium text-red-500 dark:text-red-400">🚫 Banned</p>
-        )}
+      <div className="space-y-4">
+        {isBanned && <p className="text-xs font-medium text-red-500 dark:text-red-400">🚫 Banned</p>}
         <div className="grid grid-cols-3 text-center gap-1">
           {[0, 1, 2].map(i => (
             <div key={i} className="space-y-1">
@@ -73,22 +74,22 @@ export default function WriterAchievements({
             </div>
           ))}
         </div>
-        <div className="flex justify-center gap-1.5">
-          <div className="skeleton h-5 w-24 rounded-full" />
-          <div className="skeleton h-5 w-20 rounded-full" />
+        <div className="flex justify-center gap-2">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="skeleton w-9 h-9 rounded-full" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {/* Banned notice */}
+    <div className="space-y-4">
       {isBanned && (
         <p className="text-xs font-medium text-red-500 dark:text-red-400">🚫 Banned</p>
       )}
 
-      {/* Stats row — 3 numbers like a social profile */}
+      {/* Stats row */}
       {hasStats && (
         <div className="grid grid-cols-3 text-center divide-x divide-orange-100 dark:divide-stone-700">
           <div className="px-1">
@@ -106,18 +107,11 @@ export default function WriterAchievements({
         </div>
       )}
 
-      {/* Achievement badges — flat minimal chips */}
-      {achievements && (achievements.primaryTitle || secondaryBadges.length > 0) && (
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {achievements.primaryTitle && (
-            <BadgeChip
-              badge={achievements.primaryTitle}
-              label={labels[achievements.primaryTitle.id] ?? achievements.primaryTitle.label}
-              highlight
-            />
-          )}
-          {secondaryBadges.map((b, i) => (
-            <BadgeChip key={i} badge={b} label={labels[b.id] ?? b.label} />
+      {/* Achievement badges — emoji circles */}
+      {allBadges.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {allBadges.map((b) => (
+            <BadgeCircle key={b.id} badge={b} label={labels[b.id] ?? b.label} />
           ))}
         </div>
       )}
