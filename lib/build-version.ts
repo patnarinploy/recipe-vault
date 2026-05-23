@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 151;
-export const BUILD_TIMESTAMP = "2026-05-23T00:05:49.000Z";
-export const BUILD_TOOLTIP   = "Three UX fixes: close animation, deferred category, iOS zoom";
+export const BUILD_NUMBER    = 152;
+export const BUILD_TIMESTAMP = "2026-05-23T07:03:46.000Z";
+export const BUILD_TOOLTIP   = "Redesign product tour: 7-step flow with auto page flip and FAB walkthrou";
