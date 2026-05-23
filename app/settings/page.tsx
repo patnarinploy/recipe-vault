@@ -16,21 +16,30 @@ export default async function SettingsPage() {
   const { data: myBooksData } = await supabase
     .from("books").select("id").eq("user_id", user.id);
   const bkIds = (myBooksData ?? []).map((b: { id: string }) => b.id);
-  const [recipeRes, publicRes] = bkIds.length
+  const [recipeRes, publicRes, followerRes] = bkIds.length
     ? await Promise.all([
         supabase.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
         supabase.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
+        supabase.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", user.id),
       ])
-    : [{ count: 0 as number | null }, { count: 0 as number | null }];
+    : await Promise.all([
+        Promise.resolve({ count: 0 as number | null }),
+        Promise.resolve({ count: 0 as number | null }),
+        supabase.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", user.id),
+      ]);
   const writerInfo: WriterInfo = {
-    display_name: user.display_name,
-    bio:          user.bio,
-    avatar:       user.avatar,
-    role:         user.role,
-    book_count:   bkIds.length,
-    recipe_count: recipeRes.count ?? 0,
-    public_count: publicRes.count ?? 0,
-    created_at:   user.created_at,
+    display_name:   user.display_name,
+    bio:            user.bio,
+    avatar:         user.avatar,
+    role:           user.role,
+    last_seen:      user.last_seen,
+    status:         user.status,
+    user_id:        user.id,
+    book_count:     bkIds.length,
+    recipe_count:   recipeRes.count ?? 0,
+    public_count:   publicRes.count ?? 0,
+    follower_count: followerRes.count ?? 0,
+    created_at:     user.created_at,
   };
 
   const navGroups = [

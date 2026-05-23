@@ -1,7 +1,6 @@
 "use client";
 
-import { ROLE_LABELS, ROLE_COLORS } from "@/lib/role";
-import { getAchievements, TIER_BADGE_COLORS, SPECIAL_BADGE_COLOR, type AchievementBadge } from "@/lib/achievements";
+import { getAchievements, type AchievementBadge } from "@/lib/achievements";
 import { useLocale } from "@/lib/locale";
 
 export type WriterAchievementsProps = {
@@ -14,52 +13,27 @@ export type WriterAchievementsProps = {
   statsLoading?: boolean;
 };
 
-// ── Shared badge tokens ────────────────────────────────────────────────────────
-// Every badge uses one of two sizes; both share the same shape, weight, and gap.
-// "sm" = role + secondary achievements  "lg" = primary title only
+const TIER_CHIP: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
+  1: "bg-stone-100 dark:bg-stone-700/60 text-stone-500 dark:text-stone-300",
+  2: "bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300",
+  3: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300",
+  4: "bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-300",
+  5: "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300",
+  special: "bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-300",
+};
 
-const BASE  = "inline-flex items-center gap-1.5 rounded-full font-semibold border";
-const SM    = `${BASE} px-3 py-1 text-xs`;
-const LG    = `${BASE} px-3.5 py-1.5 text-sm`;
-
-// ── Badge components ───────────────────────────────────────────────────────────
-
-function ChipSm({ className, children, title }: { className: string; children: React.ReactNode; title?: string }) {
-  return <span className={`${SM} ${className}`} title={title}>{children}</span>;
-}
-
-function ChipLg({ className, children, title }: { className: string; children: React.ReactNode; title?: string }) {
-  return <span className={`${LG} ${className}`} title={title}>{children}</span>;
-}
-
-function AchievBadge({ badge, primary = false, labelOverride }: { badge: AchievementBadge; primary?: boolean; labelOverride?: string }) {
-  const color = badge.tier === "special" ? SPECIAL_BADGE_COLOR : TIER_BADGE_COLORS[badge.tier];
-  const label = labelOverride ?? badge.label;
-  return primary
-    ? <ChipLg className={color} title={badge.tooltip}>{badge.emoji} {label}</ChipLg>
-    : <ChipSm className={color} title={badge.tooltip}>{badge.emoji} {label}</ChipSm>;
-}
-
-function RolePill({ role, isBanned }: { role?: "admin" | "user"; isBanned?: boolean }) {
-  const roleLabel = role ? ROLE_LABELS[role] : null;
-  const roleColor = role ? ROLE_COLORS[role]  : null;
-  if (!isBanned && !roleLabel) return null;
+function BadgeChip({ badge, label, highlight }: { badge: AchievementBadge; label: string; highlight?: boolean }) {
   return (
-    <div className="flex flex-wrap justify-center gap-2">
-      {isBanned && (
-        <ChipSm className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 border border-red-200 dark:border-red-800">🚫 Banned</ChipSm>
-      )}
-      {roleLabel && roleColor && (
-        <ChipSm className={roleColor}>{roleLabel}</ChipSm>
-      )}
-    </div>
+    <span
+      title={badge.tooltip}
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${TIER_CHIP[badge.tier]} ${highlight ? "ring-1 ring-amber-300/60 dark:ring-amber-600/40" : ""}`}
+    >
+      {badge.emoji} {label}
+    </span>
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
-
 export default function WriterAchievements({
-  role,
   isBanned,
   booksCount,
   recipesCount,
@@ -68,7 +42,7 @@ export default function WriterAchievements({
   statsLoading = false,
 }: WriterAchievementsProps) {
   const { t } = useLocale();
-  const achievementLabels = t.achievements as Record<string, string>;
+  const labels = t.achievements as Record<string, string>;
 
   const hasStats = booksCount !== undefined || recipesCount !== undefined || sharedCount !== undefined;
 
@@ -88,13 +62,20 @@ export default function WriterAchievements({
   if (statsLoading) {
     return (
       <div className="space-y-3">
-        <RolePill role={role} isBanned={isBanned} />
-        <div className="flex justify-center">
-          <div className="skeleton h-8 w-44 rounded-full" />
+        {isBanned && (
+          <p className="text-xs font-medium text-red-500 dark:text-red-400">🚫 Banned</p>
+        )}
+        <div className="grid grid-cols-3 text-center gap-1">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="space-y-1">
+              <div className="skeleton h-5 w-8 rounded mx-auto" />
+              <div className="skeleton h-2.5 w-10 rounded mx-auto" />
+            </div>
+          ))}
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <div className="skeleton h-6 w-20 rounded-full" />
-          <div className="skeleton h-6 w-24 rounded-full" />
+        <div className="flex justify-center gap-1.5">
+          <div className="skeleton h-5 w-24 rounded-full" />
+          <div className="skeleton h-5 w-20 rounded-full" />
         </div>
       </div>
     );
@@ -102,29 +83,41 @@ export default function WriterAchievements({
 
   return (
     <div className="space-y-3">
-      {/* Role (always first) */}
-      <RolePill role={role} isBanned={isBanned} />
+      {/* Banned notice */}
+      {isBanned && (
+        <p className="text-xs font-medium text-red-500 dark:text-red-400">🚫 Banned</p>
+      )}
 
-      {/* Primary title — one step larger to signal hierarchy */}
-      {achievements?.primaryTitle && (
-        <div className="flex justify-center">
-          <AchievBadge
-            badge={achievements.primaryTitle}
-            primary
-            labelOverride={achievementLabels[achievements.primaryTitle.id] ?? achievements.primaryTitle.label}
-          />
+      {/* Stats row — 3 numbers like a social profile */}
+      {hasStats && (
+        <div className="grid grid-cols-3 text-center divide-x divide-orange-100 dark:divide-stone-700">
+          <div className="px-1">
+            <p className="text-base font-bold text-foreground">{booksCount ?? 0}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted mt-0.5">{labels.statBooks ?? "Books"}</p>
+          </div>
+          <div className="px-1">
+            <p className="text-base font-bold text-foreground">{recipesCount ?? 0}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted mt-0.5">{labels.statRecipes ?? "Recipes"}</p>
+          </div>
+          <div className="px-1">
+            <p className="text-base font-bold text-foreground">{sharedCount ?? 0}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted mt-0.5">{labels.statShared ?? "Shared"}</p>
+          </div>
         </div>
       )}
 
-      {/* Secondary badges — same size as role pill, flex-wrap grid */}
-      {secondaryBadges.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2">
-          {secondaryBadges.map((b, i) => (
-            <AchievBadge
-              key={i}
-              badge={b}
-              labelOverride={achievementLabels[b.id] ?? b.label}
+      {/* Achievement badges — flat minimal chips */}
+      {achievements && (achievements.primaryTitle || secondaryBadges.length > 0) && (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {achievements.primaryTitle && (
+            <BadgeChip
+              badge={achievements.primaryTitle}
+              label={labels[achievements.primaryTitle.id] ?? achievements.primaryTitle.label}
+              highlight
             />
+          )}
+          {secondaryBadges.map((b, i) => (
+            <BadgeChip key={i} badge={b} label={labels[b.id] ?? b.label} />
           ))}
         </div>
       )}

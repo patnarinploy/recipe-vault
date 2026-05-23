@@ -507,5 +507,8 @@ export const th = {
     "special-shadow": "นักเขียนเงา",
     "special-secret-chef": "เชฟลับ",
     "special-early-bird": "หน้าใหม่ไฟแรง",
+    statBooks: "หนังสือ",
+    statRecipes: "สูตร",
+    statShared: "แชร์แล้ว",
   },
 } as const;

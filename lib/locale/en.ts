@@ -507,5 +507,8 @@ export const en = {
     "special-shadow": "Shadow Writer",
     "special-secret-chef": "Secret Chef",
     "special-early-bird": "Early Bird",
+    statBooks: "Books",
+    statRecipes: "Recipes",
+    statShared: "Shared",
   },
 } as const;

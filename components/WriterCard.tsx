@@ -114,7 +114,6 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
 
       {/* Role + Achievements */}
       <WriterAchievements
-        role={info.role}
         isBanned={info.status === "banned"}
         booksCount={info.book_count}
         recipesCount={info.recipe_count}
