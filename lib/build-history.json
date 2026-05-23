@@ -1,5 +1,12 @@
 [
   {
+    "build": 164,
+    "timestamp": "2026-05-23T13:37:30.000Z",
+    "subject": "fix: stabilise Modal onClose ref to prevent double-click to dismiss",
+    "hash": "f49b67e",
+    "category": "fix"
+  },
+  {
     "build": 163,
     "timestamp": "2026-05-23T12:14:07.000Z",
     "subject": "feat: add recipe directly from shelf without opening book reader",
