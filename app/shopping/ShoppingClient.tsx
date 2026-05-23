@@ -14,7 +14,7 @@ import { deleteUserStore } from "@/app/actions/stores";
 import type { ShoppingListEntry, DbIngredient, UserStore, IngredientStorePref } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 import StoreFormInline, { STORE_COLORS } from "@/components/StoreFormInline";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 
 const DynamicMap = dynamic(() => import("@/components/StoreMap"), { ssr: false });
 
@@ -471,15 +471,37 @@ function CombinedView({
     const currentStoreIds = storePrefs.get(c.presetIngredientId) ?? new Set<string>();
 
     return (
-      <div key={c.key} className={`flex items-start gap-3 px-4 py-3 transition-colors ${isChecked ? "opacity-50" : ""}`}>
-        <button
+      <motion.div
+        key={c.key}
+        layoutId={`ing-${c.key}`}
+        layout="position"
+        animate={{ opacity: isChecked ? 0.55 : 1 }}
+        transition={{ type: "spring", stiffness: 350, damping: 35 }}
+        className="flex items-start gap-3 px-4 py-3"
+      >
+        <motion.button
           onClick={() => toggleCheck(c.key)}
+          whileTap={{ scale: 0.7 }}
+          transition={{ type: "spring", stiffness: 500, damping: 20 }}
           className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
             isChecked ? "bg-green-500 border-green-500" : "border-border hover:border-green-400"
           }`}
         >
-          {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-        </button>
+          <AnimatePresence>
+            {isChecked && (
+              <motion.svg viewBox="0 0 14 12" fill="none" className="w-3 h-3"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <motion.path
+                  d="M1.5 6L5.5 10L12.5 1.5"
+                  stroke="white" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                />
+              </motion.svg>
+            )}
+          </AnimatePresence>
+        </motion.button>
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleCheck(c.key)}>
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className={`text-sm font-medium ${isChecked ? "line-through text-muted" : "text-foreground"}`}>{c.name}</span>
@@ -496,7 +518,7 @@ function CombinedView({
           storeMap={storeMap}
           onClick={() => onPickStore(c.presetIngredientId, c.name, currentStoreIds)}
         />
-      </div>
+      </motion.div>
     );
   };
 
@@ -510,15 +532,17 @@ function CombinedView({
           </button>
         )}
       </div>
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
-        {unchecked.map(renderItem)}
-        {checkedItems.length > 0 && unchecked.length > 0 && (
-          <div className="px-4 py-1.5 bg-elevated/30">
-            <p className="text-[11px] text-muted">{`✓ ${checkedItems.length}`}</p>
-          </div>
-        )}
-        {checkedItems.map(renderItem)}
-      </div>
+      <LayoutGroup id="combined-list">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden divide-y divide-border/50">
+          {unchecked.map(renderItem)}
+          {checkedItems.length > 0 && unchecked.length > 0 && (
+            <motion.div layout key="sep" className="px-4 py-1.5 bg-elevated/30">
+              <p className="text-[11px] text-muted">{`✓ ${checkedItems.length}`}</p>
+            </motion.div>
+          )}
+          {checkedItems.map(renderItem)}
+        </div>
+      </LayoutGroup>
     </div>
   );
 }

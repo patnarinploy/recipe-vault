@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, ExternalLink, Info } from "lucide-react";
@@ -232,7 +232,9 @@ function PresetsTable({
   };
 
   const renderItem = (item: { id: string; nameTh: string; nameEn: string; isActive: boolean }) => (
-    <div key={item.id} className="border-b border-border last:border-0">
+    <motion.div key={item.id} layoutId={`preset-${kind}-${item.id}`} layout="position"
+      transition={{ type: "spring", stiffness: 350, damping: 35 }}
+      className="border-b border-border last:border-0">
       <AnimatePresence initial={false} mode="wait">
         {editing?.id === item.id ? (
           <motion.div
@@ -314,7 +316,7 @@ function PresetsTable({
         </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 
   return (
@@ -378,38 +380,40 @@ function PresetsTable({
         )}
       </AnimatePresence>
 
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {activeItems.length > 0 && (
-          <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
-            <span />
-          </div>
-        )}
+      <LayoutGroup id={`presets-${kind}`}>
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          {activeItems.length > 0 && (
+            <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+              <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
+              <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
+              <span />
+            </div>
+          )}
 
-        {activeItems.length === 0 && !adding && (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted">
-            <Layers className="w-8 h-8 opacity-30" />
-            <p className="text-sm">{emptyLabel}</p>
-          </div>
-        )}
+          {activeItems.length === 0 && !adding && (
+            <div className="flex flex-col items-center gap-2 py-10 text-muted">
+              <Layers className="w-8 h-8 opacity-30" />
+              <p className="text-sm">{emptyLabel}</p>
+            </div>
+          )}
 
-        {activeItems.map(renderItem)}
+          {activeItems.map(renderItem)}
 
-        {/* Archived section */}
-        {archivedItems.length > 0 && (
-          <>
-            <button
-              onClick={() => setShowArchived(v => !v)}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
-            >
-              {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              ซ่อนอยู่ ({archivedItems.length})
-            </button>
-            {showArchived && archivedItems.map(renderItem)}
-          </>
-        )}
-      </div>
+          {/* Archived section */}
+          {archivedItems.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowArchived(v => !v)}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
+              >
+                {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                ซ่อนอยู่ ({archivedItems.length})
+              </button>
+              {showArchived && archivedItems.map(renderItem)}
+            </>
+          )}
+        </div>
+      </LayoutGroup>
 
       <p className="text-xs text-muted">{countLabel}</p>
       {detail && <PresetDetailModal {...detail} />}
@@ -486,7 +490,9 @@ function IngredientsTable({
   };
 
   const renderItem = (item: IngItem) => (
-    <div key={item.id} className="border-b border-border last:border-0">
+    <motion.div key={item.id} layoutId={`preset-ing-${item.id}`} layout="position"
+      transition={{ type: "spring", stiffness: 350, damping: 35 }}
+      className="border-b border-border last:border-0">
       <AnimatePresence initial={false} mode="wait">
         {editing?.id === item.id ? (
           <motion.div
@@ -550,7 +556,7 @@ function IngredientsTable({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 
   return (
@@ -598,39 +604,41 @@ function IngredientsTable({
         )}
       </AnimatePresence>
 
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-        {/* Column headers */}
-        {(activeItems.length > 0 || archivedItems.length > 0) && (
-          <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
-            <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
-            <span />
-          </div>
-        )}
+      <LayoutGroup id="presets-ing">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+          {/* Column headers */}
+          {(activeItems.length > 0 || archivedItems.length > 0) && (
+            <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_5rem] gap-3 px-4 py-2.5 border-b border-border bg-elevated">
+              <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col1Label}</span>
+              <span className="text-xs font-semibold text-muted uppercase tracking-widest">{col2Label}</span>
+              <span />
+            </div>
+          )}
 
-        {activeItems.length === 0 && archivedItems.length === 0 && !adding && (
-          <div className="flex flex-col items-center gap-2 py-10 text-muted">
-            <Layers className="w-8 h-8 opacity-30" />
-            <p className="text-sm">{emptyLabel}</p>
-          </div>
-        )}
+          {activeItems.length === 0 && archivedItems.length === 0 && !adding && (
+            <div className="flex flex-col items-center gap-2 py-10 text-muted">
+              <Layers className="w-8 h-8 opacity-30" />
+              <p className="text-sm">{emptyLabel}</p>
+            </div>
+          )}
 
-        {activeItems.map(renderItem)}
+          {activeItems.map(renderItem)}
 
-        {/* Archived section */}
-        {archivedItems.length > 0 && (
-          <>
-            <button
-              onClick={() => setShowArchived(v => !v)}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
-            >
-              {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              ซ่อนอยู่ ({archivedItems.length})
-            </button>
-            {showArchived && archivedItems.map(renderItem)}
-          </>
-        )}
-      </div>
+          {/* Archived section */}
+          {archivedItems.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowArchived(v => !v)}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-muted hover:text-foreground hover:bg-elevated/50 transition-colors border-t border-border"
+              >
+                {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                ซ่อนอยู่ ({archivedItems.length})
+              </button>
+              {showArchived && archivedItems.map(renderItem)}
+            </>
+          )}
+        </div>
+      </LayoutGroup>
 
       <p className="text-xs text-muted">{countLabel}</p>
       {detail && <PresetDetailModal {...detail} />}

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart, ShoppingCart } from "lucide-react";
+import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import BookTour from "./BookTour";
@@ -1422,6 +1423,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
   // FAB
   const [fabOpen,         setFabOpen]         = useState(false);
+  const [radialMenu,      setRadialMenu]      = useState<{ x: number; y: number } | null>(null);
   const [newRecipeOpen,   setNewRecipeOpen]   = useState(false);
   const [editRecipeOpen,  setEditRecipeOpen]  = useState(false);
   const [coverEditorOpen, setCoverEditorOpen] = useState(false);
@@ -1929,7 +1931,14 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     <>
       {/* Book container — relative so the FAB can be absolutely positioned
           at the bottom-right of the right page without overlapping content */}
-      <div ref={bookWrapRef} data-tour="book-pages" className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}>
+      <div ref={bookWrapRef} data-tour="book-pages" className="relative book-modal-font" style={{ width: bookW, height: pageH, maxWidth: "100vw" }}
+        onContextMenu={e => {
+          if (tourRun) return;
+          e.preventDefault();
+          setRadialMenu({ x: e.clientX, y: e.clientY });
+          setFabOpen(false);
+        }}
+      >
         <HTMLFlipBook
           key={flipKey}
           ref={bookRef}
@@ -2122,6 +2131,45 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           </button>
         </div>
       </div>
+
+      {/* ── Radial context menu ─────────────────────────────────── */}
+      {(() => {
+        const radialItems: RadialMenuItem[] = [];
+        if (isOwner && !isFavBook) {
+          radialItems.push({ id: "add", icon: Plus, label: t.library.addRecipe, action: () => setNewRecipeOpen(true) });
+          if (ctx === "cover" || ctx === "backcover")
+            radialItems.push({ id: "cover", icon: Palette, label: t.library.editCover, action: () => setCoverEditorOpen(true) });
+          if (ctx === "cover" && writerInfo)
+            radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: () => setWriterCardOpen(true) });
+          if (ctx === "toc")
+            radialItems.push({ id: "toc", icon: List, label: t.library.editToc, action: () => setTocSortOpen(true) });
+          if (ctx === "recipe" && currentRecipe)
+            radialItems.push({ id: "edit", icon: Edit2, label: t.library.editRecipe, action: () => setEditRecipeOpen(true) });
+          if (isLoggedIn && ctx === "recipe" && currentRecipe)
+            radialItems.push({ id: "fav", icon: Heart, label: favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd, action: () => handleToggleFavorite(currentRecipe.id) });
+        }
+        if (!isOwner && !isFavBook && ctx === "cover" && writerInfo)
+          radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: () => setWriterCardOpen(true) });
+        if (!isOwner && isLoggedIn && ctx === "recipe" && currentRecipe)
+          radialItems.push({ id: "fav", icon: Heart, label: favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd, action: () => handleToggleFavorite(currentRecipe.id) });
+        if (isLoggedIn && ctx === "recipe" && currentRecipe)
+          radialItems.push({ id: "shop", icon: ShoppingCart, label: t.library.addToShoppingList, action: async () => {
+            const { addToShoppingList } = await import("@/app/actions/shopping");
+            const res = await addToShoppingList(currentRecipe.id);
+            if ("error" in res) { toast.error(res.error); } else { toast.success(t.shopping.addedToList); }
+          }});
+        radialItems.push({ id: "prev", icon: ChevronLeft, label: t.library.prevPage, action: goToPrev, disabled: currentPage === 0 });
+        radialItems.push({ id: "next", icon: ChevronRight, label: t.library.nextPage, action: goToNext, disabled: currentPage >= slots.length - 1 });
+        return (
+          <RadialMenu
+            open={!!radialMenu}
+            x={radialMenu?.x ?? 0}
+            y={radialMenu?.y ?? 0}
+            items={radialItems}
+            onClose={() => setRadialMenu(null)}
+          />
+        );
+      })()}
 
       {/* ── Sub-modals ──────────────────────────────────────────── */}
       <Modal open={newRecipeOpen} onClose={() => setNewRecipeOpen(false)} title={t.library.addRecipe} disableBackdropClick>
