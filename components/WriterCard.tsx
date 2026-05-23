@@ -78,13 +78,6 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
         {info.display_name ?? ""}
       </h3>
 
-      {/* Online status label */}
-      {showPresence && (
-        <div className="flex justify-center mt-1.5">
-          <OnlineIndicator lastSeen={info.last_seen} showLabel size="sm" />
-        </div>
-      )}
-
       {/* Follow button */}
       {canFollow && (
         <div className="flex justify-center mt-3">
