@@ -1,5 +1,12 @@
 [
   {
+    "build": 175,
+    "timestamp": "2026-05-23T17:19:31.000Z",
+    "subject": "fix: flip overlay — restore original wording (title+body) and fix z-in",
+    "hash": "121612a",
+    "category": "fix"
+  },
+  {
     "build": 174,
     "timestamp": "2026-05-23T16:36:43.000Z",
     "subject": "fix: restore tour arrow + show flip notification as overlay (not a count",
