@@ -1,5 +1,12 @@
 [
   {
+    "build": 156,
+    "timestamp": "2026-05-23T07:54:05.000Z",
+    "subject": "Fix tour left-half spotlight not showing in 2-page mode",
+    "hash": "8b617cf",
+    "category": "fix"
+  },
+  {
     "build": 155,
     "timestamp": "2026-05-23T07:39:33.000Z",
     "subject": "Block all page interaction during product tour",
