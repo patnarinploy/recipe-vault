@@ -234,7 +234,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     // 1 — Right half: tap to go forward
     {
       target: "[data-tour='tour-right-half']",
-      placement: "left",
+      placement: portrait ? "bottom" : "left",
       title: isTh
         ? (portrait ? "กดฝั่งขวาเพื่อไปหน้าถัดไป" : "หน้าขวา — ไปหน้าถัดไป")
         : (portrait ? "Tap right to go forward" : "Right page — next page"),
@@ -261,7 +261,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     // 3 — Left half: tap to go back
     {
       target: "[data-tour='tour-left-half']",
-      placement: "right",
+      placement: portrait ? "bottom" : "right",
       title: isTh
         ? (portrait ? "กดฝั่งซ้ายเพื่อย้อนกลับ" : "หน้าซ้าย — ย้อนกลับ")
         : (portrait ? "Tap left to go back" : "Left page — previous page"),
@@ -303,7 +303,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     // 6 — FAB dropdown: swiper walkthrough (last step)
     {
       target: "[data-tour='fab-dropdown']",
-      placement: "left",
+      placement: portrait ? "top" : "left",
       title: isTh ? "เมนูตัวเลือกทั้งหมด" : "All options",
       content: <FabSwiper isTh={isTh} />,
       skipBeacon: true,
@@ -361,6 +361,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         skipScroll: true,
         blockTargetInteraction: true,
       }}
+      floatingOptions={{ shiftOptions: { padding: 16 } }}
       styles={{
         spotlight: {
           // SVG stroke — orange ring so spotlight is visible on any background/theme
@@ -370,6 +371,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         tooltip: {
           borderRadius: "16px",
           padding: "20px",
+          maxWidth: "min(340px, calc(100vw - 24px))",
         },
         buttonPrimary: {
           borderRadius: "10px",
