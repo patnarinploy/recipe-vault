@@ -1,5 +1,12 @@
 [
   {
+    "build": 185,
+    "timestamp": "2026-05-23T21:08:28.000Z",
+    "subject": "feat: add follow system — follow authors, see their books in Following",
+    "hash": "f9cd7c8",
+    "category": "feat"
+  },
+  {
     "build": 184,
     "timestamp": "2026-05-23T21:04:58.000Z",
     "subject": "feat: add follow system foundation — WriterCard follow button, locale ",
