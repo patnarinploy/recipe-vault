@@ -1,5 +1,12 @@
 [
   {
+    "build": 168,
+    "timestamp": "2026-05-23T15:10:28.000Z",
+    "subject": "revert: restore 0.45s theme transition (back to #165 state)",
+    "hash": "c1e5f93",
+    "category": "internal"
+  },
+  {
     "build": 165,
     "timestamp": "2026-05-23T15:08:36.000Z",
     "subject": "chore: reset build counter → hook will stamp as #165",
