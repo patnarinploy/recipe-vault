@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 179;
-export const BUILD_TIMESTAMP = "2026-05-23T19:00:35.000Z";
-export const BUILD_TOOLTIP   = "fix: PageInsideCover uses book-paper class — responds to dark mode aga";
+export const BUILD_NUMBER    = 180;
+export const BUILD_TIMESTAMP = "2026-05-23T19:33:36.000Z";
+export const BUILD_TOOLTIP   = "fix: block book interactions while tour is pending (800ms before Joyride";

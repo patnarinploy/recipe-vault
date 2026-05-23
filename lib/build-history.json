@@ -1,5 +1,12 @@
 [
   {
+    "build": 180,
+    "timestamp": "2026-05-23T19:33:36.000Z",
+    "subject": "fix: block book interactions while tour is pending (800ms before Joyride",
+    "hash": "4068bd6",
+    "category": "fix"
+  },
+  {
     "build": 179,
     "timestamp": "2026-05-23T19:00:35.000Z",
     "subject": "fix: PageInsideCover uses book-paper class — responds to dark mode aga",
