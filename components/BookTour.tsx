@@ -3,6 +3,180 @@
 import { useEffect, useState } from "react";
 import { Joyride, ACTIONS, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useLocale } from "@/lib/locale";
+import {
+  Plus, Palette, Edit2, Heart, List, ShoppingCart,
+  ChevronLeft, ChevronRight,
+} from "lucide-react";
+
+// ─── FAB option swiper shown inside step 7 ───────────────────────────────────
+
+type FabSlide = { icon: React.ReactNode; label: string; desc: string };
+
+function FabSwiper({ isTh }: { isTh: boolean }) {
+  const [idx, setIdx] = useState(0);
+
+  const slides: FabSlide[] = isTh ? [
+    {
+      icon: <Plus  style={{ width: 15, height: 15 }} />,
+      label: "เพิ่มสูตรอาหาร",
+      desc:  "สร้างสูตรอาหารใหม่แล้วเพิ่มเข้าหนังสือได้เลย",
+    },
+    {
+      icon: <Palette style={{ width: 15, height: 15 }} />,
+      label: "แก้ไขปก / การ์ดนักเขียน",
+      desc:  "เปลี่ยนสีปก ชื่อหนังสือ หรือข้อมูลผู้เขียน",
+    },
+    {
+      icon: <Edit2 style={{ width: 15, height: 15 }} />,
+      label: "แก้ไขสูตร",
+      desc:  "แก้ไขชื่อ ส่วนผสม หรือขั้นตอนของสูตรที่กำลังดูอยู่",
+    },
+    {
+      icon: <Heart style={{ width: 15, height: 15 }} />,
+      label: "บันทึกถูกใจ",
+      desc:  "กดเพื่อเพิ่มหรือเอาสูตรนี้ออกจากรายการโปรด",
+    },
+    {
+      icon: <List  style={{ width: 15, height: 15 }} />,
+      label: "เปิดสารบัญ",
+      desc:  "ดูรายการสูตรทั้งหมดและข้ามไปได้ทันที",
+    },
+    {
+      icon: <ShoppingCart style={{ width: 15, height: 15 }} />,
+      label: "รายการที่อยากทำ",
+      desc:  "เพิ่มสูตรนี้เข้ารายการที่อยากลองทำ",
+    },
+    {
+      icon: (
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          <ChevronLeft  style={{ width: 15, height: 15 }} />
+          <ChevronRight style={{ width: 15, height: 15 }} />
+        </span>
+      ),
+      label: "พลิกหน้า",
+      desc:  "ข้ามไปหน้าถัดไปหรือย้อนกลับผ่านเมนูนี้ได้",
+    },
+  ] : [
+    {
+      icon: <Plus  style={{ width: 15, height: 15 }} />,
+      label: "Add recipe",
+      desc:  "Create a new recipe and add it to your book.",
+    },
+    {
+      icon: <Palette style={{ width: 15, height: 15 }} />,
+      label: "Edit cover / writer card",
+      desc:  "Change the cover color, book title, or author info.",
+    },
+    {
+      icon: <Edit2 style={{ width: 15, height: 15 }} />,
+      label: "Edit recipe",
+      desc:  "Edit the title, ingredients, or steps of this recipe.",
+    },
+    {
+      icon: <Heart style={{ width: 15, height: 15 }} />,
+      label: "Mark as favorite",
+      desc:  "Add or remove this recipe from your favorites.",
+    },
+    {
+      icon: <List  style={{ width: 15, height: 15 }} />,
+      label: "Table of contents",
+      desc:  "See all recipes and jump to any one instantly.",
+    },
+    {
+      icon: <ShoppingCart style={{ width: 15, height: 15 }} />,
+      label: "Want-to-cook list",
+      desc:  "Save this recipe to your cooking wishlist.",
+    },
+    {
+      icon: (
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          <ChevronLeft  style={{ width: 15, height: 15 }} />
+          <ChevronRight style={{ width: 15, height: 15 }} />
+        </span>
+      ),
+      label: "Flip pages",
+      desc:  "Navigate to the next or previous page from this menu.",
+    },
+  ];
+
+  const total = slides.length;
+  const slide = slides[idx];
+
+  return (
+    <div style={{ userSelect: "none", minWidth: 220 }}>
+      {/* Mockup button */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: "7px 14px", borderRadius: 10,
+          background: "rgba(249,115,22,0.10)",
+          border: "1px solid rgba(249,115,22,0.25)",
+          color: "#f97316", fontWeight: 600, fontSize: 13,
+          whiteSpace: "nowrap",
+        }}>
+          {slide.icon}
+          <span>{slide.label}</span>
+        </div>
+      </div>
+
+      {/* Description */}
+      <p style={{
+        textAlign: "center", fontSize: 12.5, lineHeight: 1.65,
+        color: "#6b7280", margin: "0 0 14px",
+      }}>
+        {slide.desc}
+      </p>
+
+      {/* Prev / dots / Next */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button
+          onClick={() => setIdx(i => i - 1)}
+          disabled={idx === 0}
+          style={{
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+            border: "1px solid rgba(0,0,0,0.12)", background: "transparent",
+            cursor: idx === 0 ? "default" : "pointer",
+            opacity: idx === 0 ? 0.25 : 1,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <ChevronLeft style={{ width: 14, height: 14 }} />
+        </button>
+
+        <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+          {slides.map((_, i) => (
+            <div
+              key={i}
+              onClick={() => setIdx(i)}
+              style={{
+                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+                background: i === idx ? "#f97316" : "rgba(0,0,0,0.15)",
+                cursor: "pointer",
+                transition: "width 0.2s ease, background 0.2s ease",
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => setIdx(i => i + 1)}
+          disabled={idx === total - 1}
+          style={{
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+            border: "1px solid rgba(0,0,0,0.12)", background: "transparent",
+            cursor: idx === total - 1 ? "default" : "pointer",
+            opacity: idx === total - 1 ? 0.25 : 1,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <ChevronRight style={{ width: 14, height: 14 }} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main tour ────────────────────────────────────────────────────────────────
 
 interface Props {
   run: boolean;
@@ -120,30 +294,12 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       overlayClickAction: false,
       showProgress: true,
     },
-    // 6 — FAB dropdown explanation (last step)
+    // 6 — FAB dropdown: swiper walkthrough (last step)
     {
       target: "[data-tour='fab-dropdown']",
       placement: "left",
       title: isTh ? "เมนูตัวเลือกทั้งหมด" : "All options",
-      content: isTh ? (
-        <ul style={{ margin: 0, padding: "0 0 0 1.1rem", lineHeight: 1.9 }}>
-          <li>เพิ่มสูตรอาหารใหม่</li>
-          <li>แก้ไขปก / การ์ดนักเขียน</li>
-          <li>แก้ไขสูตร / บันทึกถูกใจ</li>
-          <li>เปิดสารบัญ</li>
-          <li>เพิ่มเข้ารายการที่อยากทำ</li>
-          <li>พลิกหน้า ถัดไป / ก่อนหน้า</li>
-        </ul>
-      ) : (
-        <ul style={{ margin: 0, padding: "0 0 0 1.1rem", lineHeight: 1.9 }}>
-          <li>Add a new recipe</li>
-          <li>Edit cover / writer card</li>
-          <li>Edit recipe / mark as favorite</li>
-          <li>Open table of contents</li>
-          <li>Add to want-to-cook list</li>
-          <li>Flip pages next / previous</li>
-        </ul>
-      ),
+      content: <FabSwiper isTh={isTh} />,
       skipBeacon: true,
       buttons: ["primary"],
       overlayClickAction: false,
