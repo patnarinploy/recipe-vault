@@ -1,5 +1,12 @@
 [
   {
+    "build": 191,
+    "timestamp": "2026-05-23T22:37:31.000Z",
+    "subject": "design: WriterCard polish — dot top-right, bio above divider, emoji ba",
+    "hash": "a3f0895",
+    "category": "internal"
+  },
+  {
     "build": 190,
     "timestamp": "2026-05-23T22:15:00.000Z",
     "subject": "feat: redesign WriterAchievements + settings shows status & followers",
