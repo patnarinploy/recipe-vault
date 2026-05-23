@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 169;
-export const BUILD_TIMESTAMP = "2026-05-23T15:17:09.000Z";
-export const BUILD_TOOLTIP   = "tweak: slow theme transition circle — 0.7s material easing (was 0.45s ";
+export const BUILD_NUMBER    = 170;
+export const BUILD_TIMESTAMP = "2026-05-23T15:25:07.000Z";
+export const BUILD_TOOLTIP   = "fix: fix tour tooltip overflow on mobile portrait — shift padding + po";

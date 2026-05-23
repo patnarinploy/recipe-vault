@@ -1,5 +1,12 @@
 [
   {
+    "build": 170,
+    "timestamp": "2026-05-23T15:25:07.000Z",
+    "subject": "fix: fix tour tooltip overflow on mobile portrait — shift padding + po",
+    "hash": "e99cffc",
+    "category": "fix"
+  },
+  {
     "build": 169,
     "timestamp": "2026-05-23T15:17:09.000Z",
     "subject": "tweak: slow theme transition circle — 0.7s material easing (was 0.45s ",
