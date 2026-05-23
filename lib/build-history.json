@@ -1,5 +1,12 @@
 [
   {
+    "build": 167,
+    "timestamp": "2026-05-23T14:59:55.000Z",
+    "subject": "revert: theme transition duration back to 0.45s",
+    "hash": "f3f7933",
+    "category": "internal"
+  },
+  {
     "build": 166,
     "timestamp": "2026-05-23T14:56:18.000Z",
     "subject": "test: theme transition duration 1s (was 0.45s)",
