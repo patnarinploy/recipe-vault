@@ -1,5 +1,12 @@
 [
   {
+    "build": 160,
+    "timestamp": "2026-05-23T10:43:37.000Z",
+    "subject": "feat: replace bullet list in tour step 7 with FAB option swiper",
+    "hash": "b8deb20",
+    "category": "feat"
+  },
+  {
     "build": 159,
     "timestamp": "2026-05-23T09:10:57.000Z",
     "subject": "fix: single flip in tour + always-warm inside-cover page",
