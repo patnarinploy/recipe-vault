@@ -712,7 +712,8 @@ PageCoverFront.displayName = "PageCoverFront";
 
 const PageInsideCover = forwardRef<HTMLDivElement, object>((_p, ref) => (
   <div ref={ref} data-density="hard">
-    <div className="w-full h-full book-paper" style={{ boxShadow: PAGE_BORDER, borderRadius: 2 }} />
+    {/* Always warm paper — inside-cover is physical paper, not UI chrome, so dark-mode doesn't apply */}
+    <div className="w-full h-full" style={{ backgroundColor: "#fffbf2", boxShadow: PAGE_BORDER, borderRadius: 2 }} />
   </div>
 ));
 PageInsideCover.displayName = "PageInsideCover";
