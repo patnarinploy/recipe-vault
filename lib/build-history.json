@@ -1,5 +1,12 @@
 [
   {
+    "build": 184,
+    "timestamp": "2026-05-23T21:04:58.000Z",
+    "subject": "feat: add follow system foundation — WriterCard follow button, locale ",
+    "hash": "784d195",
+    "category": "feat"
+  },
+  {
     "build": 183,
     "timestamp": "2026-05-23T20:05:34.000Z",
     "subject": "chore: add author_info and author_user_id fields to Recipe type",
