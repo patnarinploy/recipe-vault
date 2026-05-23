@@ -1,5 +1,12 @@
 [
   {
+    "build": 169,
+    "timestamp": "2026-05-23T15:17:09.000Z",
+    "subject": "tweak: slow theme transition circle — 0.7s material easing (was 0.45s ",
+    "hash": "ef6836b",
+    "category": "internal"
+  },
+  {
     "build": 168,
     "timestamp": "2026-05-23T15:10:28.000Z",
     "subject": "revert: restore 0.45s theme transition (back to #165 state)",
