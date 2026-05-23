@@ -1,9 +1,8 @@
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck, SlidersHorizontal, Map } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
-import TourResetPanel from "@/components/TourResetPanel";
 import type { WriterInfo } from "@/lib/types";
 import { getServerLocale } from "@/lib/locale/server";
 
@@ -51,8 +50,9 @@ export default async function SettingsPage() {
     {
       label: s.sections.usage,
       items: [
-        { href: "/settings/reading",    icon: BookOpen, label: s.display.label,     sub: s.display.sub },
-        { href: "/settings/presets",  icon: SlidersHorizontal, label: s.dropdowns.label, sub: s.dropdowns.sub },
+        { href: "/settings/reading", icon: BookOpen,          label: s.display.label,       sub: s.display.sub },
+        { href: "/settings/presets", icon: SlidersHorizontal, label: s.dropdowns.label,     sub: s.dropdowns.sub },
+        { href: "/settings/tours",   icon: Map,               label: s.tours.sectionLabel,  sub: s.tours.sectionSub },
       ],
     },
   ];
@@ -108,8 +108,6 @@ export default async function SettingsPage() {
           </div>
         ))}
       </div>
-
-      <TourResetPanel />
 
     </div>
   );
