@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 171;
-export const BUILD_TIMESTAMP = "2026-05-23T15:56:37.000Z";
-export const BUILD_TOOLTIP   = "fix: tour — 5 real steps (drop auto-flip from count), portrait uses bo";
+export const BUILD_NUMBER    = 172;
+export const BUILD_TIMESTAMP = "2026-05-23T16:03:23.000Z";
+export const BUILD_TOOLTIP   = "fix: tour steps 1&2 use placement auto — tooltip overlaps spotlight an";

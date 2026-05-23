@@ -1,5 +1,12 @@
 [
   {
+    "build": 172,
+    "timestamp": "2026-05-23T16:03:23.000Z",
+    "subject": "fix: tour steps 1&2 use placement auto — tooltip overlaps spotlight an",
+    "hash": "5c92cc0",
+    "category": "fix"
+  },
+  {
     "build": 171,
     "timestamp": "2026-05-23T15:56:37.000Z",
     "subject": "fix: tour — 5 real steps (drop auto-flip from count), portrait uses bo",
