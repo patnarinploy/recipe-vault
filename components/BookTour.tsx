@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 
-// ─── FAB option swiper shown inside step 7 ───────────────────────────────────
+// ─── FAB option swiper shown inside step 5 ───────────────────────────────────
 
 type FabSlide = { icon: React.ReactNode; label: string; desc: string };
 
@@ -198,28 +198,14 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
   const isTh = locale === "th";
   const [stepIndex, setStepIndex] = useState(0);
 
-  // Reset step when tour (re-)starts
   useEffect(() => {
     if (run) setStepIndex(0);
   }, [run]);
 
-  // Auto-advance steps 2 (flip forward) and 4 (flip back)
-  useEffect(() => {
-    if (!run) return;
-    if (stepIndex === 2) {
-      onFlipNext();
-      const t = setTimeout(() => setStepIndex(3), 1600);
-      return () => clearTimeout(t);
-    }
-    if (stepIndex === 4) {
-      onFlipPrev();
-      const t = setTimeout(() => setStepIndex(5), 1600);
-      return () => clearTimeout(t);
-    }
-  }, [stepIndex, run, onFlipNext, onFlipPrev]);
-
+  // 5 real steps — auto-flip transitions are handled in handleEvent,
+  // so they no longer appear as numbered steps in the progress counter.
   const steps: Step[] = [
-    // 0 — Welcome
+    // 0 — Welcome (no progress shown)
     {
       target: "body",
       placement: "center",
@@ -231,10 +217,12 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       buttons: ["skip", "primary"],
       overlayClickAction: false,
     },
-    // 1 — Right half: tap to go forward
+
+    // 1 — Right half: tap to go forward (2/5)
+    // Portrait: target body so the spotlight doesn't cover the full screen with no room for tooltip
     {
-      target: "[data-tour='tour-right-half']",
-      placement: portrait ? "bottom" : "left",
+      target: portrait ? "body" : "[data-tour='tour-right-half']",
+      placement: portrait ? "center" : "left",
       title: isTh
         ? (portrait ? "กดฝั่งขวาเพื่อไปหน้าถัดไป" : "หน้าขวา — ไปหน้าถัดไป")
         : (portrait ? "Tap right to go forward" : "Right page — next page"),
@@ -246,22 +234,12 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       overlayClickAction: false,
       showProgress: true,
     },
-    // 2 — Auto: flip forward (no buttons, advances via useEffect)
+
+    // 2 — Left half: tap to go back (3/5)
+    // Book is already flipped forward when this step shows (flip happens on leaving step 1).
     {
-      target: "body",
-      placement: "center",
-      title: isTh ? "⏩ กำลังพลิกหน้า..." : "⏩ Flipping forward...",
-      content: isTh
-        ? "หนังสือกำลังพลิกไปหน้าถัดไปให้อัตโนมัติ"
-        : "The book is automatically flipping to the next page.",
-      skipBeacon: true,
-      buttons: [],
-      overlayClickAction: false,
-    },
-    // 3 — Left half: tap to go back
-    {
-      target: "[data-tour='tour-left-half']",
-      placement: portrait ? "bottom" : "right",
+      target: portrait ? "body" : "[data-tour='tour-left-half']",
+      placement: portrait ? "center" : "right",
       title: isTh
         ? (portrait ? "กดฝั่งซ้ายเพื่อย้อนกลับ" : "หน้าซ้าย — ย้อนกลับ")
         : (portrait ? "Tap left to go back" : "Left page — previous page"),
@@ -273,19 +251,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       overlayClickAction: false,
       showProgress: true,
     },
-    // 4 — Auto: flip back (no buttons, advances via useEffect)
-    {
-      target: "body",
-      placement: "center",
-      title: isTh ? "⏪ กำลังย้อนกลับ..." : "⏪ Going back...",
-      content: isTh
-        ? "หนังสือกำลังย้อนกลับไปหน้าก่อนหน้าให้อัตโนมัติ"
-        : "The book is automatically flipping back to the previous page.",
-      skipBeacon: true,
-      buttons: [],
-      overlayClickAction: false,
-    },
-    // 5 — FAB button (circular spotlight)
+
+    // 3 — FAB button (4/5)
     {
       target: "[data-tour='fab-menu']",
       placement: "top",
@@ -300,7 +267,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       overlayClickAction: false,
       showProgress: true,
     },
-    // 6 — FAB dropdown: swiper walkthrough (last step)
+
+    // 4 — FAB dropdown: swiper walkthrough (5/5)
     {
       target: "[data-tour='fab-dropdown']",
       placement: portrait ? "top" : "left",
@@ -325,21 +293,26 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     if (type !== EVENTS.STEP_AFTER) return;
 
     if (action === ACTIONS.NEXT || action === ACTIONS.CLOSE) {
-      // Auto-steps (2, 4) advance themselves via useEffect — don't double-advance
-      if (index === 2 || index === 4) return;
-
-      if (index === 5) {
-        // Open FAB dropdown before advancing to step 6
-        onOpenFab();
-        setTimeout(() => setStepIndex(6), 200);
+      if (index === 1) {
+        // Leaving right-half → flip forward, then show left-half after animation
+        onFlipNext();
+        setTimeout(() => setStepIndex(2), 1600);
         return;
       }
-
+      if (index === 2) {
+        // Leaving left-half → flip back, then show FAB button after animation
+        onFlipPrev();
+        setTimeout(() => setStepIndex(3), 1600);
+        return;
+      }
+      if (index === 3) {
+        // Open FAB dropdown before showing its step
+        onOpenFab();
+        setTimeout(() => setStepIndex(4), 200);
+        return;
+      }
       setStepIndex(i => i + 1);
     } else if (action === ACTIONS.PREV) {
-      // Skip over auto-steps when going backward
-      if (index === 3) { setStepIndex(1); return; } // step 3 → skip step 2 → land on step 1
-      if (index === 5) { setStepIndex(3); return; } // step 5 → skip step 4 → land on step 3
       setStepIndex(i => Math.max(0, i - 1));
     } else if (action === ACTIONS.SKIP) {
       setStepIndex(0);
@@ -354,6 +327,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       stepIndex={stepIndex}
       continuous
       onEvent={handleEvent}
+      floatingOptions={{ shiftOptions: { padding: 16 } }}
       options={{
         primaryColor: "#f97316",
         zIndex: 10000,
@@ -361,10 +335,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         skipScroll: true,
         blockTargetInteraction: true,
       }}
-      floatingOptions={{ shiftOptions: { padding: 16 } }}
       styles={{
         spotlight: {
-          // SVG stroke — orange ring so spotlight is visible on any background/theme
           stroke: "rgba(249, 115, 22, 0.85)",
           strokeWidth: 3,
         },
