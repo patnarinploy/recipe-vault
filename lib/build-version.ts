@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 188;
-export const BUILD_TIMESTAMP = "2026-05-23T22:03:29.000Z";
-export const BUILD_TOOLTIP   = "fix: always show follower count on WriterCard";
+export const BUILD_NUMBER    = 189;
+export const BUILD_TIMESTAMP = "2026-05-23T22:06:16.000Z";
+export const BUILD_TOOLTIP   = "fix: status dot border matches avatar ring in dark mode";

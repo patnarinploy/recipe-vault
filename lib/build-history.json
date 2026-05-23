@@ -1,5 +1,12 @@
 [
   {
+    "build": 189,
+    "timestamp": "2026-05-23T22:06:16.000Z",
+    "subject": "fix: status dot border matches avatar ring in dark mode",
+    "hash": "2593b64",
+    "category": "fix"
+  },
+  {
     "build": 188,
     "timestamp": "2026-05-23T22:03:29.000Z",
     "subject": "fix: always show follower count on WriterCard",
