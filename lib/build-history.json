@@ -1,5 +1,12 @@
 [
   {
+    "build": 151,
+    "timestamp": "2026-05-23T00:05:49.000Z",
+    "subject": "Three UX fixes: close animation, deferred category, iOS zoom",
+    "hash": "a941d06",
+    "category": "internal"
+  },
+  {
     "build": 150,
     "timestamp": "2026-05-22T23:51:56.000Z",
     "subject": "Inline store edit & expand animations for all add/edit forms",
