@@ -1,5 +1,12 @@
 [
   {
+    "build": 182,
+    "timestamp": "2026-05-23T20:05:08.000Z",
+    "subject": "feat: make author name clickable in favorites book",
+    "hash": "cc539f8",
+    "category": "feat"
+  },
+  {
     "build": 181,
     "timestamp": "2026-05-23T19:44:23.000Z",
     "subject": "fix: WriterCard shows online status in book reader + favorites show reci",
