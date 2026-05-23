@@ -1,5 +1,12 @@
 [
   {
+    "build": 171,
+    "timestamp": "2026-05-23T15:56:37.000Z",
+    "subject": "fix: tour — 5 real steps (drop auto-flip from count), portrait uses bo",
+    "hash": "b96e1af",
+    "category": "fix"
+  },
+  {
     "build": 170,
     "timestamp": "2026-05-23T15:25:07.000Z",
     "subject": "fix: fix tour tooltip overflow on mobile portrait — shift padding + po",
