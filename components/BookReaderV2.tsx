@@ -1391,6 +1391,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [dataVersion, setDataVersion] = useState(0);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [isLoggedIn,  setIsLoggedIn]  = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [flipType,    setFlipType]    = useState<"soft" | "hard">("soft");
   const [authorName,  setAuthorName]  = useState("");
   const [writerInfo,       setWriterInfo]       = useState<WriterInfo | null>(null);
@@ -1453,6 +1454,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     // Check auth (needed for shopping button visibility)
     const { data: { user: authUser } } = await sb.auth.getUser();
     setIsLoggedIn(!!authUser);
+    if (authUser) {
+      const { data: meUser } = await sb.from("users").select("id").eq("auth_id", authUser.id).maybeSingle();
+      setCurrentUserId(meUser?.id ?? null);
+    } else {
+      setCurrentUserId(null);
+    }
 
     // ── Favorites virtual book ──────────────────────────────────────
     if (isFavBook) {
@@ -1502,6 +1509,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
             role: (r as any).books.users.role ?? undefined,
             last_seen: (r as any).books.users.last_seen ?? null,
             created_at: (r as any).books.users.created_at ?? undefined,
+            user_id: (r as any).books?.user_id ?? undefined,
           } : undefined,
           author_user_id: (r as any).books?.user_id ?? undefined,
           preset_categories: favUserCats.find(c => c.id === r.category_id) ?? null,
@@ -1543,25 +1551,39 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? "");
       if (u) {
-        setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined, last_seen: u.last_seen ?? null, created_at: u.created_at ?? undefined, status: u.status ?? undefined });
-        setWriterStatsLoading(true);
         const authorId: string = (bk.data as any).user_id;
+        setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined, last_seen: u.last_seen ?? null, created_at: u.created_at ?? undefined, status: u.status ?? undefined, user_id: authorId });
+        setWriterStatsLoading(true);
         void (async () => {
           try {
             const sc = createClient();
+            const { data: { user: currentAuthUser } } = await sc.auth.getUser();
+            let currentUserDbId: string | null = null;
+            if (currentAuthUser) {
+              const { data: cuRow } = await sc.from("users").select("id").eq("auth_id", currentAuthUser.id).maybeSingle();
+              currentUserDbId = cuRow?.id ?? null;
+            }
             const { data: authorBooks } = await sc.from("books").select("id").eq("user_id", authorId);
             const bkIds = (authorBooks ?? []).map((b: { id: string }) => b.id);
-            const [recipeRes, publicRes] = bkIds.length
-              ? await Promise.all([
-                  sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
-                  sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
-                ])
-              : [{ count: 0 }, { count: 0 }];
+            const [recipeRes, publicRes, followerRes, followStatusRes] = await Promise.all([
+              bkIds.length
+                ? sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds)
+                : Promise.resolve({ count: 0 as number | null }),
+              bkIds.length
+                ? sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true)
+                : Promise.resolve({ count: 0 as number | null }),
+              sc.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", authorId),
+              currentUserDbId
+                ? sc.from("user_follows").select("id").eq("follower_id", currentUserDbId).eq("following_id", authorId).maybeSingle()
+                : Promise.resolve({ data: null }),
+            ] as const);
             setWriterInfo(prev => prev ? {
               ...prev,
               book_count: bkIds.length,
-              recipe_count: recipeRes.count ?? 0,
-              public_count: publicRes.count ?? 0,
+              recipe_count: (recipeRes as any).count ?? 0,
+              public_count: (publicRes as any).count ?? 0,
+              follower_count: (followerRes as any).count ?? 0,
+              is_following: !!(followStatusRes as any)?.data,
             } : null);
           } catch {}
           setWriterStatsLoading(false);
@@ -1684,23 +1706,31 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           const sc = createClient();
           const { data: authorBooks } = await sc.from("books").select("id").eq("user_id", authorUserId);
           const bkIds = (authorBooks ?? []).map((b: { id: string }) => b.id);
-          const [recipeRes, publicRes] = bkIds.length
-            ? await Promise.all([
-                sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
-                sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
-              ])
-            : [{ count: 0 }, { count: 0 }];
+          const [recipeRes, publicRes, followerRes, followStatusRes] = await Promise.all([
+            bkIds.length
+              ? sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds)
+              : Promise.resolve({ count: 0 as number | null }),
+            bkIds.length
+              ? sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true)
+              : Promise.resolve({ count: 0 as number | null }),
+            sc.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", authorUserId),
+            currentUserId
+              ? sc.from("user_follows").select("id").eq("follower_id", currentUserId).eq("following_id", authorUserId).maybeSingle()
+              : Promise.resolve({ data: null }),
+          ] as const);
           setWriterInfo(prev => prev ? {
             ...prev,
             book_count: bkIds.length,
-            recipe_count: recipeRes.count ?? 0,
-            public_count: publicRes.count ?? 0,
+            recipe_count: (recipeRes as any).count ?? 0,
+            public_count: (publicRes as any).count ?? 0,
+            follower_count: (followerRes as any).count ?? 0,
+            is_following: !!(followStatusRes as any)?.data,
           } : null);
         } catch {}
         setWriterStatsLoading(false);
       })();
     }
-  }, []);
+  }, [currentUserId]);
 
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
   useEffect(() => {
@@ -2120,7 +2150,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       {writerInfo && (
         <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-[30rem]">
           <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerInfo} statsLoading={writerStatsLoading} onClose={() => setWriterCardOpen(false)} />
+            <WriterCard info={writerInfo} statsLoading={writerStatsLoading} onClose={() => setWriterCardOpen(false)} currentUserId={currentUserId} />
           </div>
         </Modal>
       )}

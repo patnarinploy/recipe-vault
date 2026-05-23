@@ -29,18 +29,19 @@ interface BookWithCounts extends Book {
 interface Props {
   myBooks: BookWithCounts[];
   publicBooks: BookWithCounts[];
+  followingBooks: BookWithCounts[];
   currentUser: WriterInfo | null;
   favoriteCount: number;
   shoppingCount: number;
 }
 
-export default function Library({ myBooks, publicBooks, currentUser, favoriteCount, shoppingCount }: Props) {
+export default function Library({ myBooks, publicBooks, followingBooks, currentUser, favoriteCount, shoppingCount }: Props) {
   const { t } = useLocale();
   const lib = t.library;
   const router = useRouter();
 
   const isGuest = !currentUser;
-  const [tab, setTab] = useState<"mine" | "public">(isGuest ? "public" : "mine");
+  const [tab, setTab] = useState<"mine" | "public" | "following">(isGuest ? "public" : "mine");
 
   // When the user logs out, props change but the component stays mounted — reset to public tab
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
     action();
   }
 
-  const rawBooks = tab === "mine" ? myBooks : publicBooks;
+  const rawBooks = tab === "mine" ? myBooks : tab === "following" ? followingBooks : publicBooks;
 
   // Client-side search filter
   const books = rawBooks.filter(b => {
@@ -106,11 +107,13 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
         <div>
           <p className="text-[11px] tracking-[0.35em] text-muted uppercase mb-3">{lib.subtitle}</p>
           <h1 className="text-3xl font-bold text-foreground">
-            {tab === "mine" ? lib.myShelfTpl.replace("{name}", displayName) : lib.publicTitle}
+            {tab === "mine" ? lib.myShelfTpl.replace("{name}", displayName) : tab === "following" ? lib.followingBooksTitle : lib.publicTitle}
           </h1>
           <p className="text-sm text-secondary mt-1">
             {tab === "mine"
               ? `${myBooks.length} ${lib.totalBooks} · ${myBooks.reduce((a, b) => a + b.recipe_count, 0)} ${lib.totalRecipes}`
+              : tab === "following"
+              ? `${followingBooks.length} ${lib.totalBooks}`
               : `${publicBooks.length} ${lib.publicShared}`}
           </p>
         </div>
@@ -128,6 +131,12 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
           className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all ${tab === "public" ? "border-orange-500 text-orange-600" : "border-transparent text-muted hover:text-foreground"}`}>
           {lib.publicTab}
         </button>
+        {!isGuest && (
+          <button onClick={() => setTab("following")}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all ${tab === "following" ? "border-orange-500 text-orange-600" : "border-transparent text-muted hover:text-foreground"}`}>
+            {lib.followingTab}
+          </button>
+        )}
       </div>
 
       {/* Search bar */}
@@ -144,7 +153,7 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
               </button>
             )}
           </div>
-        ) : (
+        ) : tab === "following" ? null : (
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
             <input value={pubSearch} onChange={e => setPubSearch(e.target.value)}
@@ -234,6 +243,14 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
               <p className="text-sm text-muted">{lib.emptyPublicSubtitle}</p>
             </div>
           )}
+
+          {/* Following tab: not following anyone yet */}
+          {rawBooks.length === 0 && tab === "following" && (
+            <div className="text-center py-20">
+              <p className="text-secondary font-medium mb-1">{lib.followingEmpty}</p>
+              <p className="text-sm text-muted">{lib.followingEmptySub}</p>
+            </div>
+          )}
         </>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10 justify-items-center">
@@ -257,7 +274,7 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-secondary text-left line-clamp-1">{book.title}</p>
                     <p className="text-xs text-muted">
-                      {tab === "public" ? `${book.public_count} ${lib.publicSuffix}` : `${book.recipe_count} ${lib.recipeSuffix}`}
+                      {tab === "public" || tab === "following" ? `${book.public_count} ${lib.publicSuffix}` : `${book.recipe_count} ${lib.recipeSuffix}`}
                     </p>
                   </div>
 
@@ -356,7 +373,7 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
       <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-[30rem]">
         {writerCard && (
           <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerCard} onClose={() => setWriterCard(null)} />
+            <WriterCard info={writerCard} onClose={() => setWriterCard(null)} currentUserId={currentUser?.user_id} />
           </div>
         )}
       </Modal>

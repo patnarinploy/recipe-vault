@@ -66,23 +66,67 @@ async function BookLibraryData({ userId }: { userId: string | null }) {
   return { myBooks, publicBooks };
 }
 
+async function getFollowingBooks(userId: string): Promise<BookWithCounts[]> {
+  const supabase = await createClient();
+  // Get all users that userId follows
+  const { data: follows } = await supabase
+    .from("user_follows")
+    .select("following_id")
+    .eq("follower_id", userId);
+  const followingIds = (follows ?? []).map((f: { following_id: string }) => f.following_id);
+  if (followingIds.length === 0) return [];
+
+  // Get their public books
+  type PublicBookRaw = Book & { users: Omit<WriterInfo, "book_count" | "recipe_count" | "public_count"> };
+  const { data: booksRaw } = await supabase
+    .from("books")
+    .select("*, users(display_name, bio, avatar, role, last_seen, created_at)")
+    .in("user_id", followingIds)
+    .order("created_at", { ascending: false })
+    .returns<PublicBookRaw[]>();
+
+  if (!booksRaw || booksRaw.length === 0) return [];
+
+  // Count public recipes per book
+  const bookIds = booksRaw.map(b => b.id);
+  const { data: pubRecipes } = await supabase
+    .from("recipes")
+    .select("book_id")
+    .eq("is_public", true)
+    .in("book_id", bookIds)
+    .returns<{ book_id: string }[]>();
+
+  const result: BookWithCounts[] = [];
+  for (const b of booksRaw) {
+    const count = (pubRecipes ?? []).filter(r => r.book_id === b.id).length;
+    if (count === 0) continue; // only show books that have public recipes
+    const bookAuthor: WriterInfo | undefined = (b as any).users
+      ? { ...(b as any).users, user_id: (b as any).user_id }
+      : undefined;
+    const { users: _users, ...bookFields } = b as any;
+    result.push({ ...bookFields, recipe_count: count, public_count: count, bookAuthor } as BookWithCounts);
+  }
+  return result;
+}
+
 async function LibraryWithData({ userId, currentUser }: { userId: string | null; currentUser: WriterInfo | null }) {
-  const [{ myBooks, publicBooks }, favoriteCount, shoppingCount] = await Promise.all([
+  const [{ myBooks, publicBooks }, followingBooks, favoriteCount, shoppingCount] = await Promise.all([
     BookLibraryData({ userId }),
+    userId ? getFollowingBooks(userId) : Promise.resolve([]),
     userId ? getFavoriteCount() : Promise.resolve(0),
     userId ? getShoppingListCount() : Promise.resolve(0),
   ]);
   const enrichedUser: WriterInfo | null = currentUser
     ? { ...currentUser, book_count: myBooks.length, recipe_count: myBooks.reduce((s, b) => s + b.recipe_count, 0), public_count: myBooks.reduce((s, b) => s + b.public_count, 0) }
     : null;
-  return <Library myBooks={myBooks} publicBooks={publicBooks} currentUser={enrichedUser} favoriteCount={favoriteCount} shoppingCount={shoppingCount} />;
+  return <Library myBooks={myBooks} publicBooks={publicBooks} followingBooks={followingBooks} currentUser={enrichedUser} favoriteCount={favoriteCount} shoppingCount={shoppingCount} />;
 }
 
 export default async function HomePage() {
   const user = await getSession();
 
   const currentUser: WriterInfo | null = user
-    ? { display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role, last_seen: user.last_seen, created_at: user.created_at }
+    ? { display_name: user.display_name, bio: user.bio, avatar: user.avatar, role: user.role, last_seen: user.last_seen, created_at: user.created_at, user_id: user.id }
     : null;
 
   return (
