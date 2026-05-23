@@ -1,5 +1,12 @@
 [
   {
+    "build": 163,
+    "timestamp": "2026-05-23T12:14:07.000Z",
+    "subject": "feat: add recipe directly from shelf without opening book reader",
+    "hash": "eeec5d9",
+    "category": "feat"
+  },
+  {
     "build": 162,
     "timestamp": "2026-05-23T10:59:39.000Z",
     "subject": "feat: add touch swipe to FAB option swiper in tour step 7",
