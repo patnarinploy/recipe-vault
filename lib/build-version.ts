@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 164;
-export const BUILD_TIMESTAMP = "2026-05-23T13:37:30.000Z";
-export const BUILD_TOOLTIP   = "fix: stabilise Modal onClose ref to prevent double-click to dismiss";
+export const BUILD_NUMBER    = 165;
+export const BUILD_TIMESTAMP = "2026-05-23T14:51:53.000Z";
+export const BUILD_TOOLTIP   = "feat: theme transition circle originates from clicked button";
