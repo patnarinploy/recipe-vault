@@ -1,5 +1,12 @@
 [
   {
+    "build": 158,
+    "timestamp": "2026-05-23T08:50:22.000Z",
+    "subject": "fix: double-flip in 2-page tour to skip dark back-of-cover page",
+    "hash": "7c110d2",
+    "category": "fix"
+  },
+  {
     "build": 157,
     "timestamp": "2026-05-23T08:37:07.000Z",
     "subject": "Fix tour left-half dark in 2-page mode: pre-flip + orange SVG stroke",
