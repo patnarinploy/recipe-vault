@@ -1,5 +1,12 @@
 [
   {
+    "build": 194,
+    "timestamp": "2026-05-23T23:36:57.000Z",
+    "subject": "Add pin-list, playful todolist, and radial context menu effects",
+    "hash": "bfcd8d2",
+    "category": "feat"
+  },
+  {
     "build": 193,
     "timestamp": "2026-05-23T23:28:25.000Z",
     "subject": "Add animate-ui style animated UI components across the app",
