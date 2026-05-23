@@ -106,7 +106,7 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
       )}
 
       {/* Follower count */}
-      {followerCount > 0 && (
+      {!!info.user_id && (
         <p className="text-xs text-muted mb-3">
           {t.library.followerCount.replace("{n}", String(followerCount))}
         </p>
