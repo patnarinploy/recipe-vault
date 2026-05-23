@@ -16,6 +16,7 @@ import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp,
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import BookTour from "./BookTour";
+import { TOUR_KEY_BOOK_READER } from "./TourResetPanel";
 import { useLocale, type Dict } from "@/lib/locale";
 
 // ─── Colour helper ────────────────────────────────────────────────
@@ -1669,11 +1670,12 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     if (autoNewRecipe && !loading && book) setNewRecipeOpen(true);
   }, [autoNewRecipe, loading, book]);
 
-  // Product tour — show on first visit
+  // Product tour — show on first visit to this book (unless globally seen/skipped)
   useEffect(() => {
     if (!loading && book) {
-      const key = `rv_book_tour_${bookId}`;
-      if (!localStorage.getItem(key)) {
+      const perBookKey = `rv_book_tour_${bookId}`;
+      const alreadySeen = localStorage.getItem(perBookKey) || localStorage.getItem(TOUR_KEY_BOOK_READER);
+      if (!alreadySeen) {
         setTimeout(() => setTourRun(true), 800);
       }
     }
@@ -1683,6 +1685,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     setTourRun(false);
     setFabOpen(false);
     localStorage.setItem(`rv_book_tour_${bookId}`, "1");
+    localStorage.setItem(TOUR_KEY_BOOK_READER, "1");
   }
 
   // Close FAB menu on outside click (disabled during tour to avoid interference)

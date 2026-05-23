@@ -254,6 +254,16 @@ export const th = {
       countStores: "{n} ร้านค้า",
       storeLocationLabel: "พิกัด GPS (ไม่บังคับ)",
     },
+    tours: {
+      sectionLabel: "คำแนะนำการใช้งาน",
+      sectionSub: "จัดการบทแนะนำที่แสดงในแต่ละฟีเจอร์",
+      seen: "ดูแล้ว",
+      unseen: "ยังไม่ได้ดู",
+      bookReader: {
+        title: "บทแนะนำหนังสือสูตรอาหาร",
+        sub: "พลิกหน้า, ปุ่มตัวเลือก และฟีเจอร์ต่างๆ ในหนังสือ",
+      },
+    },
   },
   reading: {
     backTo: "ตั้งค่า",

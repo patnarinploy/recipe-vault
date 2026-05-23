@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, User, KeyRound, BookOpen, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import WriterCard from "@/components/WriterCard";
+import TourResetPanel from "@/components/TourResetPanel";
 import type { WriterInfo } from "@/lib/types";
 import { getServerLocale } from "@/lib/locale/server";
 
@@ -107,6 +108,8 @@ export default async function SettingsPage() {
           </div>
         ))}
       </div>
+
+      <TourResetPanel />
 
     </div>
   );

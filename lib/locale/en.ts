@@ -254,6 +254,16 @@ export const en = {
       countStores: "{n} stores",
       storeLocationLabel: "GPS coordinates (optional)",
     },
+    tours: {
+      sectionLabel: "Guides",
+      sectionSub: "Manage onboarding tours shown for each feature",
+      seen: "Seen",
+      unseen: "Not seen",
+      bookReader: {
+        title: "Recipe Book Tour",
+        sub: "Page flipping, options button, and book features",
+      },
+    },
   },
   reading: {
     backTo: "Settings",
