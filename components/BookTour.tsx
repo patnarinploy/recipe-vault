@@ -197,6 +197,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
   const { locale } = useLocale();
   const isTh = locale === "th";
   const [stepIndex, setStepIndex] = useState(0);
+  const [flipMsg, setFlipMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (run) setStepIndex(0);
@@ -223,7 +224,6 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       target: "[data-tour='tour-right-half']",
       placement: "auto",
       offset: -140,
-      floatingOptions: { hideArrow: true },
       title: isTh
         ? (portrait ? "กดฝั่งขวาเพื่อไปหน้าถัดไป" : "หน้าขวา — ไปหน้าถัดไป")
         : (portrait ? "Tap right to go forward" : "Right page — next page"),
@@ -242,7 +242,6 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       target: "[data-tour='tour-left-half']",
       placement: "auto",
       offset: -140,
-      floatingOptions: { hideArrow: true },
       title: isTh
         ? (portrait ? "กดฝั่งซ้ายเพื่อย้อนกลับ" : "หน้าซ้าย — ย้อนกลับ")
         : (portrait ? "Tap left to go back" : "Left page — previous page"),
@@ -289,6 +288,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setStepIndex(0);
+      setFlipMsg(null);
       onFinish();
       return;
     }
@@ -297,15 +297,15 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
 
     if (action === ACTIONS.NEXT || action === ACTIONS.CLOSE) {
       if (index === 1) {
-        // Leaving right-half → flip forward, then show left-half after animation
         onFlipNext();
-        setTimeout(() => setStepIndex(2), 1600);
+        setFlipMsg(isTh ? "⏩ กำลังพลิกหน้า..." : "⏩ Flipping forward...");
+        setTimeout(() => { setFlipMsg(null); setStepIndex(2); }, 1600);
         return;
       }
       if (index === 2) {
-        // Leaving left-half → flip back, then show FAB button after animation
         onFlipPrev();
-        setTimeout(() => setStepIndex(3), 1600);
+        setFlipMsg(isTh ? "⏪ กำลังย้อนกลับ..." : "⏪ Going back...");
+        setTimeout(() => { setFlipMsg(null); setStepIndex(3); }, 1600);
         return;
       }
       if (index === 3) {
@@ -324,7 +324,25 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
   }
 
   return (
-    <Joyride
+    <>
+      {/* Flip transition notification — shown during 1.6s page-flip animation, not counted as a step */}
+      {flipMsg && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10001,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.55)",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 16, padding: "20px 28px",
+            textAlign: "center", maxWidth: 280,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          }}>
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#1c1917", margin: 0 }}>{flipMsg}</p>
+          </div>
+        </div>
+      )}
+      <Joyride
       steps={steps}
       run={run}
       stepIndex={stepIndex}
@@ -369,5 +387,6 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         skip: isTh ? "ข้ามไป" : "Skip",
       }}
     />
+    </>
   );
 }
