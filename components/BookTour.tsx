@@ -23,20 +23,31 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     if (run) setStepIndex(0);
   }, [run]);
 
-  // Auto-advance steps 2 (flip forward) and 4 (flip back)
+  // Auto-advance steps 2 (flip forward) and 4 (flip back).
+  // In 2-page landscape mode (!portrait), flip TWICE to skip the dark back-of-cover verso page.
   useEffect(() => {
     if (!run) return;
     if (stepIndex === 2) {
       onFlipNext();
+      if (!portrait) {
+        const t1 = setTimeout(() => onFlipNext(), 850);
+        const t2 = setTimeout(() => setStepIndex(3), 1900);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+      }
       const t = setTimeout(() => setStepIndex(3), 1600);
       return () => clearTimeout(t);
     }
     if (stepIndex === 4) {
       onFlipPrev();
+      if (!portrait) {
+        const t1 = setTimeout(() => onFlipPrev(), 850);
+        const t2 = setTimeout(() => setStepIndex(5), 1900);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+      }
       const t = setTimeout(() => setStepIndex(5), 1600);
       return () => clearTimeout(t);
     }
-  }, [stepIndex, run, onFlipNext, onFlipPrev]);
+  }, [stepIndex, run, portrait, onFlipNext, onFlipPrev]);
 
   const steps: Step[] = [
     // 0 — Welcome
