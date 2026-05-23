@@ -1,5 +1,12 @@
 [
   {
+    "build": 153,
+    "timestamp": "2026-05-23T07:29:07.000Z",
+    "subject": "Add Tour Guides panel to Settings page",
+    "hash": "6ed8091",
+    "category": "feat"
+  },
+  {
     "build": 152,
     "timestamp": "2026-05-23T07:03:46.000Z",
     "subject": "Redesign product tour: 7-step flow with auto page flip and FAB walkthrou",
