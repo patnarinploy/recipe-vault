@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 177;
-export const BUILD_TIMESTAMP = "2026-05-23T17:43:13.000Z";
-export const BUILD_TOOLTIP   = "fix: tour last step uses placement auto — fits small screens like iPho";
+export const BUILD_NUMBER    = 178;
+export const BUILD_TIMESTAMP = "2026-05-23T18:10:29.000Z";
+export const BUILD_TOOLTIP   = "fix: tour last step negative offset — tooltip overlaps FAB dropdown sp";

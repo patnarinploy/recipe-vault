@@ -1,5 +1,12 @@
 [
   {
+    "build": 178,
+    "timestamp": "2026-05-23T18:10:29.000Z",
+    "subject": "fix: tour last step negative offset — tooltip overlaps FAB dropdown sp",
+    "hash": "ea3ec48",
+    "category": "fix"
+  },
+  {
     "build": 177,
     "timestamp": "2026-05-23T17:43:13.000Z",
     "subject": "fix: tour last step uses placement auto — fits small screens like iPho",
