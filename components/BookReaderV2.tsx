@@ -1416,6 +1416,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
   const [currentPage, setCurrentPage] = useState(0);
 
   const [tourRun, setTourRun] = useState(false);
+  const [tourPending, setTourPending] = useState(false);
 
   // FAB
   const [fabOpen,         setFabOpen]         = useState(false);
@@ -1676,7 +1677,8 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const perBookKey = `rv_book_tour_${bookId}`;
       const alreadySeen = localStorage.getItem(perBookKey) || localStorage.getItem(TOUR_KEY_BOOK_READER);
       if (!alreadySeen) {
-        setTimeout(() => setTourRun(true), 800);
+        setTourPending(true);
+        setTimeout(() => { setTourPending(false); setTourRun(true); }, 800);
       }
     }
   }, [loading, book, bookId]);
@@ -1881,6 +1883,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         {/* Tour navigation target overlays — left/right halves for spotlight highlighting.
             zIndex 25 puts them above flipbook pages (startZIndex=20) so Joyride can
             reliably measure their bounding rects; pointer-events none keeps book interactive. */}
+        {/* Block all book interactions while tour is pending (before Joyride overlay takes over) */}
+        {tourPending && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 50, cursor: "default" }}
+               onPointerDown={(e) => e.stopPropagation()}
+               onClick={(e) => e.stopPropagation()} />
+        )}
+
         <div data-tour="tour-left-half"
              style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: "50%", zIndex: 25, pointerEvents: "none" }} />
         <div data-tour="tour-right-half"
