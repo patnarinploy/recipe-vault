@@ -1479,7 +1479,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         return;
       }
       const [recipesRes, ingRes] = await Promise.all([
-        sb.from("recipes").select("*, books(users(display_name))").in("id", favIds),
+        sb.from("recipes").select("*, books(user_id, users(display_name, bio, avatar, role, last_seen, created_at))").in("id", favIds),
         sb.from("recipe_ingredients").select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
       ]);
       const ingByRecipe = new Map<string, DbIngredient[]>();
@@ -1495,6 +1495,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         .map(r => ({
           ...r,
           author_name: (r as any).books?.users?.display_name ?? undefined,
+          author_info: (r as any).books?.users ? {
+            display_name: (r as any).books.users.display_name ?? null,
+            bio: (r as any).books.users.bio ?? null,
+            avatar: (r as any).books.users.avatar ?? null,
+            role: (r as any).books.users.role ?? undefined,
+            last_seen: (r as any).books.users.last_seen ?? null,
+            created_at: (r as any).books.users.created_at ?? undefined,
+          } : undefined,
+          author_user_id: (r as any).books?.user_id ?? undefined,
           preset_categories: favUserCats.find(c => c.id === r.category_id) ?? null,
           ingredient_rows: ingByRecipe.get(r.id) ?? [],
         }));
@@ -1662,6 +1671,37 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     toast.success(res.favorited ? t.library.favoriteAdded : t.library.favoriteRemoved);
   }, [isFavBook, t.library.favoriteAdded, t.library.favoriteRemoved]);
 
+  const handleFavAuthorClick = useCallback((recipe: Recipe) => {
+    if (!recipe.author_info) return;
+    setWriterInfo(recipe.author_info);
+    setWriterStatsLoading(false);
+    setWriterCardOpen(true);
+    const authorUserId = recipe.author_user_id;
+    if (authorUserId) {
+      setWriterStatsLoading(true);
+      void (async () => {
+        try {
+          const sc = createClient();
+          const { data: authorBooks } = await sc.from("books").select("id").eq("user_id", authorUserId);
+          const bkIds = (authorBooks ?? []).map((b: { id: string }) => b.id);
+          const [recipeRes, publicRes] = bkIds.length
+            ? await Promise.all([
+                sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds),
+                sc.from("recipes").select("id", { count: "exact", head: true }).in("book_id", bkIds).eq("is_public", true),
+              ])
+            : [{ count: 0 }, { count: 0 }];
+          setWriterInfo(prev => prev ? {
+            ...prev,
+            book_count: bkIds.length,
+            recipe_count: recipeRes.count ?? 0,
+            public_count: publicRes.count ?? 0,
+          } : null);
+        } catch {}
+        setWriterStatsLoading(false);
+      })();
+    }
+  }, []);
+
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
   useEffect(() => {
     if (currentPage >= slots.length) setCurrentPage(0);
@@ -1807,7 +1847,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                          onToggleFavorite={handleToggleFavorite}
                          favoriteLabel={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "") ? t.library.favoriteRemove : t.library.favoriteAdd}
                          authorName={isFavBook ? (localizedRecipes[slot.recipeIdx]?.author_name ?? undefined) : authorName}
-                         onAuthorClick={!isFavBook && writerInfo ? () => setWriterCardOpen(true) : undefined} />
+                         onAuthorClick={isFavBook
+                           ? (localizedRecipes[slot.recipeIdx]?.author_info ? () => handleFavAuthorClick(localizedRecipes[slot.recipeIdx]) : undefined)
+                           : (writerInfo ? () => setWriterCardOpen(true) : undefined)} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
