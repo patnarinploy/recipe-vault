@@ -1,5 +1,12 @@
 [
   {
+    "build": 161,
+    "timestamp": "2026-05-23T10:51:07.000Z",
+    "subject": "fix: move swiper arrows to flank body content, dots below",
+    "hash": "1145243",
+    "category": "fix"
+  },
+  {
     "build": 160,
     "timestamp": "2026-05-23T10:43:37.000Z",
     "subject": "feat: replace bullet list in tour step 7 with FAB option swiper",

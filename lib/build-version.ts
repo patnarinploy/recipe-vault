@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 160;
-export const BUILD_TIMESTAMP = "2026-05-23T10:43:37.000Z";
-export const BUILD_TOOLTIP   = "feat: replace bullet list in tour step 7 with FAB option swiper";
+export const BUILD_NUMBER    = 161;
+export const BUILD_TIMESTAMP = "2026-05-23T10:51:07.000Z";
+export const BUILD_TOOLTIP   = "fix: move swiper arrows to flank body content, dots below";
