@@ -1,5 +1,12 @@
 [
   {
+    "build": 173,
+    "timestamp": "2026-05-23T16:18:49.000Z",
+    "subject": "fix: tour steps 1&2 use negative offset to place tooltip inside spotligh",
+    "hash": "bc6fb3c",
+    "category": "fix"
+  },
+  {
     "build": 172,
     "timestamp": "2026-05-23T16:03:23.000Z",
     "subject": "fix: tour steps 1&2 use placement auto — tooltip overlaps spotlight an",
