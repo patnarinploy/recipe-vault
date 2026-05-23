@@ -149,7 +149,15 @@ function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "
         {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         {s.ingredients} ({rows.length})
       </button>
+      <AnimatePresence initial={false}>
       {open && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 380, damping: 38 }}
+          style={{ overflow: "hidden" }}
+        >
         <ul className="space-y-1">
           {rows.map(ing => {
             const unit = ing.preset_units
@@ -169,7 +177,9 @@ function IngredientList({ rows, locale, qty }: { rows: DbIngredient[]; locale: "
             );
           })}
         </ul>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -241,9 +251,9 @@ function RecipeCard({
 // ── StorePicker — multi-select bottom drawer ──────────────────────
 
 function StorePicker({
-  open, onClose, ingredientName, ingredientKey, stores, currentStoreIds, onSave,
+  onClose, ingredientName, ingredientKey, stores, currentStoreIds, onSave,
 }: {
-  open: boolean;
+  open?: boolean;
   onClose: () => void;
   ingredientName: string;
   ingredientKey: string;
@@ -267,12 +277,22 @@ function StorePicker({
     onClose();
   };
 
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col justify-end sm:items-center sm:justify-center sm:p-4" onMouseDown={handleClose}>
+    <motion.div
+      className="fixed inset-0 z-[9999] flex flex-col justify-end sm:items-center sm:justify-center sm:p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      onMouseDown={handleClose}
+    >
       <div className="absolute inset-0 bg-black/40" />
-      <div
-        className="relative bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[75vh] w-full sm:max-w-sm flex flex-col anim-scale-in"
+      <motion.div
+        className="relative bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[75vh] w-full sm:max-w-sm flex flex-col"
+        initial={{ y: "100%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 38 }}
         onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -330,8 +350,8 @@ function StorePicker({
               : s.doneBtn.replace("{n}", String(selected.size))}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -865,8 +885,10 @@ export default function ShoppingClient({
           locale={locale} onStoresChange={setStores} />
       )}
 
+      <AnimatePresence>
       {picker && (
         <StorePicker
+          key="store-picker"
           open
           onClose={() => setPicker(null)}
           ingredientName={picker.name}
@@ -876,6 +898,7 @@ export default function ShoppingClient({
           onSave={handleStoreAssign}
         />
       )}
+      </AnimatePresence>
     </div>
   );
 }

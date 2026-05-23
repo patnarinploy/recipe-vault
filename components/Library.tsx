@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -140,21 +141,33 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
       </div>
 
       {/* Tab */}
-      <div className="flex gap-2 mb-4 border-b border-outline">
+      <div className="flex mb-4 border-b border-outline">
         {!isGuest && (
           <button onClick={() => setTab("mine")}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all ${tab === "mine" ? "border-orange-500 text-orange-600" : "border-transparent text-muted hover:text-foreground"}`}>
+            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "mine" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
             {lib.myTab}
+            {tab === "mine" && (
+              <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }} />
+            )}
           </button>
         )}
         <button onClick={() => setTab("public")}
-          className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all ${tab === "public" ? "border-orange-500 text-orange-600" : "border-transparent text-muted hover:text-foreground"}`}>
+          className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "public" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
           {lib.publicTab}
+          {tab === "public" && (
+            <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
+              transition={{ type: "spring", stiffness: 500, damping: 35 }} />
+          )}
         </button>
         {!isGuest && (
           <button onClick={() => setTab("following")}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all ${tab === "following" ? "border-orange-500 text-orange-600" : "border-transparent text-muted hover:text-foreground"}`}>
+            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "following" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
             {lib.followingTab}
+            {tab === "following" && (
+              <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }} />
+            )}
           </button>
         )}
       </div>
@@ -307,25 +320,34 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
                         <Settings className="w-3.5 h-3.5" />
                       </button>
 
-                      {settingsBookId === book.id && (
-                        <div className="absolute bottom-full right-0 mb-1 z-20 bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
-                          <button onClick={() => { setSettingsBookId(null); setQuickAddBookId(book.id); }}
-                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
-                            <Plus className="w-4 h-4 text-muted shrink-0" />
-                            {lib.addRecipe}
-                          </button>
-                          <button onClick={() => { setSettingsBookId(null); setEditCoverBook(book); }}
-                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
-                            <Palette className="w-4 h-4 text-muted shrink-0" />
-                            {lib.editCover}
-                          </button>
-                          <button onClick={() => { setSettingsBookId(null); if (currentUser) openWriterCard(currentUser); }}
-                            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
-                            <User className="w-4 h-4 text-muted shrink-0" />
-                            {lib.viewWriterCard}
-                          </button>
-                        </div>
-                      )}
+                      <AnimatePresence>
+                        {settingsBookId === book.id && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.88 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.88 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                            style={{ transformOrigin: "bottom right" }}
+                            className="absolute bottom-full right-0 mb-1 z-20 bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[12rem] flex flex-col gap-0.5"
+                          >
+                            <button onClick={() => { setSettingsBookId(null); setQuickAddBookId(book.id); }}
+                              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
+                              <Plus className="w-4 h-4 text-muted shrink-0" />
+                              {lib.addRecipe}
+                            </button>
+                            <button onClick={() => { setSettingsBookId(null); setEditCoverBook(book); }}
+                              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
+                              <Palette className="w-4 h-4 text-muted shrink-0" />
+                              {lib.editCover}
+                            </button>
+                            <button onClick={() => { setSettingsBookId(null); if (currentUser) openWriterCard(currentUser); }}
+                              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
+                              <User className="w-4 h-4 text-muted shrink-0" />
+                              {lib.viewWriterCard}
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                 </div>

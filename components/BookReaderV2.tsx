@@ -1,6 +1,7 @@
 "use client";
 
 import HTMLFlipBook from "react-pageflip";
+import { AnimatePresence, motion } from "framer-motion";
 import { ReactSortable } from "react-sortablejs";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1971,8 +1972,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
              style={{ bottom: 5, right: 5 }}>
+          <AnimatePresence>
           {fabOpen && (
-            <div ref={fabRef} data-tour="fab-dropdown" className="anim-scale-in bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+            <motion.div ref={fabRef} data-tour="fab-dropdown"
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              style={{ transformOrigin: "bottom right" }}
+              className="bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
 
               {/* owner-only actions (not available in favorites virtual book) */}
               {isOwner && !isFavBook && (<>
@@ -2097,8 +2105,9 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               >
                 <ChevronRight className="w-4 h-4 text-muted" /> {t.library.nextPage}
               </button>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           {/* FAB trigger */}
           <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"

@@ -60,7 +60,7 @@ export function HoverCardContent({
               animate={{ opacity: 1, scale: 1,    y: 0 }}
               exit={{    opacity: 0, scale: 0.92, y: 6 }}
               transition={{ type: "spring", stiffness: 420, damping: 28 }}
-              className={`z-50 rounded-xl border border-border bg-surface shadow-xl ${className}`}
+              className={`z-[10001] rounded-xl border border-border bg-surface shadow-xl ${className}`}
             >
               {children}
             </motion.div>

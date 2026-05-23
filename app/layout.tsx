@@ -7,6 +7,7 @@ import { Sarabun, IBM_Plex_Sans_Thai, Playfair_Display, JetBrains_Mono, La_Belle
 import { redirect } from "next/navigation";
 import Heartbeat from "@/components/Heartbeat";
 import { ThemeProvider } from "@/lib/theme";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { LocaleProvider } from "@/lib/locale";
 import { ReadingFontProvider } from "@/lib/reading-font-context";
 import { READING_FONTS } from "@/lib/reading-fonts";
@@ -149,6 +150,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-background min-h-screen font-sans" suppressHydrationWarning>
         <LocaleProvider>
           <ThemeProvider>
+            <TooltipProvider delayDuration={400}>
             <ReadingFontProvider>
               <Navbar user={user} locked={isOnboarding} />
               <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
@@ -162,6 +164,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 closeButton
               />
             </ReadingFontProvider>
+            </TooltipProvider>
           </ThemeProvider>
         </LocaleProvider>
       </body>

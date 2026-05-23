@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale } from "@/lib/locale";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type Status = "online" | "away" | "offline";
 
@@ -43,11 +44,16 @@ export default function OnlineIndicator({
   };
 
   return (
-    <span className="inline-flex items-center gap-1.5 group relative" title={tooltips[status]}>
-      <span className={`${dotSize} rounded-full shrink-0 ${DOT_CLASSES[status]} ${status === "online" ? "animate-pulse" : ""}`} />
-      {showLabel && (
-        <span className="text-xs text-muted">{labels[status]}</span>
-      )}
-    </span>
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-1.5">
+          <span className={`${dotSize} rounded-full shrink-0 ${DOT_CLASSES[status]} ${status === "online" ? "animate-pulse" : ""}`} />
+          {showLabel && (
+            <span className="text-xs text-muted">{labels[status]}</span>
+          )}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">{tooltips[status]}</TooltipContent>
+    </Tooltip>
   );
 }
