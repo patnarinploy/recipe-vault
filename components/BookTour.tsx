@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Joyride, ACTIONS, EVENTS, STATUS, type EventData, type Step } from "react-joyride";
 import { useLocale } from "@/lib/locale";
 import {
@@ -375,8 +376,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
       }}
     />
 
-      {/* Flip transition notification — shown during 1.6s animation, not counted as a step */}
-      {flipOverlay && (
+      {/* Flip transition notification — portal into body so z-index beats Joyride's own portal */}
+      {flipOverlay && typeof document !== "undefined" && createPortal(
         <div style={{
           position: "fixed", inset: 0, zIndex: 10001,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -391,7 +392,8 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
             <p style={{ fontSize: 16, fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{flipOverlay.title}</p>
             <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>{flipOverlay.body}</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
