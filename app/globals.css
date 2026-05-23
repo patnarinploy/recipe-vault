@@ -294,7 +294,7 @@ button, a {
   mix-blend-mode: normal;
 }
 ::view-transition-new(root) {
-  animation: theme-reveal-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: theme-reveal-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 @keyframes theme-reveal-in {
   from { clip-path: circle(0px    at var(--vt-x, 85%) var(--vt-y, 8%)); }
