@@ -1,5 +1,12 @@
 [
   {
+    "build": 177,
+    "timestamp": "2026-05-23T17:43:13.000Z",
+    "subject": "fix: tour last step uses placement auto — fits small screens like iPho",
+    "hash": "c748c8f",
+    "category": "fix"
+  },
+  {
     "build": 176,
     "timestamp": "2026-05-23T17:42:15.000Z",
     "subject": "fix: render flip overlay via portal into document.body to beat Joyride's",
