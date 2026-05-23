@@ -1,5 +1,12 @@
 [
   {
+    "build": 166,
+    "timestamp": "2026-05-23T14:56:18.000Z",
+    "subject": "test: theme transition duration 1s (was 0.45s)",
+    "hash": "e4158c5",
+    "category": "internal"
+  },
+  {
     "build": 165,
     "timestamp": "2026-05-23T14:51:53.000Z",
     "subject": "feat: theme transition circle originates from clicked button",
