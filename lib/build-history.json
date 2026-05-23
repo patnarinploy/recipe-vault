@@ -1,5 +1,12 @@
 [
   {
+    "build": 174,
+    "timestamp": "2026-05-23T16:36:43.000Z",
+    "subject": "fix: restore tour arrow + show flip notification as overlay (not a count",
+    "hash": "dfc4e9e",
+    "category": "fix"
+  },
+  {
     "build": 173,
     "timestamp": "2026-05-23T16:18:49.000Z",
     "subject": "fix: tour steps 1&2 use negative offset to place tooltip inside spotligh",

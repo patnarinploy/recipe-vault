@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 173;
-export const BUILD_TIMESTAMP = "2026-05-23T16:18:49.000Z";
-export const BUILD_TOOLTIP   = "fix: tour steps 1&2 use negative offset to place tooltip inside spotligh";
+export const BUILD_NUMBER    = 174;
+export const BUILD_TIMESTAMP = "2026-05-23T16:36:43.000Z";
+export const BUILD_TOOLTIP   = "fix: restore tour arrow + show flip notification as overlay (not a count";
