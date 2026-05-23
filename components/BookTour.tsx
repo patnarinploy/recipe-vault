@@ -197,6 +197,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         zIndex: 10000,
         overlayColor: "rgba(0,0,0,0.45)",
         skipScroll: true,
+        blockTargetInteraction: true,
       }}
       styles={{
         tooltip: {
