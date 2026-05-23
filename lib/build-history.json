@@ -1,5 +1,12 @@
 [
   {
+    "build": 155,
+    "timestamp": "2026-05-23T07:39:33.000Z",
+    "subject": "Block all page interaction during product tour",
+    "hash": "b281d36",
+    "category": "internal"
+  },
+  {
     "build": 154,
     "timestamp": "2026-05-23T07:33:31.000Z",
     "subject": "Move Tours/Guides to dedicated settings sub-page (/settings/tours)",

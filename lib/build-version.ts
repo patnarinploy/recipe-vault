@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 154;
-export const BUILD_TIMESTAMP = "2026-05-23T07:33:31.000Z";
-export const BUILD_TOOLTIP   = "Move Tours/Guides to dedicated settings sub-page (/settings/tours)";
+export const BUILD_NUMBER    = 155;
+export const BUILD_TIMESTAMP = "2026-05-23T07:39:33.000Z";
+export const BUILD_TOOLTIP   = "Block all page interaction during product tour";
