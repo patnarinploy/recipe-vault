@@ -1,5 +1,12 @@
 [
   {
+    "build": 192,
+    "timestamp": "2026-05-23T23:05:21.000Z",
+    "subject": "feat: animate-ui–style HoverCard on achievement badges",
+    "hash": "a8b1b62",
+    "category": "feat"
+  },
+  {
     "build": 191,
     "timestamp": "2026-05-23T22:37:31.000Z",
     "subject": "design: WriterCard polish — dot top-right, bio above divider, emoji ba",

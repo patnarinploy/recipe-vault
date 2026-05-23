@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 191;
-export const BUILD_TIMESTAMP = "2026-05-23T22:37:31.000Z";
-export const BUILD_TOOLTIP   = "design: WriterCard polish — dot top-right, bio above divider, emoji ba";
+export const BUILD_NUMBER    = 192;
+export const BUILD_TIMESTAMP = "2026-05-23T23:05:21.000Z";
+export const BUILD_TOOLTIP   = "feat: animate-ui–style HoverCard on achievement badges";
