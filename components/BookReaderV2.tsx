@@ -1878,13 +1878,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           {pages}
         </HTMLFlipBook>
 
-        {/* Tour navigation target overlays — left/right halves for spotlight highlighting */}
+        {/* Tour navigation target overlays — left/right halves for spotlight highlighting.
+            zIndex 25 puts them above flipbook pages (startZIndex=20) so Joyride can
+            reliably measure their bounding rects; pointer-events none keeps book interactive. */}
         <div data-tour="tour-left-half"
-             className="absolute inset-y-0 left-0 pointer-events-none"
-             style={{ width: "50%", zIndex: 0 }} />
+             style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: "50%", zIndex: 25, pointerEvents: "none" }} />
         <div data-tour="tour-right-half"
-             className="absolute inset-y-0 right-0 pointer-events-none"
-             style={{ width: "50%", zIndex: 0 }} />
+             style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: "50%", zIndex: 25, pointerEvents: "none" }} />
 
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"

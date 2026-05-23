@@ -28,12 +28,12 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     if (!run) return;
     if (stepIndex === 2) {
       onFlipNext();
-      const t = setTimeout(() => setStepIndex(3), 1300);
+      const t = setTimeout(() => setStepIndex(3), 1600);
       return () => clearTimeout(t);
     }
     if (stepIndex === 4) {
       onFlipPrev();
-      const t = setTimeout(() => setStepIndex(5), 1300);
+      const t = setTimeout(() => setStepIndex(5), 1600);
       return () => clearTimeout(t);
     }
   }, [stepIndex, run, onFlipNext, onFlipPrev]);
