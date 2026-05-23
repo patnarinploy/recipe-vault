@@ -1,5 +1,12 @@
 [
   {
+    "build": 183,
+    "timestamp": "2026-05-23T20:05:34.000Z",
+    "subject": "chore: add author_info and author_user_id fields to Recipe type",
+    "hash": "87e1812",
+    "category": "chore"
+  },
+  {
     "build": 182,
     "timestamp": "2026-05-23T20:05:08.000Z",
     "subject": "feat: make author name clickable in favorites book",
