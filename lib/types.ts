@@ -45,6 +45,7 @@ export type Recipe = {
   updated_at?: string;
   sort_order: number | null;
   ingredient_rows?: DbIngredient[];
+  author_name?: string;
 };
 
 export type ShoppingListItem = {

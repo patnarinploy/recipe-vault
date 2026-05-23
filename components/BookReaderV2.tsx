@@ -1479,7 +1479,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         return;
       }
       const [recipesRes, ingRes] = await Promise.all([
-        sb.from("recipes").select("*").in("id", favIds).returns<Recipe[]>(),
+        sb.from("recipes").select("*, books(users(display_name))").in("id", favIds),
         sb.from("recipe_ingredients").select("*, preset_units(*), preset_ingredients!ingredient_preset_id(*)").in("recipe_id", favIds).order("ingredient_sort").returns<DbIngredient[]>(),
       ]);
       const ingByRecipe = new Map<string, DbIngredient[]>();
@@ -1494,6 +1494,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         .filter((r): r is Recipe => !!r)
         .map(r => ({
           ...r,
+          author_name: (r as any).books?.users?.display_name ?? undefined,
           preset_categories: favUserCats.find(c => c.id === r.category_id) ?? null,
           ingredient_rows: ingByRecipe.get(r.id) ?? [],
         }));
@@ -1508,7 +1509,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       .order("created_at", { ascending: true });
     if (!isOwner) recipeQ = recipeQ.eq("is_public", true);
     const [bk, rc] = await Promise.all([
-      sb.from("books").select("*, users(display_name, bio, avatar, role)").eq("id", bookId).single(),
+      sb.from("books").select("*, users(display_name, bio, avatar, role, last_seen, created_at, status)").eq("id", bookId).single(),
       recipeQ.returns<Recipe[]>(),
     ]);
     let rawCategories: PresetCategory[] = [];
@@ -1533,7 +1534,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
       const u = (bk.data as any).users;
       setAuthorName(u?.display_name ?? "");
       if (u) {
-        setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined });
+        setWriterInfo({ display_name: u.display_name ?? null, bio: u.bio ?? null, avatar: u.avatar ?? null, role: u.role ?? undefined, last_seen: u.last_seen ?? null, created_at: u.created_at ?? undefined, status: u.status ?? undefined });
         setWriterStatsLoading(true);
         const authorId: string = (bk.data as any).user_id;
         void (async () => {
@@ -1805,7 +1806,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                          favorited={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "")}
                          onToggleFavorite={handleToggleFavorite}
                          favoriteLabel={favoriteIds.has(localizedRecipes[slot.recipeIdx]?.id ?? "") ? t.library.favoriteRemove : t.library.favoriteAdd}
-                         authorName={isFavBook ? undefined : authorName}
+                         authorName={isFavBook ? (localizedRecipes[slot.recipeIdx]?.author_name ?? undefined) : authorName}
                          onAuthorClick={!isFavBook && writerInfo ? () => setWriterCardOpen(true) : undefined} />
       );
       case "recipe-ing": return (
