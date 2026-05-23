@@ -274,7 +274,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     // 4 — FAB dropdown: swiper walkthrough (5/5)
     {
       target: "[data-tour='fab-dropdown']",
-      placement: portrait ? "top" : "left",
+      placement: "auto",
       title: isTh ? "เมนูตัวเลือกทั้งหมด" : "All options",
       content: <FabSwiper isTh={isTh} />,
       skipBeacon: true,
