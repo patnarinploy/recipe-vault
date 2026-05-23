@@ -1,5 +1,12 @@
 [
   {
+    "build": 154,
+    "timestamp": "2026-05-23T07:33:31.000Z",
+    "subject": "Move Tours/Guides to dedicated settings sub-page (/settings/tours)",
+    "hash": "9049f9b",
+    "category": "internal"
+  },
+  {
     "build": 153,
     "timestamp": "2026-05-23T07:29:07.000Z",
     "subject": "Add Tour Guides panel to Settings page",
