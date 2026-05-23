@@ -1,5 +1,12 @@
 [
   {
+    "build": 165,
+    "timestamp": "2026-05-23T15:08:36.000Z",
+    "subject": "chore: reset build counter → hook will stamp as #165",
+    "hash": "3de405b",
+    "category": "chore"
+  },
+  {
     "build": 167,
     "timestamp": "2026-05-23T14:59:55.000Z",
     "subject": "revert: theme transition duration back to 0.45s",
