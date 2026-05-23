@@ -1,5 +1,12 @@
 [
   {
+    "build": 157,
+    "timestamp": "2026-05-23T08:37:07.000Z",
+    "subject": "Fix tour left-half dark in 2-page mode: pre-flip + orange SVG stroke",
+    "hash": "1dcb7e4",
+    "category": "fix"
+  },
+  {
     "build": 156,
     "timestamp": "2026-05-23T07:54:05.000Z",
     "subject": "Fix tour left-half spotlight not showing in 2-page mode",
