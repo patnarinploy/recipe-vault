@@ -197,7 +197,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
   const { locale } = useLocale();
   const isTh = locale === "th";
   const [stepIndex, setStepIndex] = useState(0);
-  const [flipMsg, setFlipMsg] = useState<string | null>(null);
+  const [flipOverlay, setFlipOverlay] = useState<{ title: string; body: string } | null>(null);
 
   useEffect(() => {
     if (run) setStepIndex(0);
@@ -288,7 +288,7 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
 
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setStepIndex(0);
-      setFlipMsg(null);
+      setFlipOverlay(null);
       onFinish();
       return;
     }
@@ -298,14 +298,18 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
     if (action === ACTIONS.NEXT || action === ACTIONS.CLOSE) {
       if (index === 1) {
         onFlipNext();
-        setFlipMsg(isTh ? "⏩ กำลังพลิกหน้า..." : "⏩ Flipping forward...");
-        setTimeout(() => { setFlipMsg(null); setStepIndex(2); }, 1600);
+        setFlipOverlay(isTh
+          ? { title: "⏩ กำลังพลิกหน้า...", body: "หนังสือกำลังพลิกไปหน้าถัดไปให้อัตโนมัติ" }
+          : { title: "⏩ Flipping forward...", body: "The book is automatically flipping to the next page." });
+        setTimeout(() => { setFlipOverlay(null); setStepIndex(2); }, 1600);
         return;
       }
       if (index === 2) {
         onFlipPrev();
-        setFlipMsg(isTh ? "⏪ กำลังย้อนกลับ..." : "⏪ Going back...");
-        setTimeout(() => { setFlipMsg(null); setStepIndex(3); }, 1600);
+        setFlipOverlay(isTh
+          ? { title: "⏪ กำลังย้อนกลับ...", body: "หนังสือกำลังย้อนกลับไปหน้าก่อนหน้าให้อัตโนมัติ" }
+          : { title: "⏪ Going back...", body: "The book is automatically flipping back to the previous page." });
+        setTimeout(() => { setFlipOverlay(null); setStepIndex(3); }, 1600);
         return;
       }
       if (index === 3) {
@@ -325,23 +329,6 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
 
   return (
     <>
-      {/* Flip transition notification — shown during 1.6s page-flip animation, not counted as a step */}
-      {flipMsg && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 10001,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(0,0,0,0.55)",
-          pointerEvents: "none",
-        }}>
-          <div style={{
-            background: "#fff", borderRadius: 16, padding: "20px 28px",
-            textAlign: "center", maxWidth: 280,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-          }}>
-            <p style={{ fontSize: 16, fontWeight: 600, color: "#1c1917", margin: 0 }}>{flipMsg}</p>
-          </div>
-        </div>
-      )}
       <Joyride
       steps={steps}
       run={run}
@@ -387,6 +374,25 @@ export default function BookTour({ run, onFinish, portrait, onFlipNext, onFlipPr
         skip: isTh ? "ข้ามไป" : "Skip",
       }}
     />
+
+      {/* Flip transition notification — shown during 1.6s animation, not counted as a step */}
+      {flipOverlay && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10001,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.55)",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 16, padding: "20px 28px",
+            textAlign: "center", maxWidth: 280,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#1c1917", margin: "0 0 6px" }}>{flipOverlay.title}</p>
+            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>{flipOverlay.body}</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
