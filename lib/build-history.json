@@ -1,5 +1,12 @@
 [
   {
+    "build": 179,
+    "timestamp": "2026-05-23T19:00:35.000Z",
+    "subject": "fix: PageInsideCover uses book-paper class — responds to dark mode aga",
+    "hash": "fb7b822",
+    "category": "fix"
+  },
+  {
     "build": 178,
     "timestamp": "2026-05-23T18:10:29.000Z",
     "subject": "fix: tour last step negative offset — tooltip overlaps FAB dropdown sp",
