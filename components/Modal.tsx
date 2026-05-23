@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -27,11 +27,18 @@ export default function Modal({
   hideChrome = false,
   disableBackdropClick = false,
 }: ModalProps) {
+  // Keep a stable ref to onClose so the stack effect only re-runs when open changes.
+  // Without this, an inline onClose prop (new reference each render) would re-push
+  // the modal to the stack on every parent re-render, causing stale stack entries
+  // that require extra clicks to dismiss.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
   useEffect(() => {
     if (!open) return;
-    const id = pushModal(onClose);
+    const id = pushModal(() => onCloseRef.current());
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && isTopModal(id)) { e.preventDefault(); onClose(); }
+      if (e.key === "Escape" && isTopModal(id)) { e.preventDefault(); onCloseRef.current(); }
     }
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -41,7 +48,7 @@ export default function Modal({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const portal = typeof document !== "undefined" ? document.body : null;
   if (!portal) return null;
