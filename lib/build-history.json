@@ -1,5 +1,12 @@
 [
   {
+    "build": 190,
+    "timestamp": "2026-05-23T22:15:00.000Z",
+    "subject": "feat: redesign WriterAchievements + settings shows status & followers",
+    "hash": "47743cd",
+    "category": "feat"
+  },
+  {
     "build": 189,
     "timestamp": "2026-05-23T22:06:16.000Z",
     "subject": "fix: status dot border matches avatar ring in dark mode",
