@@ -46,6 +46,8 @@ export type Recipe = {
   sort_order: number | null;
   ingredient_rows?: DbIngredient[];
   author_name?: string;
+  author_info?: WriterInfo;
+  author_user_id?: string;
 };
 
 export type ShoppingListItem = {
