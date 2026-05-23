@@ -3,15 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, BookOpen, Settings, Palette, User, Search, X, Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
 import BookReaderModalV2 from "./BookReaderModalV2";
 import WriterCard from "./WriterCard";
+import RecipeForm from "./RecipeForm";
 import AuthModal from "./AuthModal";
-import type { Book, WriterInfo } from "@/lib/types";
+import type { Book, WriterInfo, PresetUnit, PresetCategory } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
 import { FAVORITES_BOOK_ID } from "./BookReaderV2";
+import {
+  getUserPresetUnits,
+  getUserPresetCategories,
+  getUserPresetIngredients,
+} from "@/app/actions/user-presets";
 
 interface BookWithCounts extends Book {
   recipe_count: number;
@@ -30,6 +37,7 @@ interface Props {
 export default function Library({ myBooks, publicBooks, currentUser, favoriteCount, shoppingCount }: Props) {
   const { t } = useLocale();
   const lib = t.library;
+  const router = useRouter();
 
   const isGuest = !currentUser;
   const [tab, setTab] = useState<"mine" | "public">(isGuest ? "public" : "mine");
@@ -39,13 +47,29 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
     if (isGuest) setTab("public");
   }, [isGuest]);
   const [newBookOpen, setNewBookOpen]   = useState(false);
-  const [openBook, setOpenBook]         = useState<{ id: string; isOwner: boolean; autoNewRecipe?: boolean } | null>(null);
+  const [openBook, setOpenBook]         = useState<{ id: string; isOwner: boolean } | null>(null);
   const [settingsBookId, setSettingsBookId] = useState<string | null>(null);
   const [editCoverBook, setEditCoverBook]   = useState<BookWithCounts | null>(null);
   const [writerCard, setWriterCard]         = useState<WriterInfo | null>(null);
   const [authOpen, setAuthOpen]             = useState(false);
   const [mySearch, setMySearch]             = useState("");
   const [pubSearch, setPubSearch]           = useState("");
+
+  // Quick-add recipe: open RecipeForm directly without opening the book reader
+  const [quickAddBookId, setQuickAddBookId] = useState<string | null>(null);
+  const [qaPresetUnits,  setQaPresetUnits]  = useState<PresetUnit[]>([]);
+  const [qaPresetCats,   setQaPresetCats]   = useState<PresetCategory[]>([]);
+  const [qaIngNames,     setQaIngNames]     = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!quickAddBookId) return;
+    Promise.all([getUserPresetUnits(), getUserPresetCategories(), getUserPresetIngredients()])
+      .then(([units, cats, ings]) => {
+        setQaPresetUnits(units);
+        setQaPresetCats(cats);
+        setQaIngNames(ings.map(i => i.name_th));
+      });
+  }, [quickAddBookId]);
   const settingsRef = useRef<HTMLDivElement>(null);
 
   const displayName = currentUser?.display_name ?? "";
@@ -248,7 +272,7 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
 
                       {settingsBookId === book.id && (
                         <div className="absolute bottom-full right-0 mb-1 z-20 bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[12rem] flex flex-col gap-0.5 anim-scale-in">
-                          <button onClick={() => { setSettingsBookId(null); setOpenBook({ id: book.id, isOwner: true, autoNewRecipe: true }); }}
+                          <button onClick={() => { setSettingsBookId(null); setQuickAddBookId(book.id); }}
                             className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl w-full text-left">
                             <Plus className="w-4 h-4 text-muted shrink-0" />
                             {lib.addRecipe}
@@ -305,9 +329,28 @@ export default function Library({ myBooks, publicBooks, currentUser, favoriteCou
       <BookReaderModalV2
         bookId={openBook?.id ?? null}
         isOwner={openBook?.isOwner ?? false}
-        autoNewRecipe={openBook?.autoNewRecipe}
         onClose={() => setOpenBook(null)}
       />
+
+      {/* Quick-add recipe modal — opens directly without loading the book reader */}
+      <Modal
+        open={!!quickAddBookId}
+        onClose={() => setQuickAddBookId(null)}
+        title={lib.addRecipe}
+        disableBackdropClick
+      >
+        {quickAddBookId && (
+          <RecipeForm
+            bookId={quickAddBookId}
+            inModal
+            presetUnits={qaPresetUnits}
+            presetCategories={qaPresetCats}
+            ingredientNameOptions={qaIngNames}
+            onSuccess={() => { setQuickAddBookId(null); router.refresh(); }}
+            onCancel={() => setQuickAddBookId(null)}
+          />
+        )}
+      </Modal>
 
       {/* Writer card modal */}
       <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-[30rem]">
