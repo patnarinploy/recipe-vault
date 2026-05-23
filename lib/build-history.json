@@ -1,5 +1,12 @@
 [
   {
+    "build": 162,
+    "timestamp": "2026-05-23T10:59:39.000Z",
+    "subject": "feat: add touch swipe to FAB option swiper in tour step 7",
+    "hash": "fcb6413",
+    "category": "feat"
+  },
+  {
     "build": 161,
     "timestamp": "2026-05-23T10:51:07.000Z",
     "subject": "fix: move swiper arrows to flank body content, dots below",
