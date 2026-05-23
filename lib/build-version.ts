@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 167;
+export const BUILD_NUMBER    = 164;
 export const BUILD_TIMESTAMP = "2026-05-23T14:59:55.000Z";
 export const BUILD_TOOLTIP   = "revert: theme transition duration back to 0.45s";
