@@ -102,6 +102,13 @@ export const th = {
     addToShoppingList: "เพิ่มเข้ารายการที่อยากทำ",
     shoppingListCount: "{n} เมนู",
     viewShoppingList: "ดูรายการที่อยากทำ",
+    follow: "ติดตาม",
+    following: "กำลังติดตาม",
+    followingTab: "👥 ติดตาม",
+    followerCount: "{n} ผู้ติดตาม",
+    followingEmpty: "ยังไม่ได้ติดตามนักเขียนคนไหน",
+    followingEmptySub: "กดดูการ์ดนักเขียนในหน้าสาธารณะแล้วกด \"ติดตาม\" เพื่อเพิ่มหนังสือเขาไว้ที่นี่",
+    followingBooksTitle: "หนังสือจากนักเขียนที่ติดตาม",
   },
   shopping: {
     title: "รายการที่อยากทำ",

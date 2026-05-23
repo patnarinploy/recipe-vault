@@ -125,6 +125,9 @@ export type WriterInfo = {
   public_count?: number;
   last_seen?: string | null;
   created_at?: string;
+  user_id?: string;
+  follower_count?: number;
+  is_following?: boolean;
 };
 
 export type User = {

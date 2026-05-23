@@ -1,21 +1,38 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, UserPlus, UserCheck } from "lucide-react";
 import { isAvatarUrl } from "@/lib/avatar";
 import type { WriterInfo } from "@/lib/types";
 import OnlineIndicator from "./OnlineIndicator";
 import WriterAchievements from "./user/WriterAchievements";
 import { useLocale } from "@/lib/locale";
+import { useState, useTransition } from "react";
 
-export default function WriterCard({ info, onClose, statsLoading = false }: {
+export default function WriterCard({ info, onClose, statsLoading = false, currentUserId }: {
   info: WriterInfo;
   onClose?: () => void;
   statsLoading?: boolean;
+  currentUserId?: string | null;
 }) {
   const { t } = useLocale();
   const isUrl        = isAvatarUrl(info.avatar);
   const initial      = info.display_name?.[0]?.toUpperCase() ?? "?";
   const showPresence = "last_seen" in info;
+
+  const canFollow = !!(info.user_id && currentUserId && info.user_id !== currentUserId);
+  const [isFollowing, setIsFollowing] = useState(info.is_following ?? false);
+  const [followerCount, setFollowerCount] = useState(info.follower_count ?? 0);
+  const [isPending, startTransition] = useTransition();
+
+  function handleFollow() {
+    startTransition(async () => {
+      const { toggleFollow } = await import("@/app/actions/follow");
+      const res = await toggleFollow(info.user_id!);
+      if ("error" in res) return;
+      setIsFollowing(res.following);
+      setFollowerCount(c => res.following ? c + 1 : Math.max(0, c - 1));
+    });
+  }
 
   return (
     <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-stone-800 dark:via-stone-800 dark:to-stone-800 rounded-2xl p-6 border border-orange-100 dark:border-stone-700 text-center">
@@ -64,11 +81,38 @@ export default function WriterCard({ info, onClose, statsLoading = false }: {
         </div>
       )}
 
+      {/* Follow button */}
+      {canFollow && (
+        <div className="flex justify-center mt-3">
+          <button
+            type="button"
+            onClick={handleFollow}
+            disabled={isPending}
+            className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all disabled:opacity-50 ${
+              isFollowing
+                ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600"
+                : "bg-orange-500 text-white hover:bg-orange-600"
+            }`}
+          >
+            {isFollowing
+              ? <><UserCheck className="w-3.5 h-3.5" /> {t.library.following}</>
+              : <><UserPlus className="w-3.5 h-3.5" /> {t.library.follow}</>}
+          </button>
+        </div>
+      )}
+
       <div className="w-10 h-px bg-orange-200 dark:bg-stone-600/60 mx-auto mt-4 mb-4" />
 
       {/* Bio */}
       {info.bio && (
         <p className="text-sm text-secondary leading-relaxed mb-4">{info.bio}</p>
+      )}
+
+      {/* Follower count */}
+      {followerCount > 0 && (
+        <p className="text-xs text-muted mb-3">
+          {t.library.followerCount.replace("{n}", String(followerCount))}
+        </p>
       )}
 
       {/* Role + Achievements */}

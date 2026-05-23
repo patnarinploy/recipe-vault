@@ -6,6 +6,8 @@ import { SkeletonBookGrid } from "@/components/Skeleton";
 import type { Book, WriterInfo } from "@/lib/types";
 import { getFavoriteCount } from "@/app/actions/favorites";
 import { getShoppingListCount } from "@/app/actions/shopping";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { getFollowStatus } from "@/app/actions/follow";
 
 export const revalidate = 0;
 
@@ -57,7 +59,7 @@ async function BookLibraryData({ userId }: { userId: string | null }) {
     const count  = (publicRecipes ?? []).filter(r => r.book_id === b.id).length;
     const uid: string | undefined = (b as any).user_id;
     const stats  = uid ? authorPublicStats.get(uid) : undefined;
-    const bookAuthor: WriterInfo | undefined = (b as any).users ? { ...(b as any).users, ...stats } : undefined;
+    const bookAuthor: WriterInfo | undefined = (b as any).users ? { ...(b as any).users, ...stats, user_id: (b as any).user_id } : undefined;
     return { ...b, recipe_count: count, public_count: count, bookAuthor };
   });
 

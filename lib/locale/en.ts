@@ -102,6 +102,13 @@ export const en = {
     addToShoppingList: "Add to shopping list",
     shoppingListCount: "{n} recipes",
     viewShoppingList: "View shopping list",
+    follow: "Follow",
+    following: "Following",
+    followingTab: "👥 Following",
+    followerCount: "{n} followers",
+    followingEmpty: "You're not following anyone yet",
+    followingEmptySub: "View a writer card in the public tab and tap \"Follow\" to see their books here",
+    followingBooksTitle: "Books from writers you follow",
   },
   shopping: {
     title: "Want to Make",
