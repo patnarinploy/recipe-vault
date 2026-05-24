@@ -1,5 +1,12 @@
 [
   {
+    "build": 200,
+    "timestamp": "2026-05-24T15:45:34.000Z",
+    "subject": "Fix achievement badge tap-to-view and StorePicker Escape to close",
+    "hash": "4cb4a6e",
+    "category": "fix"
+  },
+  {
     "build": 199,
     "timestamp": "2026-05-24T07:50:38.000Z",
     "subject": "Add tab content fade+slide animation to Shopping, Admin, and Settings ta",
