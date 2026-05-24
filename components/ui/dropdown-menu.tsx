@@ -27,7 +27,7 @@ export const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
             // Closed state (enter-from + leave-to): scaled down and invisible
             "data-[closed]:opacity-0 data-[closed]:scale-90",
             // Override timing for leave phase
-            "data-[leave]:duration-[400ms] data-[leave]:ease-in",
+            "data-[leave]:duration-200 data-[leave]:ease-in",
             className,
           ].join(" ")}
           {...rest}
