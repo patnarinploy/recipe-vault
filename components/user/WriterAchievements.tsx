@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { getAchievements, type AchievementBadge } from "@/lib/achievements";
 import { useLocale } from "@/lib/locale";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 
 export type WriterAchievementsProps = {
   role?: "admin" | "user";
@@ -39,18 +40,21 @@ const TIER_LABEL: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
 };
 
 function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string }) {
+  const [pinned, setPinned] = useState(false);
+  const [hovered, setHovered] = useState(false);
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <HoverCard open={pinned || hovered} onOpenChange={setHovered} openDelay={200} closeDelay={100}>
+      <HoverCardTrigger asChild>
         <button
           type="button"
+          onClick={() => setPinned(p => !p)}
           className={`w-9 h-9 rounded-full flex items-center justify-center text-lg select-none shadow-sm transition-transform hover:scale-110 active:scale-95 ${TIER_BG[badge.tier]}`}
         >
           {badge.emoji}
         </button>
-      </PopoverTrigger>
+      </HoverCardTrigger>
 
-      <PopoverContent side="top" align="center" sideOffset={8} className="p-3 w-44 text-left">
+      <HoverCardContent className="p-3 w-44 text-left">
         {/* Emoji + name */}
         <div className="flex items-center gap-2 mb-2">
           <span className="text-2xl leading-none">{badge.emoji}</span>
@@ -64,8 +68,8 @@ function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string 
 
         {/* Condition */}
         <p className="text-xs text-muted leading-relaxed">{badge.tooltip}</p>
-      </PopoverContent>
-    </Popover>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 

@@ -13,14 +13,21 @@ interface HoverCardProps {
   children: React.ReactNode;
   openDelay?: number;
   closeDelay?: number;
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
 }
 
-export function HoverCard({ children, openDelay = 300, closeDelay = 150 }: HoverCardProps) {
-  const [open, setOpen] = useState(false);
+export function HoverCard({ children, openDelay = 300, closeDelay = 150, open: openProp, onOpenChange }: HoverCardProps) {
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const open = openProp !== undefined ? openProp : hoverOpen;
+  function handleChange(v: boolean) {
+    setHoverOpen(v);
+    onOpenChange?.(v);
+  }
   return (
     <HoverCardPrimitive.Root
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleChange}
       openDelay={openDelay}
       closeDelay={closeDelay}
     >
