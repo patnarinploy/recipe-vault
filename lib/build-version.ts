@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 212;
-export const BUILD_TIMESTAMP = "2026-05-24T18:48:38.000Z";
-export const BUILD_TOOLTIP   = "fix: color picker, WriterCard overflow, PresetDetailModal animation, exp";
+export const BUILD_NUMBER    = 213;
+export const BUILD_TIMESTAMP = "2026-05-24T19:02:37.000Z";
+export const BUILD_TOOLTIP   = "fix: remove framer-motion from Popover, fix remaining expand animation d";
