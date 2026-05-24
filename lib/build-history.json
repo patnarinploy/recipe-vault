@@ -1,5 +1,12 @@
 [
   {
+    "build": 212,
+    "timestamp": "2026-05-24T18:48:38.000Z",
+    "subject": "fix: color picker, WriterCard overflow, PresetDetailModal animation, exp",
+    "hash": "f59d56b",
+    "category": "fix"
+  },
+  {
     "build": 211,
     "timestamp": "2026-05-24T18:39:22.000Z",
     "subject": "fix: intercept page clicks when FAB dropdown open; fix UserMenu WriterCa",
