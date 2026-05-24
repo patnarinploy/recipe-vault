@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createContext, use } from "react";
 import { getAchievements, type AchievementBadge } from "@/lib/achievements";
 import { useLocale } from "@/lib/locale";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+
+const PinCtx = createContext<{
+  pinnedId: string | null;
+  pin: (id: string) => void;
+  unpin: (id: string) => void;
+}>({ pinnedId: null, pin: () => {}, unpin: () => {} });
 
 export type WriterAchievementsProps = {
   role?: "admin" | "user";
@@ -40,7 +46,8 @@ const TIER_LABEL: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
 };
 
 function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string }) {
-  const [pinned, setPinned] = useState(false);
+  const { pinnedId, pin, unpin } = use(PinCtx);
+  const pinned = pinnedId === badge.id;
   const [hovered, setHovered] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -48,12 +55,12 @@ function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string 
     if (!pinned) return;
     function onMouseDown(e: MouseEvent) {
       if (btnRef.current && !btnRef.current.contains(e.target as Node)) {
-        setPinned(false);
+        unpin(badge.id);
       }
     }
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [pinned]);
+  }, [pinned, badge.id, unpin]);
 
   return (
     <HoverCard open={pinned || hovered} onOpenChange={setHovered} openDelay={200} closeDelay={100}>
@@ -61,7 +68,7 @@ function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string 
         <button
           ref={btnRef}
           type="button"
-          onClick={() => setPinned(p => !p)}
+          onClick={() => pinned ? unpin(badge.id) : pin(badge.id)}
           className={`w-9 h-9 rounded-full flex items-center justify-center text-lg select-none shadow-sm transition-transform hover:scale-110 active:scale-95 ${TIER_BG[badge.tier]}`}
         >
           {badge.emoji}
@@ -97,6 +104,9 @@ export default function WriterAchievements({
 }: WriterAchievementsProps) {
   const { t } = useLocale();
   const labels = t.achievements as Record<string, string>;
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+  const pin   = (id: string) => setPinnedId(id);
+  const unpin = (id: string) => setPinnedId(p => p === id ? null : p);
 
   const hasStats = booksCount !== undefined || recipesCount !== undefined || sharedCount !== undefined;
 
@@ -159,11 +169,13 @@ export default function WriterAchievements({
 
       {/* Achievement badge circles */}
       {allBadges.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2">
-          {allBadges.map((b) => (
-            <BadgeCircle key={b.id} badge={b} label={labels[b.id] ?? b.label} />
-          ))}
-        </div>
+        <PinCtx.Provider value={{ pinnedId, pin, unpin }}>
+          <div className="flex flex-wrap justify-center gap-2">
+            {allBadges.map((b) => (
+              <BadgeCircle key={b.id} badge={b} label={labels[b.id] ?? b.label} />
+            ))}
+          </div>
+        </PinCtx.Provider>
       )}
     </div>
   );

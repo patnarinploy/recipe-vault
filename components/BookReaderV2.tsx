@@ -15,6 +15,7 @@ import { BUILD_NUMBER } from "@/lib/build-version";
 import { pushModal, popModal, isTopModal } from "@/lib/modalStack";
 import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Globe, User, Heart, ShoppingCart } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
+import { DropdownContent } from "@/components/ui/dropdown-menu";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
 import WriterCard from "./WriterCard";
 import BookTour from "./BookTour";
@@ -1981,15 +1982,13 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
              style={{ bottom: 5, right: 5 }}>
-          <AnimatePresence>
-          {fabOpen && (
-            <motion.div ref={fabRef} data-tour="fab-dropdown"
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.88 }}
-              transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              style={{ transformOrigin: "bottom right" }}
-              className="bg-surface rounded-2xl shadow-xl border border-border p-1.5 min-w-[13rem] flex flex-col gap-0.5">
+          <DropdownContent
+            ref={fabRef}
+            open={fabOpen}
+            origin="bottom right"
+            data-tour="fab-dropdown"
+            className="min-w-[13rem]"
+          >
 
               {/* owner-only actions (not available in favorites virtual book) */}
               {isOwner && !isFavBook && (<>
@@ -2114,9 +2113,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
               >
                 <ChevronRight className="w-4 h-4 text-muted" /> {t.library.nextPage}
               </button>
-            </motion.div>
-          )}
-          </AnimatePresence>
+          </DropdownContent>
 
           {/* FAB trigger */}
           <button onClick={() => setFabOpen(o => !o)} aria-label="เมนู"
