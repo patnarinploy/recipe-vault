@@ -1,5 +1,12 @@
 [
   {
+    "build": 195,
+    "timestamp": "2026-05-24T05:45:09.000Z",
+    "subject": "Add animated AlertDialog, Switch, Popover; wire tabs.tsx into Library",
+    "hash": "8884516",
+    "category": "feat"
+  },
+  {
     "build": 194,
     "timestamp": "2026-05-23T23:36:57.000Z",
     "subject": "Add pin-list, playful todolist, and radial context menu effects",

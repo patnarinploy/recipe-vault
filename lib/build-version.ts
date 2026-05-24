@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 194;
-export const BUILD_TIMESTAMP = "2026-05-23T23:36:57.000Z";
-export const BUILD_TOOLTIP   = "Add pin-list, playful todolist, and radial context menu effects";
+export const BUILD_NUMBER    = 195;
+export const BUILD_TIMESTAMP = "2026-05-24T05:45:09.000Z";
+export const BUILD_TOOLTIP   = "Add animated AlertDialog, Switch, Popover; wire tabs.tsx into Library";
