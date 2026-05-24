@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 205;
-export const BUILD_TIMESTAMP = "2026-05-24T16:11:19.000Z";
-export const BUILD_TOOLTIP   = "Use @headlessui/react Transition for authentic Tailwind Plus dropdown an";
+export const BUILD_NUMBER    = 206;
+export const BUILD_TIMESTAMP = "2026-05-24T16:18:43.000Z";
+export const BUILD_TOOLTIP   = "Clear pinned badge tooltip when hovering another badge";

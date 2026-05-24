@@ -1,5 +1,12 @@
 [
   {
+    "build": 206,
+    "timestamp": "2026-05-24T16:18:43.000Z",
+    "subject": "Clear pinned badge tooltip when hovering another badge",
+    "hash": "4d333d2",
+    "category": "internal"
+  },
+  {
     "build": 205,
     "timestamp": "2026-05-24T16:11:19.000Z",
     "subject": "Use @headlessui/react Transition for authentic Tailwind Plus dropdown an",
