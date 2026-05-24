@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createUserStore, updateUserStore } from "@/app/actions/stores";
 import type { UserStore } from "@/lib/types";
 import { useLocale } from "@/lib/locale";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 const DynamicLocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
 
@@ -30,8 +31,9 @@ export default function StoreFormInline({
   const [color, setColor]           = useState(store?.color ?? STORE_COLORS[0]);
   const [lat, setLat]               = useState(store?.latitude  != null ? String(store.latitude)  : "");
   const [lng, setLng]               = useState(store?.longitude != null ? String(store.longitude) : "");
-  const [mapPickerOpen, setMapOpen] = useState(false);
-  const [saving, setSaving]         = useState(false);
+  const [mapPickerOpen, setMapOpen]       = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [saving, setSaving]               = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error(s.storeName); return; }
@@ -71,13 +73,26 @@ export default function StoreFormInline({
         {/* Color */}
         <div>
           <label className="text-xs font-medium text-muted mb-1.5 block">{s.storeColor}</label>
-          <div className="flex gap-2 flex-wrap">
-            {STORE_COLORS.map(c => (
-              <button key={c} type="button" onClick={() => setColor(c)}
-                className="w-7 h-7 rounded-full transition-transform hover:scale-110 shrink-0"
-                style={{ background: c, outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }} />
-            ))}
-          </div>
+          <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="w-7 h-7 rounded-full transition-transform hover:scale-110 ring-2 ring-offset-2 shadow-sm"
+                style={{ background: color, outline: `2px solid ${color}`, outlineOffset: 2 }}
+                aria-label={s.storeColor}
+              />
+            </PopoverTrigger>
+            <PopoverContent sideOffset={8}>
+              <div className="flex gap-2 flex-wrap w-[156px]">
+                {STORE_COLORS.map(c => (
+                  <button key={c} type="button"
+                    onClick={() => { setColor(c); setColorPickerOpen(false); }}
+                    className="w-7 h-7 rounded-full transition-transform hover:scale-110 shrink-0"
+                    style={{ background: c, outline: color === c ? `3px solid ${c}` : "none", outlineOffset: 2 }} />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Location */}

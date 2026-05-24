@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -193,7 +194,8 @@ function PresetsTable({
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<UnitDetailProps | CategoryDetailProps | null>(null);
-  const { locale } = useLocale();
+  const [archiveTarget, setArchiveTarget] = useState<{ id: string; active: boolean } | null>(null);
+  const { locale, t: tLocale } = useLocale();
 
   const [col1Label, col2Label] = locale === "en" ? [enLabel, thLabel] : [thLabel, enLabel];
   const primaryName  = (it: { nameTh: string; nameEn: string }) =>
@@ -218,8 +220,7 @@ function PresetsTable({
   };
 
   const handleArchive = (id: string, currentlyActive: boolean) => {
-    if (!confirm(currentlyActive ? archiveConfirm : restoreConfirm)) return;
-    startTransition(async () => { await onArchive(id, !currentlyActive); });
+    setArchiveTarget({ id, active: currentlyActive });
   };
 
   const saveNew = () => {
@@ -417,6 +418,17 @@ function PresetsTable({
 
       <p className="text-xs text-muted">{countLabel}</p>
       {detail && <PresetDetailModal {...detail} />}
+      <AlertDialog
+        open={!!archiveTarget}
+        onOpenChange={(o) => !o && setArchiveTarget(null)}
+        title={archiveTarget?.active ? archiveConfirm : restoreConfirm}
+        onConfirm={() => {
+          if (!archiveTarget) return;
+          startTransition(async () => { await onArchive(archiveTarget.id, !archiveTarget.active); });
+        }}
+        confirmLabel={archiveTarget?.active ? archiveLabel : restoreLabel}
+        cancelLabel={tLocale.common.cancel}
+      />
     </div>
   );
 }
@@ -450,7 +462,8 @@ function IngredientsTable({
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<IngredientDetailProps | null>(null);
-  const { locale } = useLocale();
+  const [archiveTarget, setArchiveTarget] = useState<{ id: string; active: boolean } | null>(null);
+  const { locale, t: tLocale } = useLocale();
 
   const storeMap = new Map(stores.map(s => [s.id, s]));
 
@@ -476,8 +489,7 @@ function IngredientsTable({
   };
 
   const handleArchive = (id: string, active: boolean) => {
-    if (!confirm(active ? archiveConfirm : restoreConfirm)) return;
-    startTransition(async () => { await onArchive(id, !active); });
+    setArchiveTarget({ id, active });
   };
 
   const saveNew = () => {
@@ -642,6 +654,17 @@ function IngredientsTable({
 
       <p className="text-xs text-muted">{countLabel}</p>
       {detail && <PresetDetailModal {...detail} />}
+      <AlertDialog
+        open={!!archiveTarget}
+        onOpenChange={(o) => !o && setArchiveTarget(null)}
+        title={archiveTarget?.active ? archiveConfirm : restoreConfirm}
+        onConfirm={() => {
+          if (!archiveTarget) return;
+          startTransition(async () => { await onArchive(archiveTarget.id, !archiveTarget.active); });
+        }}
+        confirmLabel={archiveTarget?.active ? archiveLabel : restoreLabel}
+        cancelLabel={tLocale.common.cancel}
+      />
     </div>
   );
 }
@@ -663,13 +686,13 @@ function StoresTable({
   const [editingStore, setEditingStore] = useState<UserStore | null>(null);
   const [pending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<UserStore | null>(null);
 
   const q = search.toLowerCase();
   const filteredStores = stores.filter(s => !q || s.name.toLowerCase().includes(q));
 
   const handleDelete = (store: UserStore) => {
-    if (!confirm(deleteConfirm)) return;
-    startTransition(async () => { await onDelete(store.id); });
+    setDeleteTarget(store);
   };
 
   const countText = countLabel.replace("{n}", String(stores.length));
@@ -780,6 +803,15 @@ function StoresTable({
 
       <p className="text-xs text-muted">{countText}</p>
       {detail && <PresetDetailModal {...detail} />}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        title={deleteConfirm}
+        onConfirm={() => deleteTarget && startTransition(async () => { await onDelete(deleteTarget.id); })}
+        danger
+        confirmLabel={t.common.confirm}
+        cancelLabel={t.common.cancel}
+      />
     </div>
   );
 }

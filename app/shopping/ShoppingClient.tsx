@@ -15,6 +15,7 @@ import type { ShoppingListEntry, DbIngredient, UserStore, IngredientStorePref } 
 import { useLocale } from "@/lib/locale";
 import StoreFormInline, { STORE_COLORS } from "@/components/StoreFormInline";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 const DynamicMap = dynamic(() => import("@/components/StoreMap"), { ssr: false });
 
@@ -562,6 +563,7 @@ function StoresTab({
   const s = t.shopping;
   const [formOpen, setFormOpen] = useState(false);
   const [editStore, setEditStore] = useState<UserStore | undefined>(undefined);
+  const [deleteStoreTarget, setDeleteStoreTarget] = useState<string | null>(null);
 
   const combined = buildCombined(items, locale);
   const { route, unassigned } = computeRoute(combined, storePrefs, stores);
@@ -581,9 +583,11 @@ function StoresTab({
     setEditStore(undefined);
   };
 
-  const handleDeleteStore = async (storeId: string) => {
-    const store = stores.find(st => st.id === storeId);
-    if (!confirm(s.storeDeleteConfirm.replace("{name}", store?.name ?? ""))) return;
+  const handleDeleteStore = (storeId: string) => {
+    setDeleteStoreTarget(storeId);
+  };
+
+  const executeDeleteStore = async (storeId: string) => {
     const { deleteUserStore } = await import("@/app/actions/stores");
     const res = await deleteUserStore(storeId);
     if ("error" in res) { toast.error(res.error); return; }
@@ -758,7 +762,15 @@ function StoresTab({
         )}
       </div>
 
-
+      <AlertDialog
+        open={!!deleteStoreTarget}
+        onOpenChange={(o) => !o && setDeleteStoreTarget(null)}
+        title={s.storeDeleteConfirm.replace("{name}", stores.find(st => st.id === deleteStoreTarget)?.name ?? "")}
+        onConfirm={() => deleteStoreTarget && executeDeleteStore(deleteStoreTarget)}
+        danger
+        confirmLabel={t.common.confirm}
+        cancelLabel={t.common.cancel}
+      />
     </div>
   );
 }
@@ -792,6 +804,7 @@ export default function ShoppingClient({
   const [clearSignal, setClearSignal] = useState(0);
   const [, startTransition] = useTransition();
   const [picker, setPicker] = useState<{ presetIngredientId: string; name: string; storeIds: Set<string> } | null>(null);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   const handleQuantityChange = (recipeId: string, qty: number) => {
     if (qty < 1) { handleRemove(recipeId); return; }
@@ -810,8 +823,9 @@ export default function ShoppingClient({
     });
   };
 
-  const handleClearAll = async () => {
-    if (!confirm(s.clearAllConfirm)) return;
+  const handleClearAll = () => setConfirmClearOpen(true);
+
+  const executeClearAll = async () => {
     setItems([]);
     try { localStorage.removeItem("rv_shopping_checked"); } catch {}
     setClearSignal(n => n + 1);
@@ -923,6 +937,16 @@ export default function ShoppingClient({
         />
       )}
       </AnimatePresence>
+
+      <AlertDialog
+        open={confirmClearOpen}
+        onOpenChange={setConfirmClearOpen}
+        title={s.clearAllConfirm}
+        onConfirm={executeClearAll}
+        danger
+        confirmLabel={t.common.confirm}
+        cancelLabel={t.common.cancel}
+      />
     </div>
   );
 }

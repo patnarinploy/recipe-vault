@@ -44,7 +44,7 @@ export function TabsList({
   className?: string;
 }) {
   return (
-    <div className={`flex border-b border-outline ${className}`}>
+    <div className={`flex gap-2 border-b border-outline ${className}`}>
       {children}
     </div>
   );

@@ -11,6 +11,7 @@ import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes"
 import { createPresetCategory } from "@/app/actions/user-presets";
 import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
+import { Switch } from "./ui/switch";
 import { ReactSortable } from "react-sortablejs";
 import { useLocale } from "@/lib/locale";
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -635,13 +636,10 @@ export default function RecipeForm({
 
         {/* Public toggle */}
         <label className="flex items-center gap-3 cursor-pointer select-none">
-          <div className="relative">
-            <input type="checkbox" checked={form.is_public}
-              onChange={(e) => setForm((p) => ({ ...p, is_public: e.target.checked }))}
-              className="sr-only peer" />
-            <div className="w-10 h-6 bg-stone-200 dark:bg-stone-700 rounded-full peer peer-checked:bg-orange-500 transition-colors" />
-            <div className="absolute top-1 left-1 w-4 h-4 bg-white dark:bg-stone-300 rounded-full shadow transition-transform peer-checked:translate-x-4" />
-          </div>
+          <Switch
+            checked={form.is_public}
+            onCheckedChange={(v) => setForm((p) => ({ ...p, is_public: v }))}
+          />
           <span className="text-sm font-medium text-secondary">{r.publicToggle}</span>
         </label>
 

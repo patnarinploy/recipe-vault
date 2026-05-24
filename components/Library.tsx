@@ -13,6 +13,7 @@ import WriterCard from "./WriterCard";
 import RecipeForm from "./RecipeForm";
 import AuthModal from "./AuthModal";
 import type { Book, WriterInfo, PresetUnit, PresetCategory } from "@/lib/types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocale } from "@/lib/locale";
 import { FAVORITES_BOOK_ID } from "./BookReaderV2";
 import {
@@ -141,36 +142,13 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
       </div>
 
       {/* Tab */}
-      <div className="flex mb-4 border-b border-outline">
-        {!isGuest && (
-          <button onClick={() => setTab("mine")}
-            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "mine" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
-            {lib.myTab}
-            {tab === "mine" && (
-              <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }} />
-            )}
-          </button>
-        )}
-        <button onClick={() => setTab("public")}
-          className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "public" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
-          {lib.publicTab}
-          {tab === "public" && (
-            <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
-              transition={{ type: "spring", stiffness: 500, damping: 35 }} />
-          )}
-        </button>
-        {!isGuest && (
-          <button onClick={() => setTab("following")}
-            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${tab === "following" ? "text-orange-600 dark:text-orange-400" : "text-muted hover:text-foreground"}`}>
-            {lib.followingTab}
-            {tab === "following" && (
-              <motion.div layoutId="library-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }} />
-            )}
-          </button>
-        )}
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "mine" | "public" | "following")} className="mb-4">
+        <TabsList>
+          {!isGuest && <TabsTrigger value="mine">{lib.myTab}</TabsTrigger>}
+          <TabsTrigger value="public">{lib.publicTab}</TabsTrigger>
+          {!isGuest && <TabsTrigger value="following">{lib.followingTab}</TabsTrigger>}
+        </TabsList>
+      </Tabs>
 
       {/* Search bar */}
       <div className="mb-6">
