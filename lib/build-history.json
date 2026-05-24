@@ -1,5 +1,12 @@
 [
   {
+    "build": 207,
+    "timestamp": "2026-05-24T16:31:42.000Z",
+    "subject": "Switch DropdownContent to Headless UI v2 data-attribute API",
+    "hash": "15563ab",
+    "category": "internal"
+  },
+  {
     "build": 206,
     "timestamp": "2026-05-24T16:18:43.000Z",
     "subject": "Clear pinned badge tooltip when hovering another badge",
