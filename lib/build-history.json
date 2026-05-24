@@ -1,5 +1,12 @@
 [
   {
+    "build": 204,
+    "timestamp": "2026-05-24T16:02:07.000Z",
+    "subject": "Fix dropdown animation: tween easeOut/easeIn instead of broken CSS class",
+    "hash": "5e71557",
+    "category": "fix"
+  },
+  {
     "build": 203,
     "timestamp": "2026-05-24T15:58:21.000Z",
     "subject": "Close pinned achievement tooltip on click-outside",
