@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { DropdownContent } from "./ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -54,16 +54,11 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
   return (
     <>
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-        <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.88 }}
-            transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            style={{ transformOrigin: "bottom right" }}
-            className="bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 min-w-[12rem] flex flex-col gap-0.5"
-          >
+        <DropdownContent
+          open={open}
+          origin="bottom right"
+          className="min-w-[12rem]"
+        >
 
             {/* RECIPE context */}
             {context === "recipe" && recipe && <>
@@ -122,9 +117,7 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
                 <Plus className="w-4 h-4 text-stone-400" /> เพิ่มสูตรในเล่มนี้
               </button>
             </>}
-          </motion.div>
-        )}
-        </AnimatePresence>
+        </DropdownContent>
 
         <button
           onClick={() => setOpen((o) => !o)}

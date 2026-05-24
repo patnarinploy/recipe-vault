@@ -12,7 +12,7 @@ import { useLocale } from "@/lib/locale";
 import Modal from "./Modal";
 import WriterCard from "./WriterCard";
 import { getMyStats } from "@/app/actions/stats";
-import { AnimatePresence, motion } from "framer-motion";
+import { DropdownContent } from "./ui/dropdown-menu";
 
 export default function UserMenu({ user, locked }: { user: User; locked?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -62,15 +62,11 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
         <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
-      <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: -6 }}
-          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } }}
-          exit={{ opacity: 0, scale: 0.96, y: -6, transition: { duration: 0.1, ease: [0.4, 0, 1, 1] } }}
-          className="absolute right-0 top-full mt-2 w-56 bg-surface rounded-2xl shadow-lg border border-border py-1.5 z-50"
-          style={{ transformOrigin: "top right" }}
-        >
+      <DropdownContent
+        open={open}
+        origin="top right"
+        className="absolute right-0 top-full mt-2 w-56 z-50"
+      >
           <button
             type="button"
             onClick={() => {
@@ -123,9 +119,7 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
           <div className="border-t border-border px-4 pt-2 pb-1 flex justify-center">
             <DbStatus />
           </div>
-        </motion.div>
-      )}
-      </AnimatePresence>
+      </DropdownContent>
 
       <Modal open={cardOpen} onClose={() => setCardOpen(false)} maxWidth="max-w-[30rem]">
         <WriterCard
