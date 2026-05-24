@@ -76,7 +76,7 @@ export function TabsTrigger({
         <motion.div
           layoutId={layoutId}
           className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
-          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
         />
       )}
     </button>

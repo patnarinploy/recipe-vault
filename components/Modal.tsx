@@ -111,10 +111,10 @@ export default function Modal({
         {open && (
           <motion.div
             key="modal-panel"
-            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            initial={{ opacity: 0, scale: 0.92, y: 32 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 10 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ type: "spring", stiffness: 160, damping: 20 }}
             className="fixed inset-0 overflow-y-auto pointer-events-none"
             style={{ zIndex: 9999 }}
             role="dialog"
