@@ -1,5 +1,12 @@
 [
   {
+    "build": 201,
+    "timestamp": "2026-05-24T15:50:42.000Z",
+    "subject": "Achievement badges: keep hover preview, add click to pin tooltip open",
+    "hash": "7e2b3b9",
+    "category": "internal"
+  },
+  {
     "build": 200,
     "timestamp": "2026-05-24T15:45:34.000Z",
     "subject": "Fix achievement badge tap-to-view and StorePicker Escape to close",

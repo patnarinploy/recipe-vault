@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 200;
-export const BUILD_TIMESTAMP = "2026-05-24T15:45:34.000Z";
-export const BUILD_TOOLTIP   = "Fix achievement badge tap-to-view and StorePicker Escape to close";
+export const BUILD_NUMBER    = 201;
+export const BUILD_TIMESTAMP = "2026-05-24T15:50:42.000Z";
+export const BUILD_TOOLTIP   = "Achievement badges: keep hover preview, add click to pin tooltip open";
