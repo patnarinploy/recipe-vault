@@ -1,5 +1,12 @@
 [
   {
+    "build": 197,
+    "timestamp": "2026-05-24T07:25:48.000Z",
+    "subject": "Tune modal + tab spring for visible, perceptible animation",
+    "hash": "e70caf9",
+    "category": "internal"
+  },
+  {
     "build": 196,
     "timestamp": "2026-05-24T06:55:24.000Z",
     "subject": "Fix framer-motion v12 nested motion animation (modal pops in bug)",
