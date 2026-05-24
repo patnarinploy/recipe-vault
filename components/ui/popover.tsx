@@ -20,12 +20,12 @@ export function PopoverContent({
 }: PopoverContentProps) {
   return (
     <PopoverPrimitive.Portal>
-      <PopoverPrimitive.Content asChild side={side} align={align} sideOffset={sideOffset}>
+      <PopoverPrimitive.Content side={side} align={align} sideOffset={sideOffset} className="z-50 outline-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 28 }}
-          className={`z-50 bg-surface rounded-2xl shadow-xl border border-border p-3 ${className}`}
+          className={`bg-surface rounded-2xl shadow-xl border border-border p-3 ${className}`}
         >
           {children}
         </motion.div>

@@ -38,7 +38,7 @@ export default function WriterCard({ info, onClose, statsLoading = false, curren
   }
 
   return (
-    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-stone-800 dark:via-stone-800 dark:to-stone-800 rounded-2xl p-6 border border-orange-100 dark:border-stone-700 text-center">
+    <div className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 dark:from-stone-800 dark:via-stone-800 dark:to-stone-800 rounded-2xl overflow-hidden p-6 border border-orange-100 dark:border-stone-700 text-center">
 
       {onClose && (
         <button

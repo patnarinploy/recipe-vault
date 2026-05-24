@@ -241,8 +241,8 @@ function PresetsTable({
           <motion.div
             key={`edit-${item.id}`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
             <div className="flex flex-col gap-2 px-4 py-3 bg-orange-50/50 dark:bg-orange-900/10">
@@ -345,8 +345,8 @@ function PresetsTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
             <div className="bg-surface rounded-2xl border border-border overflow-hidden mb-0">
@@ -510,8 +510,8 @@ function IngredientsTable({
           <motion.div
             key={`edit-${item.id}`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
             <EditForm
@@ -596,8 +596,8 @@ function IngredientsTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
             <div className="bg-surface rounded-2xl border border-border overflow-hidden">
@@ -722,8 +722,8 @@ function StoresTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
             <StoreFormInline

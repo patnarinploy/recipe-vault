@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { X, ChefHat, Loader2, ExternalLink } from "lucide-react";
 import { useLocale } from "@/lib/locale";
 import type { UserStore } from "@/lib/types";
@@ -84,9 +85,17 @@ export default function PresetDetailModal(props: Props) {
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={props.onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+      />
+      <motion.div
         className="relative bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -204,7 +213,7 @@ export default function PresetDetailModal(props: Props) {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>,
     document.body
   );
