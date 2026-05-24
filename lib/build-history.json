@@ -1,5 +1,12 @@
 [
   {
+    "build": 210,
+    "timestamp": "2026-05-24T18:33:55.000Z",
+    "subject": "Apply Tailwind dropdown animation to UserMenu and BookFAB",
+    "hash": "a63beb4",
+    "category": "internal"
+  },
+  {
     "build": 209,
     "timestamp": "2026-05-24T18:26:34.000Z",
     "subject": "Tune dropdown leave duration to 200ms (enter stays 400ms)",
