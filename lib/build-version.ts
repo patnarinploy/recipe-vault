@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 204;
-export const BUILD_TIMESTAMP = "2026-05-24T16:02:07.000Z";
-export const BUILD_TOOLTIP   = "Fix dropdown animation: tween easeOut/easeIn instead of broken CSS class";
+export const BUILD_NUMBER    = 205;
+export const BUILD_TIMESTAMP = "2026-05-24T16:11:19.000Z";
+export const BUILD_TOOLTIP   = "Use @headlessui/react Transition for authentic Tailwind Plus dropdown an";

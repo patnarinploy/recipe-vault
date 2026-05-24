@@ -1,5 +1,12 @@
 [
   {
+    "build": 205,
+    "timestamp": "2026-05-24T16:11:19.000Z",
+    "subject": "Use @headlessui/react Transition for authentic Tailwind Plus dropdown an",
+    "hash": "471a466",
+    "category": "internal"
+  },
+  {
     "build": 204,
     "timestamp": "2026-05-24T16:02:07.000Z",
     "subject": "Fix dropdown animation: tween easeOut/easeIn instead of broken CSS class",
