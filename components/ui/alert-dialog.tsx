@@ -19,17 +19,27 @@ export function AlertDialog({
   onConfirm, danger = false,
 }: AlertDialogProps) {
   return (
-    <AnimatePresence>
-      {open && (
-        <>
+    <>
+      {/* Backdrop */}
+      <AnimatePresence>
+        {open && (
           <motion.div
+            key="alert-backdrop"
             className="fixed inset-0 z-[9998] bg-black/50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onMouseDown={() => onOpenChange(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Dialog panel */}
+      <AnimatePresence>
+        {open && (
           <motion.div
+            key="alert-panel"
             role="alertdialog"
             aria-modal
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-full max-w-sm bg-surface rounded-2xl shadow-2xl border border-border p-6"
@@ -57,8 +67,8 @@ export function AlertDialog({
               </button>
             </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

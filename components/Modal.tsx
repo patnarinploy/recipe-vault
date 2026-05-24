@@ -27,10 +27,6 @@ export default function Modal({
   hideChrome = false,
   disableBackdropClick = false,
 }: ModalProps) {
-  // Keep a stable ref to onClose so the stack effect only re-runs when open changes.
-  // Without this, an inline onClose prop (new reference each render) would re-push
-  // the modal to the stack on every parent re-render, causing stale stack entries
-  // that require extra clicks to dismiss.
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
 
@@ -87,51 +83,68 @@ export default function Modal({
     );
   }
 
-  /* ── Standard centered modal ── */
+  /* ── Standard centered modal ──
+     Backdrop and panel are separate AnimatePresence siblings so each
+     motion.div is a direct child and runs its own initial→animate sequence.
+     Nesting motion.div inside another animating motion.div in framer-motion v12
+     causes the inner element to skip its initial animation. ── */
   return createPortal(
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.18 } }}
-          exit={{ opacity: 0, transition: { duration: 0.14 } }}
-          className="fixed inset-0 overflow-y-auto"
-          style={{ zIndex: 9999 }}
-          onClick={disableBackdropClick ? undefined : onClose}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm" />
+    <>
+      {/* Backdrop overlay */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm"
+            style={{ zIndex: 9998 }}
+            onClick={disableBackdropClick ? undefined : onClose}
+          />
+        )}
+      </AnimatePresence>
 
-          <div className="relative min-h-full flex items-center justify-center p-4 sm:p-6">
-            <motion.div
-              key="modal-panel"
-              initial={{ opacity: 0, scale: 0.96, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } }}
-              exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.14, ease: [0.4, 0, 1, 1] } }}
-              className={`relative w-full ${maxWidth}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {title && (
-                <div className="bg-surface rounded-t-2xl border border-border border-b-0 px-6 py-4 flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-foreground">{title}</h2>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="p-1.5 -m-1.5 rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-colors"
-                    aria-label="ปิด"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-              {children}
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
+      {/* Panel — pointer-events-none on container so backdrop click-to-close still fires */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="modal-panel"
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 overflow-y-auto pointer-events-none"
+            style={{ zIndex: 9999 }}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="relative min-h-full flex items-center justify-center p-4 sm:p-6">
+              <div
+                className={`relative w-full pointer-events-auto ${maxWidth}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {title && (
+                  <div className="bg-surface rounded-t-2xl border border-border border-b-0 px-6 py-4 flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-foreground">{title}</h2>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="p-1.5 -m-1.5 rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-colors"
+                      aria-label="ปิด"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+                {children}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>,
     portal
   );
 }
