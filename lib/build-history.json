@@ -1,5 +1,12 @@
 [
   {
+    "build": 209,
+    "timestamp": "2026-05-24T18:26:34.000Z",
+    "subject": "Tune dropdown leave duration to 200ms (enter stays 400ms)",
+    "hash": "0d3f5eb",
+    "category": "internal"
+  },
+  {
     "build": 208,
     "timestamp": "2026-05-24T18:23:09.000Z",
     "subject": "Set dropdown transition duration to 400ms for both enter and leave",

@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 208;
-export const BUILD_TIMESTAMP = "2026-05-24T18:23:09.000Z";
-export const BUILD_TOOLTIP   = "Set dropdown transition duration to 400ms for both enter and leave";
+export const BUILD_NUMBER    = 209;
+export const BUILD_TIMESTAMP = "2026-05-24T18:26:34.000Z";
+export const BUILD_TOOLTIP   = "Tune dropdown leave duration to 200ms (enter stays 400ms)";
