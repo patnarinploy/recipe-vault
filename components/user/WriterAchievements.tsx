@@ -63,7 +63,15 @@ function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string 
   }, [pinned, badge.id, unpin]);
 
   return (
-    <HoverCard open={pinned || hovered} onOpenChange={setHovered} openDelay={200} closeDelay={100}>
+    <HoverCard
+      open={pinned || hovered}
+      onOpenChange={(v) => {
+        setHovered(v);
+        if (v && pinnedId !== null && pinnedId !== badge.id) unpin(pinnedId);
+      }}
+      openDelay={200}
+      closeDelay={100}
+    >
       <HoverCardTrigger asChild>
         <button
           ref={btnRef}
