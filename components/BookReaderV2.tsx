@@ -1979,6 +1979,15 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         <div data-tour="tour-right-half"
              style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: "50%", zIndex: 25, pointerEvents: "none" }} />
 
+        {/* When FAB dropdown is open, intercept page clicks so they only close the dropdown */}
+        {fabOpen && (
+          <div
+            style={{ position: "absolute", inset: 0, zIndex: 30 }}
+            onMouseDown={(e) => { e.stopPropagation(); setFabOpen(false); }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
+
         {/* ── FAB — bottom-right of the right page ─── */}
         <div className="absolute z-[10001] flex flex-col items-end gap-2"
              style={{ bottom: 5, right: 5 }}>

@@ -122,6 +122,7 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
       </DropdownContent>
 
       <Modal open={cardOpen} onClose={() => setCardOpen(false)} maxWidth="max-w-[30rem]">
+        <div className="rounded-2xl overflow-hidden">
         <WriterCard
           info={{
             display_name: user.display_name,
@@ -138,6 +139,7 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
           statsLoading={statsLoading}
           onClose={() => setCardOpen(false)}
         />
+        </div>
       </Modal>
     </div>
   );
