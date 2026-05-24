@@ -1,5 +1,12 @@
 [
   {
+    "build": 202,
+    "timestamp": "2026-05-24T15:54:42.000Z",
+    "subject": "Replace framer-motion spring dropdown with CSS transition (Tailwind Plus",
+    "hash": "151c224",
+    "category": "internal"
+  },
+  {
     "build": 201,
     "timestamp": "2026-05-24T15:50:42.000Z",
     "subject": "Achievement badges: keep hover preview, add click to pin tooltip open",
