@@ -150,7 +150,14 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
         </TabsList>
       </Tabs>
 
-      {/* Search bar */}
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+      >
       <div className="mb-6">
         {tab === "mine" && !isGuest ? (
           <div className="relative max-w-sm">
@@ -346,6 +353,9 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
           )}
         </div>
       )}
+
+      </motion.div>
+      </AnimatePresence>
 
       {/* New book modal */}
       <Modal open={newBookOpen} onClose={() => setNewBookOpen(false)} title={lib.createBookTitle} maxWidth="max-w-3xl" disableBackdropClick>
