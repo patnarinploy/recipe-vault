@@ -1,5 +1,12 @@
 [
   {
+    "build": 198,
+    "timestamp": "2026-05-24T07:40:43.000Z",
+    "subject": "Add tab content fade+slide animation when switching Library tabs",
+    "hash": "a5761ce",
+    "category": "feat"
+  },
+  {
     "build": 197,
     "timestamp": "2026-05-24T07:25:48.000Z",
     "subject": "Tune modal + tab spring for visible, perceptible animation",
