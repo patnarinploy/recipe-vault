@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getAchievements, type AchievementBadge } from "@/lib/achievements";
 import { useLocale } from "@/lib/locale";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
@@ -42,10 +42,24 @@ const TIER_LABEL: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
 function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string }) {
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!pinned) return;
+    function onMouseDown(e: MouseEvent) {
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) {
+        setPinned(false);
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [pinned]);
+
   return (
     <HoverCard open={pinned || hovered} onOpenChange={setHovered} openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
         <button
+          ref={btnRef}
           type="button"
           onClick={() => setPinned(p => !p)}
           className={`w-9 h-9 rounded-full flex items-center justify-center text-lg select-none shadow-sm transition-transform hover:scale-110 active:scale-95 ${TIER_BG[badge.tier]}`}
