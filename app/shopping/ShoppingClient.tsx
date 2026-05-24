@@ -722,8 +722,8 @@ function StoresTab({
                     <motion.div
                       key={`edit-${store.id}`}
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-                      exit={{ height: 0, opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
+                      animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+                      exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
                       style={{ overflow: "hidden" }}
                     >
                       <StoreFormInline

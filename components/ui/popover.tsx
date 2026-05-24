@@ -1,7 +1,6 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { motion } from "framer-motion";
 
 export const PopoverTrigger = PopoverPrimitive.Trigger;
 export const PopoverClose = PopoverPrimitive.Close;
@@ -20,15 +19,13 @@ export function PopoverContent({
 }: PopoverContentProps) {
   return (
     <PopoverPrimitive.Portal>
-      <PopoverPrimitive.Content side={side} align={align} sideOffset={sideOffset} className="z-50 outline-none">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 28 }}
-          className={`bg-surface rounded-2xl shadow-xl border border-border p-3 ${className}`}
-        >
-          {children}
-        </motion.div>
+      <PopoverPrimitive.Content
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+        className={`z-50 outline-none bg-surface rounded-2xl shadow-xl border border-border p-3 ${className}`}
+      >
+        {children}
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );
