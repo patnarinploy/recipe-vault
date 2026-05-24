@@ -1,5 +1,12 @@
 [
   {
+    "build": 208,
+    "timestamp": "2026-05-24T18:23:09.000Z",
+    "subject": "Set dropdown transition duration to 400ms for both enter and leave",
+    "hash": "4247d22",
+    "category": "internal"
+  },
+  {
     "build": 207,
     "timestamp": "2026-05-24T16:31:42.000Z",
     "subject": "Switch DropdownContent to Headless UI v2 data-attribute API",
