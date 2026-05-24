@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 202;
-export const BUILD_TIMESTAMP = "2026-05-24T15:54:42.000Z";
-export const BUILD_TOOLTIP   = "Replace framer-motion spring dropdown with CSS transition (Tailwind Plus";
+export const BUILD_NUMBER    = 203;
+export const BUILD_TIMESTAMP = "2026-05-24T15:58:21.000Z";
+export const BUILD_TOOLTIP   = "Close pinned achievement tooltip on click-outside";

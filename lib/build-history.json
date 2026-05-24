@@ -1,5 +1,12 @@
 [
   {
+    "build": 203,
+    "timestamp": "2026-05-24T15:58:21.000Z",
+    "subject": "Close pinned achievement tooltip on click-outside",
+    "hash": "6013eb7",
+    "category": "internal"
+  },
+  {
     "build": 202,
     "timestamp": "2026-05-24T15:54:42.000Z",
     "subject": "Replace framer-motion spring dropdown with CSS transition (Tailwind Plus",
