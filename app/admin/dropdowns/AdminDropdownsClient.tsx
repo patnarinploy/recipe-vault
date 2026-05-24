@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Plus, Check, X, Pencil, EyeOff, Eye } from "lucide-react";
@@ -293,41 +294,51 @@ export default function AdminDropdownsClient({
         ))}
       </div>
 
-      {activeTab === "units" && (
-        <PresetsTable
-          items={unitItems}
-          onSaveEdit={saveUnit}
-          onArchive={archiveUnit}
-          onAdd={addUnit}
-          thLabel={d.nameTh}
-          enLabel={d.nameEn}
-          addLabel={d.addUnit}
-          archiveConfirm={d.deleteUnitConfirm}
-          restoreConfirm={d.restoreUnitConfirm}
-          countLabel={d.countUnits.replace("{n}", String(units.length))}
-          archiveLabel={d.archive}
-          restoreLabel={d.restore}
-          archivedLabel={d.archived}
-        />
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          {activeTab === "units" && (
+            <PresetsTable
+              items={unitItems}
+              onSaveEdit={saveUnit}
+              onArchive={archiveUnit}
+              onAdd={addUnit}
+              thLabel={d.nameTh}
+              enLabel={d.nameEn}
+              addLabel={d.addUnit}
+              archiveConfirm={d.deleteUnitConfirm}
+              restoreConfirm={d.restoreUnitConfirm}
+              countLabel={d.countUnits.replace("{n}", String(units.length))}
+              archiveLabel={d.archive}
+              restoreLabel={d.restore}
+              archivedLabel={d.archived}
+            />
+          )}
 
-      {activeTab === "categories" && (
-        <PresetsTable
-          items={categoryItems}
-          onSaveEdit={saveCategory}
-          onArchive={archiveCategory}
-          onAdd={addCategory}
-          thLabel={d.nameTh}
-          enLabel={d.nameEn}
-          addLabel={d.addCategory}
-          archiveConfirm={d.deleteCategoryConfirm}
-          restoreConfirm={d.restoreCategoryConfirm}
-          countLabel={d.countCategories.replace("{n}", String(categories.length))}
-          archiveLabel={d.archive}
-          restoreLabel={d.restore}
-          archivedLabel={d.archived}
-        />
-      )}
+          {activeTab === "categories" && (
+            <PresetsTable
+              items={categoryItems}
+              onSaveEdit={saveCategory}
+              onArchive={archiveCategory}
+              onAdd={addCategory}
+              thLabel={d.nameTh}
+              enLabel={d.nameEn}
+              addLabel={d.addCategory}
+              archiveConfirm={d.deleteCategoryConfirm}
+              restoreConfirm={d.restoreCategoryConfirm}
+              countLabel={d.countCategories.replace("{n}", String(categories.length))}
+              archiveLabel={d.archive}
+              restoreLabel={d.restore}
+              archivedLabel={d.archived}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

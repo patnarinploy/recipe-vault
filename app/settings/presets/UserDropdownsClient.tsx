@@ -1015,82 +1015,92 @@ export default function UserDropdownsClient({
         ))}
       </div>
 
-      {activeTab === "ingredients" && (
-        <IngredientsTable
-          items={ingItems}
-          stores={initialStores}
-          onSaveEdit={saveIngredient}
-          onArchive={archiveIngredient}
-          onAdd={addIngredient}
-          thLabel={d.nameTh}
-          enLabel={d.nameEn}
-          addLabel={d.addIngredient}
-          archiveConfirm={d.deleteIngredientConfirm}
-          restoreConfirm={d.restoreIngredientConfirm}
-          countLabel={d.countIngredients.replace("{n}", String(ingredients.length))}
-          archiveLabel={d.archive}
-          restoreLabel={d.restore}
-          archivedLabel={d.archived}
-          emptyLabel={d.emptyIngredients}
-          storesLabel={d.ingredientStores}
-          noStoreLabel={d.noStoreAssigned}
-          requireOneNameError={d.requireOneName}
-        />
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          {activeTab === "ingredients" && (
+            <IngredientsTable
+              items={ingItems}
+              stores={initialStores}
+              onSaveEdit={saveIngredient}
+              onArchive={archiveIngredient}
+              onAdd={addIngredient}
+              thLabel={d.nameTh}
+              enLabel={d.nameEn}
+              addLabel={d.addIngredient}
+              archiveConfirm={d.deleteIngredientConfirm}
+              restoreConfirm={d.restoreIngredientConfirm}
+              countLabel={d.countIngredients.replace("{n}", String(ingredients.length))}
+              archiveLabel={d.archive}
+              restoreLabel={d.restore}
+              archivedLabel={d.archived}
+              emptyLabel={d.emptyIngredients}
+              storesLabel={d.ingredientStores}
+              noStoreLabel={d.noStoreAssigned}
+              requireOneNameError={d.requireOneName}
+            />
+          )}
 
-      {activeTab === "units" && (
-        <PresetsTable
-          kind="unit"
-          items={unitItems}
-          onSaveEdit={saveUnit}
-          onArchive={archiveUnit}
-          onAdd={addUnit}
-          thLabel={d.nameTh}
-          enLabel={d.nameEn}
-          addLabel={d.addUnit}
-          archiveConfirm={d.deleteUnitConfirm}
-          restoreConfirm={d.restoreUnitConfirm}
-          countLabel={d.countUnits.replace("{n}", String(units.length))}
-          archiveLabel={d.archive}
-          restoreLabel={d.restore}
-          archivedLabel={d.archived}
-          emptyLabel={d.emptyUnits}
-          requireOneNameError={d.requireOneName}
-        />
-      )}
+          {activeTab === "units" && (
+            <PresetsTable
+              kind="unit"
+              items={unitItems}
+              onSaveEdit={saveUnit}
+              onArchive={archiveUnit}
+              onAdd={addUnit}
+              thLabel={d.nameTh}
+              enLabel={d.nameEn}
+              addLabel={d.addUnit}
+              archiveConfirm={d.deleteUnitConfirm}
+              restoreConfirm={d.restoreUnitConfirm}
+              countLabel={d.countUnits.replace("{n}", String(units.length))}
+              archiveLabel={d.archive}
+              restoreLabel={d.restore}
+              archivedLabel={d.archived}
+              emptyLabel={d.emptyUnits}
+              requireOneNameError={d.requireOneName}
+            />
+          )}
 
-      {activeTab === "categories" && (
-        <PresetsTable
-          kind="category"
-          items={categoryItems}
-          onSaveEdit={saveCategory}
-          onArchive={archiveCategory}
-          onAdd={addCategory}
-          thLabel={d.nameTh}
-          enLabel={d.nameEn}
-          addLabel={d.addCategory}
-          archiveConfirm={d.deleteCategoryConfirm}
-          restoreConfirm={d.restoreCategoryConfirm}
-          countLabel={d.countCategories.replace("{n}", String(categories.length))}
-          archiveLabel={d.archive}
-          restoreLabel={d.restore}
-          archivedLabel={d.archived}
-          emptyLabel={d.emptyCategories}
-          requireOneNameError={d.requireOneName}
-        />
-      )}
+          {activeTab === "categories" && (
+            <PresetsTable
+              kind="category"
+              items={categoryItems}
+              onSaveEdit={saveCategory}
+              onArchive={archiveCategory}
+              onAdd={addCategory}
+              thLabel={d.nameTh}
+              enLabel={d.nameEn}
+              addLabel={d.addCategory}
+              archiveConfirm={d.deleteCategoryConfirm}
+              restoreConfirm={d.restoreCategoryConfirm}
+              countLabel={d.countCategories.replace("{n}", String(categories.length))}
+              archiveLabel={d.archive}
+              restoreLabel={d.restore}
+              archivedLabel={d.archived}
+              emptyLabel={d.emptyCategories}
+              requireOneNameError={d.requireOneName}
+            />
+          )}
 
-      {activeTab === "stores" && (
-        <StoresTable
-          stores={stores}
-          onSave={handleStoreSaved}
-          onDelete={removeStore}
-          addLabel={d.addStore}
-          deleteConfirm={d.storeDeleteConfirm}
-          emptyLabel={d.emptyStores}
-          countLabel={d.countStores}
-        />
-      )}
+          {activeTab === "stores" && (
+            <StoresTable
+              stores={stores}
+              onSave={handleStoreSaved}
+              onDelete={removeStore}
+              addLabel={d.addStore}
+              deleteConfirm={d.storeDeleteConfirm}
+              emptyLabel={d.emptyStores}
+              countLabel={d.countStores}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

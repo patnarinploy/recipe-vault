@@ -889,39 +889,49 @@ export default function ShoppingClient({
         ))}
       </div>
 
-      {tab === "per" && (
-        items.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-20 text-center">
-            <ShoppingCart className="w-14 h-14 text-muted opacity-20" />
-            <p className="text-base font-medium text-foreground">{s.empty}</p>
-            <p className="text-sm text-muted max-w-xs">{s.emptySub}</p>
-            <Link href="/" className="mt-4 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors">
-              {s.backHome}
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {items.map(entry => (
-              <RecipeCard key={entry.recipe.id} entry={entry} locale={locale}
-                onQuantityChange={handleQuantityChange} onRemove={handleRemove} />
-            ))}
-          </div>
-        )
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          {tab === "per" && (
+            items.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-20 text-center">
+                <ShoppingCart className="w-14 h-14 text-muted opacity-20" />
+                <p className="text-base font-medium text-foreground">{s.empty}</p>
+                <p className="text-sm text-muted max-w-xs">{s.emptySub}</p>
+                <Link href="/" className="mt-4 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors">
+                  {s.backHome}
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {items.map(entry => (
+                  <RecipeCard key={entry.recipe.id} entry={entry} locale={locale}
+                    onQuantityChange={handleQuantityChange} onRemove={handleRemove} />
+                ))}
+              </div>
+            )
+          )}
 
-      {tab === "combined" && (
-        items.length === 0 ? (
-          <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>
-        ) : (
-          <CombinedView key={clearSignal} items={items} locale={locale} stores={stores}
-            storePrefs={storePrefs} onPickStore={handlePickStore} onClearAll={handleClearAll} />
-        )
-      )}
+          {tab === "combined" && (
+            items.length === 0 ? (
+              <div className="text-center py-12 text-muted text-sm">{s.totalIngredients.replace("{n}", "0")}</div>
+            ) : (
+              <CombinedView key={clearSignal} items={items} locale={locale} stores={stores}
+                storePrefs={storePrefs} onPickStore={handlePickStore} onClearAll={handleClearAll} />
+            )
+          )}
 
-      {tab === "map" && (
-        <StoresTab stores={stores} storePrefs={storePrefs} items={items}
-          locale={locale} onStoresChange={setStores} />
-      )}
+          {tab === "map" && (
+            <StoresTab stores={stores} storePrefs={storePrefs} items={items}
+              locale={locale} onStoresChange={setStores} />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       <AnimatePresence>
       {picker && (
