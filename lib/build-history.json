@@ -1,5 +1,12 @@
 [
   {
+    "build": 211,
+    "timestamp": "2026-05-24T18:39:22.000Z",
+    "subject": "fix: intercept page clicks when FAB dropdown open; fix UserMenu WriterCa",
+    "hash": "12ea7e6",
+    "category": "fix"
+  },
+  {
     "build": 210,
     "timestamp": "2026-05-24T18:33:55.000Z",
     "subject": "Apply Tailwind dropdown animation to UserMenu and BookFAB",

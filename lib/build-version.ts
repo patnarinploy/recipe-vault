@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 210;
-export const BUILD_TIMESTAMP = "2026-05-24T18:33:55.000Z";
-export const BUILD_TOOLTIP   = "Apply Tailwind dropdown animation to UserMenu and BookFAB";
+export const BUILD_NUMBER    = 211;
+export const BUILD_TIMESTAMP = "2026-05-24T18:39:22.000Z";
+export const BUILD_TOOLTIP   = "fix: intercept page clicks when FAB dropdown open; fix UserMenu WriterCa";
