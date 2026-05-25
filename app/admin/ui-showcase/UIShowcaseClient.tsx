@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Check, ChevronDown, Info, Loader2, Plus, Search, X, FlaskConical } from "lucide-react";
+import { Check, ChevronDown, GripVertical, Info, Loader2, Plus, Search, X, FlaskConical } from "lucide-react";
+import { ReactSortable } from "react-sortablejs";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import Modal from "@/components/Modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -221,6 +222,24 @@ export default function UIShowcaseClient() {
   const [comboVal, setComboVal]         = useState("");
   const [achievePinned, setAchievePinned] = useState<string | null>(null);
 
+  // Number inputs
+  const [numServings, setNumServings]   = useState(2);
+  const [numCookTime, setNumCookTime]   = useState(30);
+
+  // Add step demo
+  const [steps, setSteps] = useState([{ id: "s1", text: "" }, { id: "s2", text: "" }]);
+  function addStep()                      { setSteps(p => [...p, { id: `s${Date.now()}`, text: "" }]); }
+  function removeStep(id: string)         { setSteps(p => p.filter(s => s.id !== id)); }
+  function updateStep(id: string, t: string) { setSteps(p => p.map(s => s.id === id ? { ...s, text: t } : s)); }
+
+  // Drag sort
+  const [sortItems, setSortItems] = useState([
+    { id: "si1", name: "บทที่ 1 — บทนำ" },
+    { id: "si2", name: "บทที่ 2 — วัตถุดิบหลัก" },
+    { id: "si3", name: "บทที่ 3 — วิธีทำ" },
+    { id: "si4", name: "บทที่ 4 — การเสิร์ฟ" },
+  ]);
+
   // Sorted: unchecked first, checked sink to bottom
   const sortedList = [...checkList].sort((a, b) => Number(a.done) - Number(b.done));
 
@@ -413,6 +432,34 @@ export default function UIShowcaseClient() {
           </div>
         </Section>
 
+        <Section title="Drag & Sort">
+          <div className="bg-surface rounded-2xl border border-border overflow-hidden">
+            <ReactSortable
+              list={sortItems}
+              setList={setSortItems}
+              handle=".drag-handle"
+              animation={150}
+              ghostClass="opacity-40"
+            >
+              {sortItems.map((item, i) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-3 px-4 py-3 hover:bg-elevated/60 transition-colors select-none ${i > 0 ? "border-t border-border" : ""}`}
+                >
+                  <GripVertical className="drag-handle w-4 h-4 text-muted shrink-0 cursor-grab active:cursor-grabbing" />
+                  <span className="w-5 text-center text-xs text-muted font-mono shrink-0">{i + 1}</span>
+                  <span className="flex-1 text-sm text-foreground">{item.name}</span>
+                </div>
+              ))}
+            </ReactSortable>
+            <div className="px-4 py-2.5 border-t border-border bg-elevated/30">
+              <p className="text-xs text-muted">
+                <Code>{"<ReactSortable handle='.drag-handle' animation={150}>"}</Code> — ลาก GripVertical เพื่อเรียงลำดับ
+              </p>
+            </div>
+          </div>
+        </Section>
+
       </SectionGroup>
 
       {/* ════════════════════════════════════════════════════════ */}
@@ -525,6 +572,88 @@ export default function UIShowcaseClient() {
               <input type="date" disabled className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground opacity-50 cursor-not-allowed" />
             </div>
             <p className="text-xs text-muted"><Code>{"<input type='date' />"}</Code> — native browser datepicker</p>
+          </div>
+        </Section>
+
+        <Section title="Number Input (Stepper)">
+          <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted">จำนวนคน (servings)</label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setNumServings(n => Math.max(1, n - 1))}
+                  className="px-3 py-2 rounded-l-xl border border-border text-sm text-secondary hover:bg-elevated transition-colors border-r-0"
+                >−</button>
+                <input
+                  type="number" min="1" value={numServings}
+                  onChange={e => setNumServings(Math.max(1, Number(e.target.value)))}
+                  className="w-14 text-center border-y border-border py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setNumServings(n => n + 1)}
+                  className="px-3 py-2 rounded-r-xl border border-border text-sm text-secondary hover:bg-elevated transition-colors border-l-0"
+                >+</button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted">เวลาทำ (นาที)</label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setNumCookTime(n => Math.max(1, n - 5))}
+                  className="px-3 py-2 rounded-l-xl border border-orange-300 text-sm text-secondary hover:bg-orange-50/50 transition-colors border-r-0"
+                >−</button>
+                <input
+                  type="number" min="1" value={numCookTime}
+                  onChange={e => setNumCookTime(Math.max(1, Number(e.target.value)))}
+                  className="w-16 text-center border-y border-orange-300 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setNumCookTime(n => n + 5)}
+                  className="px-3 py-2 rounded-r-xl border border-orange-300 text-sm text-secondary hover:bg-orange-50/50 transition-colors border-l-0"
+                >+</button>
+              </div>
+            </div>
+            <p className="text-xs text-muted">ปุ่ม −/+ ติดกับ <Code>{"<input type='number'>"}</Code> · ซ่อน spin arrow ด้วย <Code>appearance:textfield</Code></p>
+          </div>
+        </Section>
+
+        <Section title="Add Step (Instruction List)">
+          <div className="bg-surface rounded-2xl border border-border p-5 space-y-3">
+            {steps.map((step, i) => (
+              <div key={step.id} className="flex items-start gap-2">
+                <span className="w-5 text-center text-xs text-muted font-mono mt-2.5 shrink-0">{i + 1}</span>
+                <textarea
+                  value={step.text}
+                  onChange={e => updateStep(step.id, e.target.value)}
+                  rows={2}
+                  placeholder={`ขั้นตอนที่ ${i + 1}…`}
+                  className="flex-1 border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-orange-400 placeholder:text-muted"
+                />
+                {steps.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeStep(step.id)}
+                    className="p-1.5 text-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors mt-1 rounded-lg"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addStep}
+              className="mt-1 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" /> เพิ่มขั้นตอน
+            </button>
+            <p className="text-xs text-muted pt-1">
+              <Code>textarea</Code> + <Code>{"<Plus> เพิ่มขั้นตอน"}</Code> + <Code>{"<X>"}</Code> ลบ — ใช้ใน RecipeForm
+            </p>
           </div>
         </Section>
 
