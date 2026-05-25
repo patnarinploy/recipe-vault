@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { DropdownContent } from "./ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,7 +11,8 @@ import Modal from "./Modal";
 import RecipeForm from "./RecipeForm";
 import BookCoverEditor from "./BookCoverEditor";
 import { togglePublic } from "@/app/actions/recipes";
-import type { Book, Recipe } from "@/lib/types";
+import { getUserPresetUnits, getUserPresetCategories, getUserPresetIngredients } from "@/app/actions/user-presets";
+import type { Book, Recipe, PresetUnit, PresetCategory } from "@/lib/types";
 
 interface Props {
   context: "cover" | "toc" | "recipe";
@@ -29,6 +30,25 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
   const [coverEditorOpen, setCoverEditorOpen] = useState(false);
   const [isPublic, setIsPublic] = useState(recipe?.is_public ?? false);
   const [isPending, startTransition] = useTransition();
+
+  const [presetUnits, setPresetUnits]       = useState<PresetUnit[]>([]);
+  const [presetCats,  setPresetCats]        = useState<PresetCategory[]>([]);
+  const [ingNames,    setIngNames]          = useState<string[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(false);
+
+  const recipeFormOpen = newRecipeOpen || editRecipeOpen;
+  useEffect(() => {
+    if (!recipeFormOpen) return;
+    setPresetsLoading(true);
+    Promise.all([getUserPresetUnits(), getUserPresetCategories(), getUserPresetIngredients()])
+      .then(([units, cats, ings]) => {
+        setPresetUnits(units);
+        setPresetCats(cats);
+        setIngNames(ings.map(i => i.name_th));
+      })
+      .finally(() => setPresetsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipeFormOpen]);
 
   // Sync public state when recipe changes
   if (recipe && recipe.is_public !== isPublic && !isPending) {
@@ -137,6 +157,10 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
         <RecipeForm
           bookId={book.id}
           inModal
+          presetUnits={presetUnits}
+          presetCategories={presetCats}
+          ingredientNameOptions={ingNames}
+          presetsLoading={presetsLoading}
           onSuccess={() => { setNewRecipeOpen(false); router.refresh(); }}
           onCancel={() => setNewRecipeOpen(false)}
         />
@@ -149,6 +173,10 @@ export default function BookFAB({ context, book, recipe, isOwner, onBackToToC }:
             bookId={book.id}
             inModal
             showDelete
+            presetUnits={presetUnits}
+            presetCategories={presetCats}
+            ingredientNameOptions={ingNames}
+            presetsLoading={presetsLoading}
             onSuccess={() => { setEditRecipeOpen(false); router.refresh(); }}
             onCancel={() => setEditRecipeOpen(false)}
             onDeleted={() => { setEditRecipeOpen(false); onBackToToC(); router.refresh(); }}

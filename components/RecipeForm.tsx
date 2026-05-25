@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { type Recipe, type PresetUnit, type PresetCategory, type DbIngredient } from "@/lib/types";
@@ -146,6 +146,7 @@ interface Props {
   presetUnits?: PresetUnit[];
   presetCategories?: PresetCategory[];
   ingredientNameOptions?: string[];
+  presetsLoading?: boolean;
 }
 
 export default function RecipeForm({
@@ -159,6 +160,7 @@ export default function RecipeForm({
   presetUnits = [],
   presetCategories = [],
   ingredientNameOptions = [],
+  presetsLoading = false,
 }: Props) {
   const { t, locale } = useLocale();
   const r = t.recipe;
@@ -169,6 +171,11 @@ export default function RecipeForm({
   const [imageUrl, setImageUrl] = useState<string | null>(recipe?.image_url ?? null);
   const [localCategories, setLocalCategories] = useState<PresetCategory[]>(presetCategories);
   const [pendingCategoryName, setPendingCategoryName] = useState<string>("");
+
+  // Sync categories when async preset data arrives after mount (async fetch in parent)
+  useEffect(() => {
+    if (presetCategories.length > 0) setLocalCategories(presetCategories);
+  }, [presetCategories]);
 
   const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(() => {
     // Primary path: structured rows from DB
@@ -393,23 +400,24 @@ export default function RecipeForm({
               onChange={handleCategoryChange}
               options={categoryOptions}
               placeholder={r.categoryPlaceholder}
+              loading={presetsLoading}
             />
           </div>
           <div>
             <label className={labelCls}>{r.cookTimeLabel}</label>
             <Stepper
-              value={Number(form.cook_time_minutes) || 1}
+              value={Number(form.cook_time_minutes)}
               onChange={v => setForm(p => ({ ...p, cook_time_minutes: String(v) }))}
-              min={1}
+              min={0}
               step={5}
             />
           </div>
           <div>
             <label className={labelCls}>{r.servingsLabel}</label>
             <Stepper
-              value={Number(form.servings) || 1}
+              value={Number(form.servings)}
               onChange={v => setForm(p => ({ ...p, servings: String(v) }))}
-              min={1}
+              min={0}
             />
           </div>
         </div>

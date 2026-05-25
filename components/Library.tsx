@@ -91,15 +91,18 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
   const [qaPresetUnits,  setQaPresetUnits]  = useState<PresetUnit[]>([]);
   const [qaPresetCats,   setQaPresetCats]   = useState<PresetCategory[]>([]);
   const [qaIngNames,     setQaIngNames]     = useState<string[]>([]);
+  const [qaLoading,      setQaLoading]      = useState(false);
 
   useEffect(() => {
     if (!quickAddBookId) return;
+    setQaLoading(true);
     Promise.all([getUserPresetUnits(), getUserPresetCategories(), getUserPresetIngredients()])
       .then(([units, cats, ings]) => {
         setQaPresetUnits(units);
         setQaPresetCats(cats);
         setQaIngNames(ings.map(i => i.name_th));
-      });
+      })
+      .finally(() => setQaLoading(false));
   }, [quickAddBookId]);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -394,6 +397,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
             presetUnits={qaPresetUnits}
             presetCategories={qaPresetCats}
             ingredientNameOptions={qaIngNames}
+            presetsLoading={qaLoading}
             onSuccess={() => { setQuickAddBookId(null); router.refresh(); }}
             onCancel={() => setQuickAddBookId(null)}
           />
