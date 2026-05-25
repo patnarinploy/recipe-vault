@@ -55,26 +55,33 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
   const [openBook, setOpenBook]         = useState<{ id: string; isOwner: boolean } | null>(null);
   const [settingsBookId, setSettingsBookId] = useState<string | null>(null);
   const [editCoverBook, setEditCoverBook]   = useState<BookWithCounts | null>(null);
-  const [writerCard, setWriterCard]         = useState<WriterInfo | null>(null);
-  const [authOpen, setAuthOpen]             = useState(false);
+  const [writerCard, setWriterCard]           = useState<WriterInfo | null>(null);
+  const [writerCardLoading, setWriterCardLoading] = useState(false);
+  const [authOpen, setAuthOpen]               = useState(false);
 
-  // Opens WriterCard and fetches is_following + follower_count client-side so the
-  // follow button always shows the correct state regardless of server-side cache.
+  // Opens WriterCard and fetches follower_count + is_following client-side.
+  // Always fetches follower_count (including own card). Skips is_following only
+  // when viewer is the same as the target or viewer is a guest.
   const openWriterCard = useCallback(async (info: WriterInfo) => {
     setWriterCard(info);
+    setWriterCardLoading(true);
     const viewerId = currentUser?.user_id;
     const targetId = info.user_id;
-    if (!viewerId || !targetId || viewerId === targetId) return;
+    if (!targetId) { setWriterCardLoading(false); return; }
     const sb = createClient();
-    const [followRes, followerRes] = await Promise.all([
-      sb.from("user_follows").select("id").eq("follower_id", viewerId).eq("following_id", targetId).maybeSingle(),
+    const isSelf = viewerId === targetId;
+    const [followerRes, followRes] = await Promise.all([
       sb.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", targetId),
+      (!isSelf && viewerId)
+        ? sb.from("user_follows").select("id").eq("follower_id", viewerId).eq("following_id", targetId).maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     setWriterCard(prev => prev?.user_id === targetId ? {
       ...prev,
-      is_following: !!followRes.data,
+      is_following: !!(followRes as { data: unknown }).data,
       follower_count: followerRes.count ?? 0,
     } : prev);
+    setWriterCardLoading(false);
   }, [currentUser?.user_id]);
   const [mySearch, setMySearch]             = useState("");
   const [pubSearch, setPubSearch]           = useState("");
@@ -394,7 +401,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
       </Modal>
 
       {/* Writer card modal */}
-      <WriterCardModal open={!!writerCard} onClose={() => setWriterCard(null)} info={writerCard} currentUserId={currentUser?.user_id} />
+      <WriterCardModal open={!!writerCard} onClose={() => setWriterCard(null)} info={writerCard} currentUserId={currentUser?.user_id} statsLoading={writerCardLoading} />
 
       {/* Auth modal — triggered when guest tries a protected action */}
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
