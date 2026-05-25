@@ -1,5 +1,12 @@
 [
   {
+    "build": 220,
+    "timestamp": "2026-05-25T09:14:44.000Z",
+    "subject": "ui-showcase: add Dropdown List + Tooltip sections, fix interactive Tabs",
+    "hash": "0877c05",
+    "category": "internal"
+  },
+  {
     "build": 219,
     "timestamp": "2026-05-25T08:57:46.000Z",
     "subject": "Add UI Showcase page at /admin/ui-showcase",
