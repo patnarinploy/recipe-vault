@@ -1736,6 +1736,32 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     }
   }, [currentUserId]);
 
+  // Re-fetches only follower_count + is_following so the count is fresh every open.
+  const handleOpenWriterCard = useCallback(() => {
+    setWriterCardOpen(true);
+    const authorUserId = writerInfo?.user_id;
+    if (!authorUserId) return;
+    const isSelf = currentUserId === authorUserId;
+    setWriterStatsLoading(true);
+    void (async () => {
+      try {
+        const sc = createClient();
+        const [followerRes, followRes] = await Promise.all([
+          sc.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", authorUserId),
+          (!isSelf && currentUserId)
+            ? sc.from("user_follows").select("id").eq("follower_id", currentUserId).eq("following_id", authorUserId).maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
+        setWriterInfo(prev => prev ? {
+          ...prev,
+          follower_count: followerRes.count ?? 0,
+          is_following: !!(followRes as { data: unknown }).data,
+        } : null);
+      } catch {}
+      setWriterStatsLoading(false);
+    })();
+  }, [writerInfo?.user_id, currentUserId]);
+
   // Clamp currentPage whenever slots change (portrait mode toggle can shrink slot count)
   useEffect(() => {
     if (currentPage >= slots.length) setCurrentPage(0);
@@ -1863,7 +1889,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
     // and page number must always anchor to the right edge of the visible page.
     const isRight = portrait ? true : si % 2 === 0;
     switch (slot.kind) {
-      case "cover-front":  return <PageCoverFront key="cf" book={displayBook} publicCount={isFavBook ? 0 : recipes.filter(r => r.is_public).length} authorName={isFavBook ? undefined : authorName} onAuthorClick={!isFavBook && writerInfo ? () => setWriterCardOpen(true) : undefined} lastUpdated={isFavBook ? undefined : bookLastUpdated} />;
+      case "cover-front":  return <PageCoverFront key="cf" book={displayBook} publicCount={isFavBook ? 0 : recipes.filter(r => r.is_public).length} authorName={isFavBook ? undefined : authorName} onAuthorClick={!isFavBook && writerInfo ? handleOpenWriterCard : undefined} lastUpdated={isFavBook ? undefined : bookLastUpdated} />;
       case "inside-cover": return <PageInsideCover key="ic" />;
       case "toc": return (
         <PageToC key={`toc-${slot.tocPage}`} recipes={recipes} tocPage={slot.tocPage}
@@ -1883,7 +1909,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
                          authorName={isFavBook ? (localizedRecipes[slot.recipeIdx]?.author_name ?? undefined) : authorName}
                          onAuthorClick={isFavBook
                            ? (localizedRecipes[slot.recipeIdx]?.author_info ? () => handleFavAuthorClick(localizedRecipes[slot.recipeIdx]) : undefined)
-                           : (writerInfo ? () => setWriterCardOpen(true) : undefined)} />
+                           : (writerInfo ? handleOpenWriterCard : undefined)} />
       );
       case "recipe-ing": return (
         <PageRecipeCont key={`ri-${slot.recipeIdx}-${slot.chunkIdx}`}
@@ -2017,7 +2043,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
                 {/* ดูการ์ดนักเขียน — cover */}
                 {ctx === "cover" && writerInfo && (
-                  <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
+                  <button onClick={() => { setFabOpen(false); handleOpenWriterCard(); }}
                           className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
                     <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
                   </button>
@@ -2088,7 +2114,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
 
               {/* ดูการ์ดนักเขียน — cover (non-owner) */}
               {!isOwner && !isFavBook && ctx === "cover" && writerInfo && (
-                <button onClick={() => { setFabOpen(false); setWriterCardOpen(true); }}
+                <button onClick={() => { setFabOpen(false); handleOpenWriterCard(); }}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-secondary hover:bg-elevated rounded-xl">
                   <User className="w-4 h-4 text-muted" /> {t.library.viewWriterCard}
                 </button>
@@ -2146,7 +2172,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
           if (ctx === "cover" || ctx === "backcover")
             radialItems.push({ id: "cover", icon: Palette, label: t.library.editCover, action: () => setCoverEditorOpen(true) });
           if (ctx === "cover" && writerInfo)
-            radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: () => setWriterCardOpen(true) });
+            radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: handleOpenWriterCard });
           if (ctx === "toc")
             radialItems.push({ id: "toc", icon: List, label: t.library.editToc, action: () => setTocSortOpen(true) });
           if (ctx === "recipe" && currentRecipe)
@@ -2155,7 +2181,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
             radialItems.push({ id: "fav", icon: Heart, label: favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd, action: () => handleToggleFavorite(currentRecipe.id) });
         }
         if (!isOwner && !isFavBook && ctx === "cover" && writerInfo)
-          radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: () => setWriterCardOpen(true) });
+          radialItems.push({ id: "writer", icon: User, label: t.library.viewWriterCard, action: handleOpenWriterCard });
         if (!isOwner && isLoggedIn && ctx === "recipe" && currentRecipe)
           radialItems.push({ id: "fav", icon: Heart, label: favoriteIds.has(currentRecipe.id) ? t.library.favoriteRemove : t.library.favoriteAdd, action: () => handleToggleFavorite(currentRecipe.id) });
         if (isLoggedIn && ctx === "recipe" && currentRecipe)
