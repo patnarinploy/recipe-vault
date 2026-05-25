@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { DropdownContent } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { STORE_COLORS } from "@/components/StoreFormInline";
 
 // ── Section wrapper ────────────────────────────────────────────────
@@ -54,8 +55,11 @@ export default function UIShowcaseClient() {
   // Expand/collapse
   const [expanded, setExpanded] = useState(false);
 
-  // Tab
-  const [tab, setTab] = useState("buttons");
+  // Tab (border-bottom style)
+  const [tab, setTab] = useState("หน้าแรก");
+
+  // Tabs component (interactive)
+  const [tabComp, setTabComp] = useState("tab-a");
 
   // Color picker
   const [color, setColor] = useState(STORE_COLORS[0]);
@@ -225,13 +229,33 @@ export default function UIShowcaseClient() {
           {/* Tabs component */}
           <div>
             <p className="text-xs text-muted mb-2">Tabs component</p>
-            <Tabs value="a">
+            <Tabs value={tabComp} onValueChange={setTabComp}>
               <TabsList>
-                <TabsTrigger value="a">Tab A</TabsTrigger>
-                <TabsTrigger value="b">Tab B</TabsTrigger>
-                <TabsTrigger value="c">Tab C</TabsTrigger>
+                <TabsTrigger value="tab-a">Tab A</TabsTrigger>
+                <TabsTrigger value="tab-b">Tab B</TabsTrigger>
+                <TabsTrigger value="tab-c">Tab C</TabsTrigger>
               </TabsList>
             </Tabs>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tabComp}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-3 px-4 py-3 rounded-xl bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20"
+              >
+                {tabComp === "tab-a" && (
+                  <p className="text-sm text-secondary">เนื้อหาของ <span className="font-semibold text-foreground">Tab A</span> — ภาพรวมสูตรอาหาร</p>
+                )}
+                {tabComp === "tab-b" && (
+                  <p className="text-sm text-secondary">เนื้อหาของ <span className="font-semibold text-foreground">Tab B</span> — รายการวัตถุดิบ</p>
+                )}
+                {tabComp === "tab-c" && (
+                  <p className="text-sm text-secondary">เนื้อหาของ <span className="font-semibold text-foreground">Tab C</span> — ขั้นตอนการทำ</p>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </Section>
@@ -436,6 +460,105 @@ export default function UIShowcaseClient() {
             <p className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-1">form card</p>
             <p className="text-sm text-secondary">bg-orange-50/50 — ใช้ใน add/edit forms</p>
           </div>
+        </div>
+      </Section>
+
+      {/* ── 16. Dropdown List (Select) ───────────────────────────── */}
+      <Section title="Dropdown List (Select)">
+        <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
+          {/* Standard select */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted">Select มาตรฐาน</label>
+            <div className="relative">
+              <select className="w-full appearance-none border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 pr-8 cursor-pointer">
+                <option value="">-- เลือกหมวดหมู่ --</option>
+                <option value="a">อาหารไทย</option>
+                <option value="b">อาหารจีน</option>
+                <option value="c">อาหารญี่ปุ่น</option>
+                <option value="d">อาหารฝรั่ง</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+            </div>
+          </div>
+          {/* Orange variant */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted">Select (orange border — form variant)</label>
+            <div className="relative">
+              <select className="w-full appearance-none border border-orange-300 rounded-xl px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 pr-8 cursor-pointer">
+                <option value="">-- เลือกหน่วยวัด --</option>
+                <option value="g">กรัม (g)</option>
+                <option value="kg">กิโลกรัม (kg)</option>
+                <option value="ml">มิลลิลิตร (ml)</option>
+                <option value="l">ลิตร (l)</option>
+                <option value="cup">ถ้วย (cup)</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+            </div>
+          </div>
+          {/* Disabled */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted">Select (disabled)</label>
+            <div className="relative opacity-50">
+              <select disabled className="w-full appearance-none border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground focus:outline-none pr-8 cursor-not-allowed">
+                <option>ปิดใช้งาน</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+            </div>
+          </div>
+          <p className="text-xs text-muted"><Code>{"<select className='appearance-none ...'>"}</Code> + chevron overlay</p>
+        </div>
+      </Section>
+
+      {/* ── 17. Hover Tooltip ────────────────────────────────────── */}
+      <Section title="Hover Tooltip">
+        <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
+          <TooltipProvider>
+            <div className="flex flex-wrap gap-3 items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="px-4 py-2 rounded-xl bg-elevated border border-border text-sm text-secondary hover:bg-border transition-colors">
+                    Tooltip บน (top)
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">แสดงจากด้านบน</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="px-4 py-2 rounded-xl bg-elevated border border-border text-sm text-secondary hover:bg-border transition-colors">
+                    Tooltip ล่าง (bottom)
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">แสดงจากด้านล่าง</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="px-4 py-2 rounded-xl bg-elevated border border-border text-sm text-secondary hover:bg-border transition-colors">
+                    Tooltip ขวา (right)
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">แสดงจากด้านขวา</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="p-2 rounded-xl bg-elevated border border-border text-muted hover:text-foreground transition-colors">
+                    <Info className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">ข้อมูลเพิ่มเติม</TooltipContent>
+              </Tooltip>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors">
+                    No Delay
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">delayDuration=0 — แสดงทันที</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+          <p className="text-xs text-muted">
+            ต้องมี <Code>{"<TooltipProvider>"}</Code> ห่อไว้ · ใช้ <Code>{"side='top|bottom|left|right'"}</Code> · delay ค่า default 400ms
+          </p>
         </div>
       </Section>
 
