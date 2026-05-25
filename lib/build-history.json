@@ -1,5 +1,12 @@
 [
   {
+    "build": 230,
+    "timestamp": "2026-05-25T21:36:29.000Z",
+    "subject": "Add custom datepicker sandbox, social link add-on inputs",
+    "hash": "a2945da",
+    "category": "feat"
+  },
+  {
     "build": 229,
     "timestamp": "2026-05-25T21:16:03.000Z",
     "subject": "fix: settings nav rows no longer show gap on press",
