@@ -1,5 +1,12 @@
 [
   {
+    "build": 214,
+    "timestamp": "2026-05-25T05:02:17.000Z",
+    "subject": "Fix 5 UI issues: inline colors, expand logic, modal exit animation, Writ",
+    "hash": "164f3b2",
+    "category": "fix"
+  },
+  {
     "build": 213,
     "timestamp": "2026-05-24T19:02:37.000Z",
     "subject": "fix: remove framer-motion from Popover, fix remaining expand animation d",
