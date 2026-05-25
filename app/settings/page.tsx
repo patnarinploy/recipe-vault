@@ -101,7 +101,7 @@ export default async function SettingsPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3.5 px-5 py-4 hover:bg-elevated active:bg-elevated/70 active:scale-100 transition-colors"
+                  className="flex items-center gap-3.5 px-5 py-4 hover:bg-elevated active:bg-elevated/70 active:scale-100 active:translate-y-px transition-all"
                 >
                   <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
                     <Icon className="w-4 h-4 text-orange-500" />
