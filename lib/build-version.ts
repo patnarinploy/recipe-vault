@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 234;
-export const BUILD_TIMESTAMP = "2026-05-25T22:39:35.000Z";
-export const BUILD_TOOLTIP   = "fix: consistent focus rings in RecipeForm + datepicker bugs in Sandbox";
+export const BUILD_NUMBER    = 235;
+export const BUILD_TIMESTAMP = "2026-05-25T22:39:55.000Z";
+export const BUILD_TOOLTIP   = "fix: remove border-orange-400 from Combobox and SelectCustom open state";

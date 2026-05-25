@@ -1,5 +1,12 @@
 [
   {
+    "build": 235,
+    "timestamp": "2026-05-25T22:39:55.000Z",
+    "subject": "fix: remove border-orange-400 from Combobox and SelectCustom open state",
+    "hash": "1533128",
+    "category": "fix"
+  },
+  {
     "build": 234,
     "timestamp": "2026-05-25T22:39:35.000Z",
     "subject": "fix: consistent focus rings in RecipeForm + datepicker bugs in Sandbox",
