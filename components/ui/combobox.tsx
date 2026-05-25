@@ -64,7 +64,7 @@ export function Combobox({
           ${loading
             ? "border-border opacity-60 cursor-not-allowed"
             : open
-              ? "border-orange-400 ring-1 ring-orange-400"
+              ? "ring-1 ring-orange-400"
               : "border-outline hover:border-orange-300"}`}
       >
         {loading ? (
