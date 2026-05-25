@@ -1,5 +1,12 @@
 [
   {
+    "build": 223,
+    "timestamp": "2026-05-25T17:09:10.000Z",
+    "subject": "sandbox: improved Combobox + Select; showcase: add Drag Sort, Number Inp",
+    "hash": "f1bb8ba",
+    "category": "internal"
+  },
+  {
     "build": 222,
     "timestamp": "2026-05-25T10:21:18.000Z",
     "subject": "ui-showcase: fix 4 issues — check list sort, achievement pin, section ",
