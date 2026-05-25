@@ -454,7 +454,7 @@ export default function RecipeForm({
                     <div>
                       <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientName}</p>
                       <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
-                        options={ingredientNameOptions} placeholder={r.ingredientName} />
+                        options={ingredientNameOptions} placeholder={r.ingredientName} loading={presetsLoading} />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
@@ -464,7 +464,7 @@ export default function RecipeForm({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientUnit}</p>
-                        <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} />
+                        <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} loading={presetsLoading} />
                       </div>
                     </div>
                   </div>
@@ -479,10 +479,10 @@ export default function RecipeForm({
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
                   <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
                   <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
-                    options={ingredientNameOptions} placeholder={r.ingredientName} />
+                    options={ingredientNameOptions} placeholder={r.ingredientName} loading={presetsLoading} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
-                  <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} />
+                  <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} loading={presetsLoading} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />
