@@ -9,7 +9,7 @@ export default async function SandboxPage() {
   return (
     <AdminLayout
       title="Sandbox / Playground"
-      backLabel="← UI Showcase"
+      backLabel="UI Showcase"
       backHref="/admin/ui-showcase"
       maxWidth="xl"
     >
