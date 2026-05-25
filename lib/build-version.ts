@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 224;
-export const BUILD_TIMESTAMP = "2026-05-25T18:42:11.000Z";
-export const BUILD_TOOLTIP   = "Extract Combobox, SelectCustom, Stepper into shared components; replace ";
+export const BUILD_NUMBER    = 225;
+export const BUILD_TIMESTAMP = "2026-05-25T20:13:21.000Z";
+export const BUILD_TOOLTIP   = "redesign Stepper to Preline horizontal layout: input left, −/+ buttons";

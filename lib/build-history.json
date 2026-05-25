@@ -1,5 +1,12 @@
 [
   {
+    "build": 225,
+    "timestamp": "2026-05-25T20:13:21.000Z",
+    "subject": "redesign Stepper to Preline horizontal layout: input left, −/+ buttons",
+    "hash": "6e06b24",
+    "category": "internal"
+  },
+  {
     "build": 224,
     "timestamp": "2026-05-25T18:42:11.000Z",
     "subject": "Extract Combobox, SelectCustom, Stepper into shared components; replace ",
