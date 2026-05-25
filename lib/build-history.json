@@ -1,5 +1,12 @@
 [
   {
+    "build": 216,
+    "timestamp": "2026-05-25T06:02:58.000Z",
+    "subject": "Fix follower_count query using wrong table name 'follows' → 'user_foll",
+    "hash": "bedb52f",
+    "category": "fix"
+  },
+  {
     "build": 215,
     "timestamp": "2026-05-25T05:46:00.000Z",
     "subject": "Apply expand/collapse mutual exclusion to Ingredients, Units, Categories",
