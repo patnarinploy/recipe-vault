@@ -673,9 +673,9 @@ function StoresTab({
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-foreground">{s.myStores}</h2>
-          {!formOpen && !editStore && (
+          {!formOpen && (
             <button
-              onClick={() => setFormOpen(true)}
+              onClick={() => { setEditStore(undefined); setFormOpen(true); }}
               className="flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-600 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />{s.addStore}
@@ -687,7 +687,7 @@ function StoresTab({
           {formOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+              animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
               exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
               style={{ overflow: "hidden" }}
               className="mb-3"
@@ -722,7 +722,7 @@ function StoresTab({
                     <motion.div
                       key={`edit-${store.id}`}
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+                      animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
                       exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
                       style={{ overflow: "hidden" }}
                     >

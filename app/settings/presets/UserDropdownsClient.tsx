@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Plus, Check, Pencil, EyeOff, Eye, Layers, ChevronDown, ChevronUp, Search, Trash2, ExternalLink, Info } from "lucide-react";
 import PresetDetailModal from "@/components/PresetDetailModal";
-import type { IngredientDetailProps, UnitDetailProps, CategoryDetailProps, StoreDetailProps } from "@/components/PresetDetailModal";
+import type { IngredientDetailContent, UnitDetailContent, CategoryDetailContent, StoreDetailContent, DetailContent } from "@/components/PresetDetailModal";
 import {
   createPresetUnit, updatePresetUnit, setPresetUnitActive,
   createPresetCategory, updatePresetCategory, setPresetCategoryActive,
@@ -193,7 +193,8 @@ function PresetsTable({
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
-  const [detail, setDetail] = useState<UnitDetailProps | CategoryDetailProps | null>(null);
+  const [detail, setDetail] = useState<UnitDetailContent | CategoryDetailContent | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; active: boolean } | null>(null);
   const { locale, t: tLocale } = useLocale();
 
@@ -241,7 +242,7 @@ function PresetsTable({
           <motion.div
             key={`edit-${item.id}`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
             exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
@@ -293,7 +294,7 @@ function PresetsTable({
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
-            <button onClick={() => setDetail({ kind, id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, onClose: () => setDetail(null) } as UnitDetailProps | CategoryDetailProps)}
+            <button onClick={() => { setDetail({ kind, id: item.id, nameTh: item.nameTh, nameEn: item.nameEn } as UnitDetailContent | CategoryDetailContent); setDetailOpen(true); }}
                     className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
               <Info className="w-3.5 h-3.5" />
             </button>
@@ -345,7 +346,7 @@ function PresetsTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
             exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
@@ -417,7 +418,7 @@ function PresetsTable({
       </LayoutGroup>
 
       <p className="text-xs text-muted">{countLabel}</p>
-      {detail && <PresetDetailModal {...detail} />}
+      <PresetDetailModal open={detailOpen} onClose={() => setDetailOpen(false)} detail={detail} />
       <AlertDialog
         open={!!archiveTarget}
         onOpenChange={(o) => !o && setArchiveTarget(null)}
@@ -461,7 +462,8 @@ function IngredientsTable({
   const [pending, startTransition] = useTransition();
   const [showArchived, setShowArchived] = useState(false);
   const [search, setSearch] = useState("");
-  const [detail, setDetail] = useState<IngredientDetailProps | null>(null);
+  const [detail, setDetail] = useState<IngredientDetailContent | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; active: boolean } | null>(null);
   const { locale, t: tLocale } = useLocale();
 
@@ -510,7 +512,7 @@ function IngredientsTable({
           <motion.div
             key={`edit-${item.id}`}
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
             exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
@@ -544,7 +546,7 @@ function IngredientsTable({
                 <StoreChips ids={item.storeIds} muted storeMap={storeMap} noStoreLabel={noStoreLabel} />
               </div>
               <div className="flex gap-1 shrink-0">
-                <button onClick={() => setDetail({ kind: "ingredient", id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds, storeMap, onClose: () => setDetail(null) })}
+                <button onClick={() => { setDetail({ kind: "ingredient", id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds, storeMap }); setDetailOpen(true); }}
                   className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
                   <Info className="w-3.5 h-3.5" />
                 </button>
@@ -596,7 +598,7 @@ function IngredientsTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
             exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
@@ -653,7 +655,7 @@ function IngredientsTable({
       </LayoutGroup>
 
       <p className="text-xs text-muted">{countLabel}</p>
-      {detail && <PresetDetailModal {...detail} />}
+      <PresetDetailModal open={detailOpen} onClose={() => setDetailOpen(false)} detail={detail} />
       <AlertDialog
         open={!!archiveTarget}
         onOpenChange={(o) => !o && setArchiveTarget(null)}
@@ -696,7 +698,8 @@ function StoresTable({
   };
 
   const countText = countLabel.replace("{n}", String(stores.length));
-  const [detail, setDetail] = useState<StoreDetailProps | null>(null);
+  const [detail, setDetail] = useState<StoreDetailContent | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -710,7 +713,7 @@ function StoresTable({
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
         {!adding && (
-          <button onClick={() => setAdding(true)}
+          <button onClick={() => { setEditingStore(null); setAdding(true); }}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
             <Plus className="w-4 h-4" /> {addLabel}
           </button>
@@ -722,7 +725,7 @@ function StoresTable({
         {adding && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
             exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
             style={{ overflow: "hidden" }}
           >
@@ -753,7 +756,7 @@ function StoresTable({
                 <motion.div
                   key={`edit-${store.id}`}
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+                  animate={{ height: "auto", opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
                   exit={{ height: 0, opacity: 0, transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
                   style={{ overflow: "hidden" }}
                 >
@@ -780,7 +783,7 @@ function StoresTable({
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <button onClick={() => setDetail({ kind: "store", store, onClose: () => setDetail(null) })}
+                    <button onClick={() => { setDetail({ kind: "store", store }); setDetailOpen(true); }}
                       className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
                       <Info className="w-3.5 h-3.5" />
                     </button>
@@ -802,7 +805,7 @@ function StoresTable({
       </div>
 
       <p className="text-xs text-muted">{countText}</p>
-      {detail && <PresetDetailModal {...detail} />}
+      <PresetDetailModal open={detailOpen} onClose={() => setDetailOpen(false)} detail={detail} />
       <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}

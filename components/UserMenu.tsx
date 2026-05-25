@@ -9,15 +9,14 @@ import type { User } from "@/lib/types";
 import { isAvatarUrl } from "@/lib/avatar";
 import DbStatus from "./DbStatus";
 import { useLocale } from "@/lib/locale";
-import Modal from "./Modal";
-import WriterCard from "./WriterCard";
+import WriterCardModal from "./WriterCardModal";
 import { getMyStats } from "@/app/actions/stats";
 import { DropdownContent } from "./ui/dropdown-menu";
 
 export default function UserMenu({ user, locked }: { user: User; locked?: boolean }) {
   const [open, setOpen] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
-  const [stats, setStats] = useState<{ book_count: number; recipe_count: number; public_count: number } | null>(null);
+  const [stats, setStats] = useState<{ book_count: number; recipe_count: number; public_count: number; follower_count: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useLocale();
@@ -121,24 +120,25 @@ export default function UserMenu({ user, locked }: { user: User; locked?: boolea
           </div>
       </DropdownContent>
 
-      <Modal open={cardOpen} onClose={() => setCardOpen(false)} maxWidth="max-w-[30rem]">
-        <WriterCard
-          info={{
-            display_name: user.display_name,
-            bio: user.bio,
-            avatar: user.avatar,
-            role: user.role,
-            status: user.status,
-            last_seen: user.last_seen,
-            created_at: user.created_at,
-            book_count:   stats?.book_count,
-            recipe_count: stats?.recipe_count,
-            public_count: stats?.public_count,
-          }}
-          statsLoading={statsLoading}
-          onClose={() => setCardOpen(false)}
-        />
-      </Modal>
+      <WriterCardModal
+        open={cardOpen}
+        onClose={() => setCardOpen(false)}
+        info={{
+          user_id:      user.id,
+          display_name: user.display_name,
+          bio:          user.bio,
+          avatar:       user.avatar,
+          role:         user.role,
+          status:       user.status,
+          last_seen:    user.last_seen,
+          created_at:   user.created_at,
+          book_count:     stats?.book_count,
+          recipe_count:   stats?.recipe_count,
+          public_count:   stats?.public_count,
+          follower_count: stats?.follower_count,
+        }}
+        statsLoading={statsLoading}
+      />
     </div>
   );
 }

@@ -17,7 +17,7 @@ import { Plus, Edit2, List, Palette, X, MoreHorizontal, GripVertical, ChevronUp,
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { DropdownContent } from "@/components/ui/dropdown-menu";
 import type { Book, DbIngredient, PresetCategory, PresetUnit, Recipe, WriterInfo } from "@/lib/types";
-import WriterCard from "./WriterCard";
+import WriterCardModal from "./WriterCardModal";
 import BookTour from "./BookTour";
 import { TOUR_KEY_BOOK_READER } from "./TourResetPanel";
 import { useLocale, type Dict } from "@/lib/locale";
@@ -2210,13 +2210,7 @@ export default function BookReaderV2({ bookId, isOwner, onClose, autoNewRecipe }
         favoriteIds={favoriteIds}
       />
 
-      {writerInfo && (
-        <Modal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} maxWidth="max-w-[30rem]">
-          <div className="rounded-2xl overflow-hidden">
-            <WriterCard info={writerInfo} statsLoading={writerStatsLoading} onClose={() => setWriterCardOpen(false)} currentUserId={currentUserId} />
-          </div>
-        </Modal>
-      )}
+      <WriterCardModal open={writerCardOpen} onClose={() => setWriterCardOpen(false)} info={writerInfo} statsLoading={writerStatsLoading} currentUserId={currentUserId} />
 
       <BookTour
         run={tourRun}

@@ -10,7 +10,7 @@ import Modal from "./Modal";
 import BookCover from "./BookCover";
 import BookCoverEditor from "./BookCoverEditor";
 import BookReaderModalV2 from "./BookReaderModalV2";
-import WriterCard from "./WriterCard";
+import WriterCardModal from "./WriterCardModal";
 import RecipeForm from "./RecipeForm";
 import AuthModal from "./AuthModal";
 import type { Book, WriterInfo, PresetUnit, PresetCategory } from "@/lib/types";
@@ -394,11 +394,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
       </Modal>
 
       {/* Writer card modal */}
-      <Modal open={!!writerCard} onClose={() => setWriterCard(null)} maxWidth="max-w-[30rem]">
-        {writerCard && (
-          <WriterCard info={writerCard} onClose={() => setWriterCard(null)} currentUserId={currentUser?.user_id} />
-        )}
-      </Modal>
+      <WriterCardModal open={!!writerCard} onClose={() => setWriterCard(null)} info={writerCard} currentUserId={currentUser?.user_id} />
 
       {/* Auth modal — triggered when guest tries a protected action */}
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
