@@ -64,7 +64,7 @@ export function SelectCustom({
   }
 
   return (
-    <div ref={wrapRef} className={`relative w-full ${wrapperClass}`}>
+    <div ref={wrapRef} className={`relative w-full min-w-0 ${wrapperClass}`}>
       {name && <input type="hidden" name={name} value={value} />}
 
       <button
@@ -81,10 +81,10 @@ export function SelectCustom({
         {loading ? (
           <>
             <Loader2 className="w-4 h-4 text-muted animate-spin shrink-0" />
-            <span className="flex-1 text-muted text-sm">กำลังโหลด…</span>
+            <span className="flex-1 min-w-0 truncate text-muted text-sm">กำลังโหลด…</span>
           </>
         ) : (
-          <span className={`flex-1 truncate ${selected ? "text-foreground" : "text-muted"}`}>
+          <span className={`flex-1 min-w-0 truncate ${selected ? "text-foreground" : "text-muted"}`}>
             {selected ? optLabel(selected) : placeholder}
           </span>
         )}

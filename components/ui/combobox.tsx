@@ -58,7 +58,7 @@ export function Combobox({
   }
 
   return (
-    <div ref={wrapRef} className={`relative w-full ${wrapperClass}`}>
+    <div ref={wrapRef} className={`relative w-full min-w-0 ${wrapperClass}`}>
       <div
         className={`flex items-center border rounded-xl bg-surface transition-colors
           ${loading
@@ -68,9 +68,9 @@ export function Combobox({
               : "border-outline hover:border-orange-300"}`}
       >
         {loading ? (
-          <div className="flex items-center gap-2 px-3 py-2.5 flex-1">
+          <div className="flex items-center gap-2 px-3 py-2.5 flex-1 min-w-0">
             <Loader2 className="w-4 h-4 text-muted animate-spin shrink-0" />
-            <span className="text-sm text-muted">กำลังโหลด…</span>
+            <span className="flex-1 min-w-0 truncate text-sm text-muted">กำลังโหลด…</span>
           </div>
         ) : (
           <input
