@@ -515,6 +515,34 @@ export default function UIShowcaseClient() {
           </div>
         </Section>
 
+        <Section title="Input with Add-on (Social Links)">
+          <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
+            <div className="space-y-3">
+              {[
+                { prefix: "x.com/",         label: "X / Twitter",  placeholder: "username" },
+                { prefix: "instagram.com/", label: "Instagram",    placeholder: "username" },
+                { prefix: "youtube.com/@",  label: "YouTube",      placeholder: "channel" },
+                { prefix: "https://",       label: "Website",      placeholder: "yoursite.com" },
+              ].map(({ prefix, label, placeholder }) => (
+                <div key={prefix} className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted">{label}</label>
+                  <div className="flex items-center border border-outline rounded-xl bg-surface overflow-hidden focus-within:ring-2 focus-within:ring-orange-400/20 focus-within:border-orange-400 transition-colors">
+                    <span className="flex shrink-0 items-center self-stretch px-3 text-sm text-muted bg-elevated border-r border-border select-none whitespace-nowrap">
+                      {prefix}
+                    </span>
+                    <input
+                      type="text"
+                      placeholder={placeholder}
+                      className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted">ใช้ใน Settings → Account สำหรับ Social Links · <Code>focus-within:ring-2</Code> ไฮไลท์ทั้งกล่องเมื่อ focus</p>
+          </div>
+        </Section>
+
         <Section title="Datepicker">
           <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
             <div className="space-y-1.5">

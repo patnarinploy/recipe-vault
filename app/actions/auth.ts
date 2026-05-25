@@ -82,10 +82,14 @@ export async function updatePrivateInfo(
   const country  = (formData.get("country") as string)?.trim() || null;
   const language = (formData.get("language") as string)?.trim() || null;
 
-  const twitter   = (formData.get("social_twitter") as string)?.trim() || "";
-  const instagram = (formData.get("social_instagram") as string)?.trim() || "";
-  const youtube   = (formData.get("social_youtube") as string)?.trim() || "";
-  const website   = (formData.get("social_website") as string)?.trim() || "";
+  const twitter_in   = (formData.get("social_twitter")   as string)?.trim() || "";
+  const instagram_in = (formData.get("social_instagram") as string)?.trim() || "";
+  const youtube_in   = (formData.get("social_youtube")   as string)?.trim() || "";
+  const website_in   = (formData.get("social_website")   as string)?.trim() || "";
+  const twitter   = twitter_in   ? `https://x.com/${twitter_in}`                                           : "";
+  const instagram = instagram_in ? `https://instagram.com/${instagram_in}`                                 : "";
+  const youtube   = youtube_in   ? `https://youtube.com/@${youtube_in.replace(/^@/, "")}`                 : "";
+  const website   = website_in   ? `https://${website_in.replace(/^https?:\/\//, "")}`                   : "";
   const social_links = (twitter || instagram || youtube || website)
     ? { twitter, instagram, youtube, website }
     : null;

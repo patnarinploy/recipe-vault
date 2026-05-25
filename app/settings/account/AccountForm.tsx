@@ -9,6 +9,20 @@ import LoadingButton from "@/components/ui/LoadingButton";
 import { useLocale } from "@/lib/locale";
 import { SelectCustom } from "@/components/ui/select-custom";
 
+function getSocialDefault(stored: string | undefined | null, platform: string): string {
+  if (!stored) return "";
+  const prefixes: Record<string, string[]> = {
+    twitter:   ["https://x.com/", "https://twitter.com/", "x.com/", "twitter.com/"],
+    instagram: ["https://instagram.com/", "instagram.com/"],
+    youtube:   ["https://youtube.com/@", "https://youtube.com/", "youtube.com/@", "youtube.com/"],
+    website:   ["https://", "http://"],
+  };
+  for (const p of prefixes[platform] ?? []) {
+    if (stored.startsWith(p)) return stored.slice(p.length);
+  }
+  return stored;
+}
+
 const COUNTRY_LIST = [
   "Thailand", "Japan", "South Korea", "United States", "United Kingdom",
   "Australia", "Singapore", "Germany", "France", "Canada", "Other",
@@ -113,20 +127,25 @@ export default function AccountForm({
         <div className="bg-surface rounded-2xl border border-border shadow-sm p-6 space-y-4">
           <p className="text-sm font-semibold text-secondary">{a.socialHeader}</p>
           {[
-            { name: "social_twitter",   label: "X / Twitter",  placeholder: "https://x.com/username" },
-            { name: "social_instagram", label: "Instagram",    placeholder: "https://instagram.com/username" },
-            { name: "social_youtube",   label: "YouTube",      placeholder: "https://youtube.com/@channel" },
-            { name: "social_website",   label: a.websiteLabel, placeholder: "https://yoursite.com" },
-          ].map(({ name, label, placeholder }) => (
+            { name: "social_twitter",   label: "X / Twitter",    addonPrefix: "x.com/",         dbKey: "twitter",   placeholder: "username" },
+            { name: "social_instagram", label: "Instagram",       addonPrefix: "instagram.com/", dbKey: "instagram", placeholder: "username" },
+            { name: "social_youtube",   label: "YouTube",         addonPrefix: "youtube.com/@",  dbKey: "youtube",   placeholder: "channel" },
+            { name: "social_website",   label: a.websiteLabel,    addonPrefix: "https://",       dbKey: "website",   placeholder: "yoursite.com" },
+          ].map(({ name, label, addonPrefix, dbKey, placeholder }) => (
             <div key={name}>
               <label className={labelCls}>{label}</label>
-              <input
-                name={name}
-                type="url"
-                defaultValue={currentSocialLinks?.[name.replace("social_", "")] ?? ""}
-                placeholder={placeholder}
-                className={inputCls}
-              />
+              <div className="flex items-center border border-outline rounded-xl bg-surface overflow-hidden focus-within:ring-2 focus-within:ring-orange-400/20 focus-within:border-orange-400 transition-colors">
+                <span className="flex shrink-0 items-center self-stretch px-3 text-sm text-muted bg-elevated border-r border-border select-none whitespace-nowrap">
+                  {addonPrefix}
+                </span>
+                <input
+                  name={name}
+                  type="text"
+                  defaultValue={getSocialDefault(currentSocialLinks?.[dbKey], dbKey)}
+                  placeholder={placeholder}
+                  className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted"
+                />
+              </div>
             </div>
           ))}
         </div>
