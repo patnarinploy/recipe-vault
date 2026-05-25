@@ -1,5 +1,12 @@
 [
   {
+    "build": 234,
+    "timestamp": "2026-05-25T22:39:35.000Z",
+    "subject": "fix: consistent focus rings in RecipeForm + datepicker bugs in Sandbox",
+    "hash": "54c3e66",
+    "category": "fix"
+  },
+  {
     "build": 233,
     "timestamp": "2026-05-25T22:15:33.000Z",
     "subject": "Standardize inputs: ring-1, iOS zoom fix, social links, datepicker",
