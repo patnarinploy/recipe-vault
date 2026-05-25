@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 218;
-export const BUILD_TIMESTAMP = "2026-05-25T06:57:37.000Z";
-export const BUILD_TOOLTIP   = "Refresh follower_count on every WriterCard open in BookReaderV2";
+export const BUILD_NUMBER    = 219;
+export const BUILD_TIMESTAMP = "2026-05-25T08:57:46.000Z";
+export const BUILD_TOOLTIP   = "Add UI Showcase page at /admin/ui-showcase";

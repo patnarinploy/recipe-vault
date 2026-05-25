@@ -1,5 +1,12 @@
 [
   {
+    "build": 219,
+    "timestamp": "2026-05-25T08:57:46.000Z",
+    "subject": "Add UI Showcase page at /admin/ui-showcase",
+    "hash": "ffbb4bf",
+    "category": "feat"
+  },
+  {
     "build": 218,
     "timestamp": "2026-05-25T06:57:37.000Z",
     "subject": "Refresh follower_count on every WriterCard open in BookReaderV2",
