@@ -1,5 +1,12 @@
 [
   {
+    "build": 226,
+    "timestamp": "2026-05-25T20:44:21.000Z",
+    "subject": "fix: category combobox empty on modal open + Stepper min=0",
+    "hash": "f00e01b",
+    "category": "fix"
+  },
+  {
     "build": 225,
     "timestamp": "2026-05-25T20:13:21.000Z",
     "subject": "redesign Stepper to Preline horizontal layout: input left, −/+ buttons",

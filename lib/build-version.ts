@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 225;
-export const BUILD_TIMESTAMP = "2026-05-25T20:13:21.000Z";
-export const BUILD_TOOLTIP   = "redesign Stepper to Preline horizontal layout: input left, −/+ buttons";
+export const BUILD_NUMBER    = 226;
+export const BUILD_TIMESTAMP = "2026-05-25T20:44:21.000Z";
+export const BUILD_TOOLTIP   = "fix: category combobox empty on modal open + Stepper min=0";
