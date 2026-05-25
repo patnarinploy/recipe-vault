@@ -299,7 +299,7 @@ function PresetsTable({
               <Info className="w-3.5 h-3.5" />
             </button>
             {item.isActive && (
-              <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn })}
+              <button onClick={() => { setAdding(false); setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn }); }}
                       className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
                 <Pencil className="w-3.5 h-3.5" />
               </button>
@@ -333,7 +333,7 @@ function PresetsTable({
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
         {!adding && (
-          <button onClick={() => setAdding(true)}
+          <button onClick={() => { setEditing(null); setAdding(true); }}
                   className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
             <Plus className="w-4 h-4" />
             {addLabel}
@@ -551,7 +551,7 @@ function IngredientsTable({
                   <Info className="w-3.5 h-3.5" />
                 </button>
                 {item.isActive && (
-                  <button onClick={() => setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds })}
+                  <button onClick={() => { setAdding(false); setEditing({ id: item.id, nameTh: item.nameTh, nameEn: item.nameEn, storeIds: item.storeIds }); }}
                     className="p-1.5 rounded-lg text-muted hover:bg-elevated hover:text-foreground transition-colors">
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -585,7 +585,7 @@ function IngredientsTable({
             className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
         </div>
         {!adding && (
-          <button onClick={() => setAdding(true)}
+          <button onClick={() => { setEditing(null); setAdding(true); }}
             className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors shrink-0">
             <Plus className="w-4 h-4" />
             {addLabel}
