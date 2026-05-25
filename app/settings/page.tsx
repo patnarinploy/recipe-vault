@@ -101,16 +101,18 @@ export default async function SettingsPage() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3.5 px-5 py-4 hover:bg-elevated active:bg-elevated/70 active:scale-100 active:translate-y-px transition-all"
+                  className="group flex items-center gap-3.5 px-5 py-4 hover:bg-elevated active:bg-elevated/70 active:scale-100 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-orange-500" />
+                  <div className="flex items-center gap-3.5 w-full group-active:translate-y-px transition-transform">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted mt-0.5">{sub}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted shrink-0" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{label}</p>
-                    <p className="text-xs text-muted mt-0.5">{sub}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted shrink-0" />
                 </Link>
               ))}
             </div>
