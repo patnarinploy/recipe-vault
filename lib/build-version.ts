@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 221;
-export const BUILD_TIMESTAMP = "2026-05-25T09:25:22.000Z";
-export const BUILD_TOOLTIP   = "ui-showcase: add 6 new sections + Sandbox page";
+export const BUILD_NUMBER    = 222;
+export const BUILD_TIMESTAMP = "2026-05-25T10:21:18.000Z";
+export const BUILD_TOOLTIP   = "ui-showcase: fix 4 issues — check list sort, achievement pin, section ";

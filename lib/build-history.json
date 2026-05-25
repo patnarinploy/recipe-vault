@@ -1,5 +1,12 @@
 [
   {
+    "build": 222,
+    "timestamp": "2026-05-25T10:21:18.000Z",
+    "subject": "ui-showcase: fix 4 issues — check list sort, achievement pin, section ",
+    "hash": "4263c35",
+    "category": "internal"
+  },
+  {
     "build": 221,
     "timestamp": "2026-05-25T09:25:22.000Z",
     "subject": "ui-showcase: add 6 new sections + Sandbox page",
