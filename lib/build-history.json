@@ -1,5 +1,12 @@
 [
   {
+    "build": 224,
+    "timestamp": "2026-05-25T18:42:11.000Z",
+    "subject": "Extract Combobox, SelectCustom, Stepper into shared components; replace ",
+    "hash": "f293e30",
+    "category": "internal"
+  },
+  {
     "build": 223,
     "timestamp": "2026-05-25T17:09:10.000Z",
     "subject": "sandbox: improved Combobox + Select; showcase: add Drag Sort, Number Inp",
