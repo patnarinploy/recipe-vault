@@ -1,5 +1,12 @@
 [
   {
+    "build": 221,
+    "timestamp": "2026-05-25T09:25:22.000Z",
+    "subject": "ui-showcase: add 6 new sections + Sandbox page",
+    "hash": "37fb244",
+    "category": "internal"
+  },
+  {
     "build": 220,
     "timestamp": "2026-05-25T09:14:44.000Z",
     "subject": "ui-showcase: add Dropdown List + Tooltip sections, fix interactive Tabs",
