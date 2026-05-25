@@ -11,7 +11,7 @@ export async function getMyStats(): Promise<{ book_count: number; recipe_count: 
 
   const [booksRes, followerRes] = await Promise.all([
     supabase.from("books").select("id").eq("user_id", user.id),
-    supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", user.id),
+    supabase.from("user_follows").select("id", { count: "exact", head: true }).eq("following_id", user.id),
   ]);
 
   const bkIds = (booksRes.data ?? []).map((b: { id: string }) => b.id);
