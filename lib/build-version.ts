@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 214;
-export const BUILD_TIMESTAMP = "2026-05-25T05:02:17.000Z";
-export const BUILD_TOOLTIP   = "Fix 5 UI issues: inline colors, expand logic, modal exit animation, Writ";
+export const BUILD_NUMBER    = 215;
+export const BUILD_TIMESTAMP = "2026-05-25T05:46:00.000Z";
+export const BUILD_TOOLTIP   = "Apply expand/collapse mutual exclusion to Ingredients, Units, Categories";

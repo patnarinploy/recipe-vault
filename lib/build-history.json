@@ -1,5 +1,12 @@
 [
   {
+    "build": 215,
+    "timestamp": "2026-05-25T05:46:00.000Z",
+    "subject": "Apply expand/collapse mutual exclusion to Ingredients, Units, Categories",
+    "hash": "da33ff5",
+    "category": "internal"
+  },
+  {
     "build": 214,
     "timestamp": "2026-05-25T05:02:17.000Z",
     "subject": "Fix 5 UI issues: inline colors, expand logic, modal exit animation, Writ",
