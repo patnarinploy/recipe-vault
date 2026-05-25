@@ -1,5 +1,12 @@
 [
   {
+    "build": 229,
+    "timestamp": "2026-05-25T21:16:03.000Z",
+    "subject": "fix: settings nav rows no longer show gap on press",
+    "hash": "b138272",
+    "category": "fix"
+  },
+  {
     "build": 228,
     "timestamp": "2026-05-25T21:12:19.000Z",
     "subject": "fix: prevent placeholder text from wrapping in Combobox and SelectCustom",
