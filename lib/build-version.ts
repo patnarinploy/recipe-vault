@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 216;
-export const BUILD_TIMESTAMP = "2026-05-25T06:02:58.000Z";
-export const BUILD_TOOLTIP   = "Fix follower_count query using wrong table name 'follows' → 'user_foll";
+export const BUILD_NUMBER    = 217;
+export const BUILD_TIMESTAMP = "2026-05-25T06:17:16.000Z";
+export const BUILD_TOOLTIP   = "Fix WriterCard follower count flicker and missing skeleton animation";
