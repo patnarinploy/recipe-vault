@@ -1,5 +1,12 @@
 [
   {
+    "build": 218,
+    "timestamp": "2026-05-25T06:57:37.000Z",
+    "subject": "Refresh follower_count on every WriterCard open in BookReaderV2",
+    "hash": "661d662",
+    "category": "internal"
+  },
+  {
     "build": 217,
     "timestamp": "2026-05-25T06:17:16.000Z",
     "subject": "Fix WriterCard follower count flicker and missing skeleton animation",
