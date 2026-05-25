@@ -381,6 +381,7 @@ export const en = {
     },
     audit: { label: "Audit Logs", sub: "Track important system changes" },
     system: { label: "System Settings", sub: "Customize platform behavior" },
+    uiShowcase: { label: "UI Showcase", sub: "All components used in the system — for testing and reference" },
     dropdowns: {
       title: "Dropdown Settings",
       label: "Dropdown Settings",

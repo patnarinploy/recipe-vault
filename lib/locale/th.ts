@@ -381,6 +381,7 @@ export const th = {
     },
     audit: { label: "Audit Logs", sub: "ติดตามการเปลี่ยนแปลงสำคัญในระบบ" },
     system: { label: "ตั้งค่าระบบ", sub: "ปรับแต่งการทำงานของแพลตฟอร์ม" },
+    uiShowcase: { label: "UI Showcase", sub: "ตัวอย่าง Component ทั้งหมดที่ใช้ในระบบ สำหรับทดสอบและอ้างอิง" },
     dropdowns: {
       title: "ตั้งค่า Dropdown",
       label: "ตั้งค่า Dropdown",

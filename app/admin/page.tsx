@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Sparkles, ScrollText, Settings2, ChevronRight, Palette } from "lucide-react";
 import { getServerLocale } from "@/lib/locale/server";
 
 export const revalidate = 0;
@@ -38,6 +38,14 @@ export default async function AdminPage() {
       icon:        Sparkles,
       title:       adm.updates.label,
       description: adm.updates.sub,
+      meta:        null,
+      enabled:     true,
+    },
+    {
+      href:        "/admin/ui-showcase",
+      icon:        Palette,
+      title:       adm.uiShowcase.label,
+      description: adm.uiShowcase.sub,
       meta:        null,
       enabled:     true,
     },
