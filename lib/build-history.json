@@ -1,5 +1,12 @@
 [
   {
+    "build": 232,
+    "timestamp": "2026-05-25T21:43:04.000Z",
+    "subject": "Fix settings nav press: content sinks, background stays",
+    "hash": "c37e760",
+    "category": "fix"
+  },
+  {
     "build": 231,
     "timestamp": "2026-05-25T21:38:53.000Z",
     "subject": "Restore settings nav press effect using translate instead of scale",
