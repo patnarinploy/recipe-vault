@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
 import { type Recipe, type PresetUnit, type PresetCategory, type DbIngredient } from "@/lib/types";
 import ImageUpload from "./ImageUpload";
 import { createClient } from "@/lib/supabase/client";
 import { createRecipe, updateRecipe, deleteRecipe } from "@/app/actions/recipes";
 import { createPresetCategory } from "@/app/actions/user-presets";
-import { Plus, Trash2, X, ChevronDown, ImageIcon, GripVertical } from "lucide-react";
+import { Plus, Trash2, X, ImageIcon, GripVertical } from "lucide-react";
 import LoadingButton from "./ui/LoadingButton";
 import { Switch } from "./ui/switch";
 import { ReactSortable } from "react-sortablejs";
 import { useLocale } from "@/lib/locale";
+import { Combobox } from "./ui/combobox";
+import { Stepper } from "./ui/stepper";
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 function ytVideoId(url: string): string | null {
@@ -25,89 +26,6 @@ function ytVideoId(url: string): string | null {
 interface IngredientRow { id: string; name: string; amount: string; unitId: string | null; unitFlex: string; unitDisplay: string; }
 interface InstructionStep { id: string; text: string; image_url: string | null; }
 
-// ─── Generic searchable + creatable combobox ──────────────────────
-function Combobox({ value, onChange, options, placeholder = "", className = "", wrapperClass = "" }: {
-  value: string;
-  onChange: (v: string) => void;
-  options: readonly string[];
-  placeholder?: string;
-  className?: string;
-  wrapperClass?: string;
-}) {
-  const { t } = useLocale();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { setQuery(value); }, [value]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        onChange(query.trim());
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open, query, onChange]);
-
-  const filtered = options.filter(u => !query || u.toLowerCase().includes(query.toLowerCase()));
-  const showCreate = query.trim() !== "" && !options.some(u => u.toLowerCase() === query.trim().toLowerCase());
-
-  function select(v: string) { onChange(v); setQuery(v); setOpen(false); }
-
-  return (
-    <div ref={wrapRef} className={`relative ${wrapperClass}`}>
-      <input
-        value={query}
-        onChange={e => { setQuery(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={e => {
-          if (e.key === "Escape") { onChange(query.trim()); setOpen(false); }
-          if (e.key === "Enter") { e.preventDefault(); select(query.trim()); }
-        }}
-        placeholder={placeholder}
-        className={className}
-        style={{ paddingRight: "2rem" }}
-      />
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-        <ChevronDown className="w-4 h-4" />
-      </div>
-      <AnimatePresence>
-        {open && (filtered.length > 0 || showCreate) && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: -4 }}
-          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } }}
-          exit={{ opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.1, ease: [0.4, 0, 1, 1] } }}
-          style={{ transformOrigin: "top", maxHeight: "12rem" }}
-          className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto">
-          {!query && placeholder && (
-            <button type="button" onClick={() => select("")}
-              className="w-full text-left px-3 py-2 text-sm text-muted hover:bg-elevated">
-              {placeholder}
-            </button>
-          )}
-          {filtered.map(u => (
-            <button key={u} type="button" onClick={() => select(u)}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 dark:hover:text-orange-400 transition-colors
-                ${u === value ? "font-semibold text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/20" : "text-secondary"}`}>
-              {u}
-            </button>
-          ))}
-          {showCreate && (
-            <button type="button" onClick={() => select(query.trim())}
-              className="w-full text-left px-3 py-2 text-sm text-orange-600 dark:text-orange-400 font-medium hover:bg-orange-50 dark:hover:bg-orange-950/20 border-t border-border transition-colors">
-              {t.recipe.createOption} &ldquo;{query.trim()}&rdquo;
-            </button>
-          )}
-        </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 // ─── YouTube thumbnail preview card ──────────────────────────────
 function YtPreview({ url }: { url: string }) {
@@ -475,16 +393,24 @@ export default function RecipeForm({
               onChange={handleCategoryChange}
               options={categoryOptions}
               placeholder={r.categoryPlaceholder}
-              className={inputCls}
             />
           </div>
           <div>
             <label className={labelCls}>{r.cookTimeLabel}</label>
-            <input type="number" min="1" value={form.cook_time_minutes} onChange={set("cook_time_minutes")} placeholder="30" className={inputCls} />
+            <Stepper
+              value={Number(form.cook_time_minutes) || 1}
+              onChange={v => setForm(p => ({ ...p, cook_time_minutes: String(v) }))}
+              min={1}
+              step={5}
+            />
           </div>
           <div>
             <label className={labelCls}>{r.servingsLabel}</label>
-            <input type="number" min="1" value={form.servings} onChange={set("servings")} placeholder="1" className={inputCls} />
+            <Stepper
+              value={Number(form.servings) || 1}
+              onChange={v => setForm(p => ({ ...p, servings: String(v) }))}
+              min={1}
+            />
           </div>
         </div>
 
@@ -520,7 +446,7 @@ export default function RecipeForm({
                     <div>
                       <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientName}</p>
                       <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
-                        options={ingredientNameOptions} placeholder={r.ingredientName} className={inputCls} wrapperClass="w-full" />
+                        options={ingredientNameOptions} placeholder={r.ingredientName} />
                     </div>
                     <div className="flex gap-2">
                       <div className="w-[4.5rem] shrink-0">
@@ -530,7 +456,7 @@ export default function RecipeForm({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-medium text-muted mb-1">{r.ingredientUnit}</p>
-                        <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} className={inputCls} wrapperClass="w-full" />
+                        <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} />
                       </div>
                     </div>
                   </div>
@@ -545,10 +471,10 @@ export default function RecipeForm({
                 <div className="hidden sm:grid gap-2 items-center" style={{ gridTemplateColumns: "1.25rem 1fr 5.5rem 8.5rem 2rem" }}>
                   <GripVertical className="ing-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing touch-none" />
                   <Combobox value={row.name} onChange={v => updateRow(i, "name", v)}
-                    options={ingredientNameOptions} placeholder={r.ingredientName} className={inputCls} />
+                    options={ingredientNameOptions} placeholder={r.ingredientName} />
                   <input value={row.amount} onChange={e => updateRow(i, "amount", e.target.value)}
                     placeholder="0" className={inputCls} />
-                  <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} className={inputCls} />
+                  <Combobox value={row.unitDisplay} onChange={v => updateRowUnit(i, v)} options={presetUnitOptions} placeholder={r.unspecifiedUnit} />
                   <button type="button" onClick={() => removeRow(i)} disabled={ingredientRows.length === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible">
                     <X className="w-3.5 h-3.5" />

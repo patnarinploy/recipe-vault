@@ -3,10 +3,11 @@
 import { useActionState, useEffect } from "react";
 import { updatePrivateInfo } from "@/app/actions/auth";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import LoadingButton from "@/components/ui/LoadingButton";
 import { useLocale } from "@/lib/locale";
+import { SelectCustom } from "@/components/ui/select-custom";
 
 const COUNTRY_LIST = [
   "Thailand", "Japan", "South Korea", "United States", "United Kingdom",
@@ -41,7 +42,6 @@ export default function AccountForm({
   }, [state, a.saveSuccess]);
 
   const inputCls  = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted";
-  const selectCls = `${inputCls} appearance-none pr-10`;
   const labelCls = "block text-sm font-semibold text-secondary mb-1";
 
   return (
@@ -89,23 +89,23 @@ export default function AccountForm({
           </div>
           <div>
             <label className={labelCls}>{a.countryLabel}</label>
-            <div className="relative">
-              <select name="country" defaultValue={currentCountry ?? ""} className={selectCls}>
-                <option value="">{a.unspecified}</option>
-                {COUNTRY_LIST.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-            </div>
+            <SelectCustom
+              name="country"
+              defaultValue={currentCountry ?? ""}
+              options={[...COUNTRY_LIST]}
+              placeholder={a.unspecified}
+              clearable
+            />
           </div>
           <div>
             <label className={labelCls}>{a.languageLabel}</label>
-            <div className="relative">
-              <select name="language" defaultValue={currentLanguage ?? ""} className={selectCls}>
-                <option value="">{a.unspecified}</option>
-                {LANGUAGE_LIST.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-            </div>
+            <SelectCustom
+              name="language"
+              defaultValue={currentLanguage ?? ""}
+              options={[...LANGUAGE_LIST]}
+              placeholder={a.unspecified}
+              clearable
+            />
           </div>
         </div>
 

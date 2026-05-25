@@ -4,8 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Check, ChevronDown, GripVertical, Info, Loader2, Plus, Search, X, FlaskConical } from "lucide-react";
+import { Check, ChevronDown, GripVertical, ImageIcon, Info, Loader2, Plus, Search, X, FlaskConical } from "lucide-react";
 import { ReactSortable } from "react-sortablejs";
+import { Combobox } from "@/components/ui/combobox";
+import { SelectCustom } from "@/components/ui/select-custom";
+import { Stepper } from "@/components/ui/stepper";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import Modal from "@/components/Modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,74 +19,17 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { STORE_COLORS } from "@/components/StoreFormInline";
 
-// ── Combobox ──────────────────────────────────────────────────────
+// ── Data ──────────────────────────────────────────────────────────
 
 const COMBO_OPTIONS = ["กระเทียม", "หัวหอม", "พริกขี้หนู", "ขิง", "ตะไคร้", "ใบมะกรูด", "น้ำปลา", "ซีอิ๊ว"];
 
-function ShowcaseCombobox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { setQuery(value); }, [value]);
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) { onChange(query.trim()); setOpen(false); }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open, query, onChange]);
-
-  const filtered = COMBO_OPTIONS.filter(u => !query || u.toLowerCase().includes(query.toLowerCase()));
-  const showCreate = query.trim() !== "" && !COMBO_OPTIONS.some(u => u.toLowerCase() === query.trim().toLowerCase());
-  function select(v: string) { onChange(v); setQuery(v); setOpen(false); }
-
-  return (
-    <div ref={wrapRef} className="relative">
-      <input
-        value={query}
-        onChange={e => { setQuery(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={e => {
-          if (e.key === "Escape") { onChange(query.trim()); setOpen(false); }
-          if (e.key === "Enter") { e.preventDefault(); select(query.trim()); }
-        }}
-        placeholder="ค้นหาหรือพิมพ์เพิ่มเอง…"
-        style={{ paddingRight: "2rem" }}
-        className="w-full border border-orange-300 rounded-xl px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
-      />
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-        <ChevronDown className="w-4 h-4" />
-      </div>
-      <AnimatePresence>
-        {open && (filtered.length > 0 || showCreate) && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.1, ease: [0.4, 0, 1, 1] } }}
-            style={{ transformOrigin: "top", maxHeight: "12rem" }}
-            className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface border border-outline rounded-xl shadow-lg overflow-y-auto"
-          >
-            {filtered.map(u => (
-              <button key={u} type="button" onClick={() => select(u)}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-600 transition-colors
-                  ${u === value ? "font-semibold text-orange-600 bg-orange-50/50 dark:bg-orange-950/20" : "text-secondary"}`}>
-                {u}
-              </button>
-            ))}
-            {showCreate && (
-              <button type="button" onClick={() => select(query.trim())}
-                className="w-full text-left px-3 py-2 text-sm text-orange-600 font-medium hover:bg-orange-50 dark:hover:bg-orange-950/20 border-t border-border transition-colors">
-                เพิ่ม &ldquo;{query.trim()}&rdquo;
-              </button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+const SHOWCASE_SELECT_OPTIONS = [
+  { value: "thai",     label: "อาหารไทย" },
+  { value: "chinese",  label: "อาหารจีน" },
+  { value: "japanese", label: "อาหารญี่ปุ่น" },
+  { value: "western",  label: "อาหารฝรั่ง" },
+  { value: "dessert",  label: "ขนมหวาน" },
+];
 
 // ── Achievement HoverCard badge ───────────────────────────────────
 
@@ -220,6 +166,7 @@ export default function UIShowcaseClient() {
     { id: "4", label: "ไข่ไก่ 2 ฟอง",        done: false },
   ]);
   const [comboVal, setComboVal]         = useState("");
+  const [selectVal, setSelectVal]       = useState("");
   const [achievePinned, setAchievePinned] = useState<string | null>(null);
 
   // Number inputs
@@ -502,38 +449,43 @@ export default function UIShowcaseClient() {
           </div>
         </Section>
 
-        <Section title="Dropdown List (Select)">
+        <Section title="Dropdown List (Custom Select)">
           <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Select มาตรฐาน</label>
-              <div className="relative">
-                <select className="w-full appearance-none border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 pr-8 cursor-pointer">
-                  <option value="">-- เลือกหมวดหมู่ --</option>
-                  <option>อาหารไทย</option><option>อาหารจีน</option><option>อาหารญี่ปุ่น</option><option>อาหารฝรั่ง</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-              </div>
+              <label className="text-xs font-medium text-muted">Custom Select — เลือกจากรายการ</label>
+              <SelectCustom
+                value={selectVal}
+                onChange={setSelectVal}
+                options={SHOWCASE_SELECT_OPTIONS}
+                placeholder="-- เลือกหมวดหมู่ --"
+                clearable
+              />
             </div>
+            {selectVal && (
+              <p className="text-xs text-secondary">
+                เลือก: <span className="font-semibold text-foreground">
+                  {SHOWCASE_SELECT_OPTIONS.find(o => o.value === selectVal)?.label}
+                </span>
+              </p>
+            )}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Select (orange border — form variant)</label>
-              <div className="relative">
-                <select className="w-full appearance-none border border-orange-300 rounded-xl px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 pr-8 cursor-pointer">
-                  <option value="">-- เลือกหน่วยวัด --</option>
-                  <option>กรัม (g)</option><option>กิโลกรัม (kg)</option><option>มิลลิลิตร (ml)</option><option>ลิตร (l)</option><option>ถ้วย (cup)</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-              </div>
+              <label className="text-xs font-medium text-muted">Loading state</label>
+              <SelectCustom
+                value=""
+                onChange={() => {}}
+                options={SHOWCASE_SELECT_OPTIONS}
+                placeholder="-- กำลังโหลด --"
+                loading
+              />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Select (disabled)</label>
-              <div className="relative opacity-50">
-                <select disabled className="w-full appearance-none border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground focus:outline-none pr-8 cursor-not-allowed">
-                  <option>ปิดใช้งาน</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-              </div>
-            </div>
-            <p className="text-xs text-muted"><Code>{"<select className='appearance-none ...'>"}</Code> + chevron overlay</p>
+            <ul className="text-xs text-muted space-y-1 border-t border-border pt-3">
+              <li>✓ เปิด/ปิดมี Animation (scale + fade)</li>
+              <li>✓ กด X เพื่อล้างค่า (<Code>clearable</Code>)</li>
+              <li>✓ ลูกศรหมุน 180° เมื่อ Dropdown เปิด</li>
+              <li>✓ Loading state = spinner + กดไม่ได้</li>
+              <li>✓ รายการที่เลือกมี ✓ Checkmark</li>
+            </ul>
+            <p className="text-xs text-muted"><Code>{"<SelectCustom value={...} onChange={...} options={[...]} clearable />"}</Code></p>
           </div>
         </Section>
 
@@ -541,19 +493,25 @@ export default function UIShowcaseClient() {
           <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted">Combobox — ค้นหาหรือพิมพ์สร้างใหม่</label>
-              <ShowcaseCombobox value={comboVal} onChange={setComboVal} />
+              <Combobox
+                value={comboVal}
+                onChange={setComboVal}
+                options={COMBO_OPTIONS}
+                placeholder="ค้นหาหรือพิมพ์เพิ่มเอง…"
+              />
             </div>
             {comboVal && (
               <p className="text-xs text-secondary">
                 เลือก: <span className="font-semibold text-foreground">{comboVal}</span>
-                <button type="button" onClick={() => setComboVal("")} className="ml-2 text-muted hover:text-red-500 transition-colors">
-                  <X className="w-3 h-3 inline" />
-                </button>
               </p>
             )}
-            <p className="text-xs text-muted">
-              กรอกชื่อที่ไม่มีในรายการ → ปุ่ม <Code>เพิ่ม "..."</Code> จะปรากฏขึ้น · ใช้ใน RecipeForm สำหรับวัตถุดิบ / หน่วยวัด
-            </p>
+            <ul className="text-xs text-muted space-y-1 border-t border-border pt-3">
+              <li>✓ กด X เพื่อล้างค่า</li>
+              <li>✓ ลูกศรขวาสุดกด = เปิด/ปิด (ไม่ขึ้น keyboard)</li>
+              <li>✓ ลูกศรหมุน 180° เมื่อ Dropdown เปิด</li>
+              <li>✓ พิมพ์ชื่อใหม่ → ปุ่มสร้างปรากฏ</li>
+            </ul>
+            <p className="text-xs text-muted">ใช้ใน RecipeForm สำหรับหมวดหมู่ / วัตถุดิบ / หน่วยวัด</p>
           </div>
         </Section>
 
@@ -579,82 +537,72 @@ export default function UIShowcaseClient() {
           <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted">จำนวนคน (servings)</label>
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setNumServings(n => Math.max(1, n - 1))}
-                  className="px-3 py-2 rounded-l-xl border border-border text-sm text-secondary hover:bg-elevated transition-colors border-r-0"
-                >−</button>
-                <input
-                  type="number" min="1" value={numServings}
-                  onChange={e => setNumServings(Math.max(1, Number(e.target.value)))}
-                  className="w-14 text-center border-y border-border py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setNumServings(n => n + 1)}
-                  className="px-3 py-2 rounded-r-xl border border-border text-sm text-secondary hover:bg-elevated transition-colors border-l-0"
-                >+</button>
-              </div>
+              <Stepper value={numServings} onChange={setNumServings} min={1} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">เวลาทำ (นาที)</label>
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setNumCookTime(n => Math.max(1, n - 5))}
-                  className="px-3 py-2 rounded-l-xl border border-orange-300 text-sm text-secondary hover:bg-orange-50/50 transition-colors border-r-0"
-                >−</button>
-                <input
-                  type="number" min="1" value={numCookTime}
-                  onChange={e => setNumCookTime(Math.max(1, Number(e.target.value)))}
-                  className="w-16 text-center border-y border-orange-300 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setNumCookTime(n => n + 5)}
-                  className="px-3 py-2 rounded-r-xl border border-orange-300 text-sm text-secondary hover:bg-orange-50/50 transition-colors border-l-0"
-                >+</button>
-              </div>
+              <label className="text-xs font-medium text-muted">เวลาทำ (นาที) — step=5</label>
+              <Stepper value={numCookTime} onChange={setNumCookTime} min={5} step={5} />
             </div>
-            <p className="text-xs text-muted">ปุ่ม −/+ ติดกับ <Code>{"<input type='number'>"}</Code> · ซ่อน spin arrow ด้วย <Code>appearance:textfield</Code></p>
+            <p className="text-xs text-muted">
+              <Code>{"<Stepper value={...} onChange={...} min={1} step={5} />"}</Code> · ใช้ใน RecipeForm สำหรับเวลาทำและจำนวนเสิร์ฟ
+            </p>
           </div>
         </Section>
 
         <Section title="Add Step (Instruction List)">
-          <div className="bg-surface rounded-2xl border border-border p-5 space-y-3">
-            {steps.map((step, i) => (
-              <div key={step.id} className="flex items-start gap-2">
-                <span className="w-5 text-center text-xs text-muted font-mono mt-2.5 shrink-0">{i + 1}</span>
-                <textarea
-                  value={step.text}
-                  onChange={e => updateStep(step.id, e.target.value)}
-                  rows={2}
-                  placeholder={`ขั้นตอนที่ ${i + 1}…`}
-                  className="flex-1 border border-orange-300 rounded-lg px-3 py-2 text-sm bg-surface text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-orange-400 placeholder:text-muted"
-                />
-                {steps.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeStep(step.id)}
-                    className="p-1.5 text-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors mt-1 rounded-lg"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+          <div className="space-y-2.5">
+            <ReactSortable
+              list={steps}
+              setList={setSteps}
+              handle=".step-drag-handle"
+              animation={150}
+              ghostClass="opacity-40"
+              className="space-y-2.5"
+            >
+              {steps.map((step, i) => (
+                <div key={step.id} className="border border-outline rounded-xl overflow-hidden bg-surface">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-elevated border-b border-border">
+                    <GripVertical className="step-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing shrink-0 touch-none" />
+                    <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs text-muted flex-1">ขั้นตอนที่ {i + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeStep(step.id)}
+                      disabled={steps.length === 1}
+                      className="w-6 h-6 flex items-center justify-center rounded text-muted hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors disabled:invisible"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={step.text}
+                    onChange={e => updateStep(step.id, e.target.value)}
+                    placeholder={`อธิบายขั้นตอนที่ ${i + 1}…`}
+                    rows={2}
+                    className="w-full px-3 py-2.5 text-sm focus:outline-none resize-none bg-surface text-foreground placeholder:text-muted border-0"
+                  />
+                  <div className="px-3 py-2 border-t border-border bg-elevated/60">
+                    <button type="button" className="flex items-center gap-1.5 text-xs text-muted hover:text-orange-500 transition-colors">
+                      <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                      เพิ่มรูปภาพขั้นตอน
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </ReactSortable>
             <button
               type="button"
               onClick={addStep}
-              className="mt-1 flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors"
+              className="flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-600 font-medium transition-colors"
             >
               <Plus className="w-4 h-4" /> เพิ่มขั้นตอน
             </button>
-            <p className="text-xs text-muted pt-1">
-              <Code>textarea</Code> + <Code>{"<Plus> เพิ่มขั้นตอน"}</Code> + <Code>{"<X>"}</Code> ลบ — ใช้ใน RecipeForm
-            </p>
           </div>
+          <p className="text-xs text-muted mt-3">
+            เหมือนกับ <Code>Instructions</Code> ใน RecipeForm — ลาก GripVertical เพื่อเรียงลำดับ · กด X ลบ · กล่องรูปเป็น placeholder
+          </p>
         </Section>
 
       </SectionGroup>
