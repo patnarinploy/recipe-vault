@@ -75,7 +75,8 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark]"
+          onClick={() => { try { (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.(); } catch { /* no-op */ } }}
+          className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
         />
 
         {/* X clear button — animates in/out */}
@@ -87,7 +88,6 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
               exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
-              onMouseDown={e => e.preventDefault()}
               onClick={() => onChange("")}
               className="pr-3 pl-1 py-2.5 text-muted hover:text-foreground transition-colors shrink-0"
             >

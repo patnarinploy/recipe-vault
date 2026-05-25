@@ -511,7 +511,7 @@ export default function RecipeForm({
             className="space-y-2.5"
           >
             {instructionSteps.map((step, i) => (
-              <div key={step.id} className="border border-outline rounded-xl overflow-hidden bg-surface">
+              <div key={step.id} className="border border-outline rounded-xl overflow-hidden bg-surface focus-within:ring-1 focus-within:ring-orange-400 transition-colors">
                 {/* Step header */}
                 <div className="flex items-center gap-2 px-3 py-2 bg-elevated border-b border-border">
                   <GripVertical className="step-drag-handle w-4 h-4 text-muted cursor-grab active:cursor-grabbing shrink-0 touch-none" />
@@ -546,7 +546,7 @@ export default function RecipeForm({
         {/* ── Recipe-level YouTube ─────────────────────────── */}
         <div>
           <label className={labelCls}>{r.youtubeLabel}</label>
-          <div className="border border-outline rounded-xl overflow-hidden bg-surface">
+          <div className="border border-outline rounded-xl overflow-hidden bg-surface focus-within:ring-1 focus-within:ring-orange-400 transition-colors">
             <div className="flex items-center gap-2 px-3 py-2.5 bg-elevated/60">
               <div className="w-4 h-4 rounded bg-red-600 flex items-center justify-center shrink-0">
                 <div style={{ width: 0, height: 0, borderTop: "4px solid transparent", borderBottom: "4px solid transparent", borderLeft: "7px solid white", marginLeft: 1 }} />
