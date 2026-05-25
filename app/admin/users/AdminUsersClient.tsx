@@ -389,7 +389,7 @@ export default function AdminUsersClient({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={adm.search}
-          className="w-full border border-outline rounded-xl pl-9 pr-9 py-2.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted"
+          className="w-full border border-outline rounded-xl pl-9 pr-9 py-2.5 text-sm focus:ring-1 focus:ring-orange-400 focus:outline-none bg-surface text-foreground placeholder:text-muted"
         />
         {search && (
           <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground">

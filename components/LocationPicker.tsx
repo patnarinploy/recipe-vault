@@ -150,7 +150,7 @@ export default function LocationPicker({ initialPos, onConfirm, onCancel }: Prop
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={s.searchPlace}
-              className="w-full pl-9 pr-8 py-2.5 text-sm border border-outline rounded-xl bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full pl-9 pr-8 py-2.5 text-sm border border-outline rounded-xl bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400"
             />
             {query && !searching && (
               <button onClick={() => { setQuery(""); setResults([]); }}

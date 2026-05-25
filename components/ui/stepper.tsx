@@ -18,7 +18,7 @@ export function Stepper({ value, onChange, min = 1, max, step = 1 }: StepperProp
   }
 
   return (
-    <div className="border border-outline rounded-xl overflow-hidden bg-surface">
+    <div className="border border-outline rounded-xl overflow-hidden bg-surface focus-within:ring-1 focus-within:ring-orange-400 transition-colors">
       <div className="flex justify-between items-center">
         <div className="grow py-2 px-3">
           <input
@@ -30,7 +30,7 @@ export function Stepper({ value, onChange, min = 1, max, step = 1 }: StepperProp
                 onChange(max !== undefined ? Math.min(max, Math.max(min, v)) : Math.max(min, v));
               }
             }}
-            className="w-full p-0 bg-transparent border-0 text-sm text-foreground focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="w-full p-0 bg-transparent border-0 text-sm text-foreground focus:ring-0 focus:outline-none focus:[box-shadow:none] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
         <div className="flex items-center divide-x divide-border border-l border-border">

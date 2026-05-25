@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
+import { Calendar, Loader2, X } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 import { SelectCustom } from "@/components/ui/select-custom";
 
@@ -26,151 +26,76 @@ const UNIT_OPTIONS = [
   { value: "tsp",  label: "ช้อนชา (tsp)" },
 ];
 
-// ── Custom Datepicker ─────────────────────────────────────────────
-
-const MONTHS_TH       = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-const MONTHS_TH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-const DAYS_TH         = ["อา","จ","อ","พ","พฤ","ศ","ส"];
-
-function formatDateTH(iso: string): string {
-  const d = new Date(iso + "T00:00:00");
-  return `${d.getDate()} ${MONTHS_TH_SHORT[d.getMonth()]} ${d.getFullYear() + 543}`;
-}
+// ── Custom Datepicker wrapper (native <input type="date">) ────────────────
 
 interface DatepickerProps {
   value: string;
   onChange: (v: string) => void;
-  placeholder?: string;
 }
 
-function CustomDatepicker({ value, onChange, placeholder = "เลือกวันที่" }: DatepickerProps) {
-  const today = new Date();
-  const [open, setOpen]         = useState(false);
-  const [viewYear, setViewYear] = useState(() => value ? new Date(value + "T00:00:00").getFullYear() : today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(() => value ? new Date(value + "T00:00:00").getMonth() : today.getMonth());
-  const wrapRef = useRef<HTMLDivElement>(null);
+function CustomDatepicker({ value, onChange }: DatepickerProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+  function handleCalendarClick() {
+    if (focused) {
+      inputRef.current?.blur();
+    } else {
+      try {
+        (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.();
+      } catch { /* fallback for browsers without showPicker */ }
+      inputRef.current?.focus();
     }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  // Snap calendar view to selected date when opening
-  useEffect(() => {
-    if (open && value) {
-      const d = new Date(value + "T00:00:00");
-      setViewYear(d.getFullYear());
-      setViewMonth(d.getMonth());
-    }
-  }, [open, value]);
-
-  function prevMonth() {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-    else setViewMonth(m => m - 1);
-  }
-  function nextMonth() {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-    else setViewMonth(m => m + 1);
-  }
-
-  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
-  const daysInMonth    = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const cells: (number | null)[] = [
-    ...Array(firstDayOfWeek).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-
-  function selectDay(day: number) {
-    const mm = String(viewMonth + 1).padStart(2, "0");
-    const dd = String(day).padStart(2, "0");
-    onChange(`${viewYear}-${mm}-${dd}`);
-    setOpen(false);
   }
 
   return (
-    <div ref={wrapRef} className="relative w-full">
-      <div
-        role="button"
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 bg-surface cursor-pointer transition-colors
-          ${open ? "border-orange-400 ring-2 ring-orange-400/20" : "border-outline hover:border-orange-300"}`}
+    <div className="relative w-full">
+      <div className={`flex items-center rounded-xl bg-surface border overflow-hidden transition-colors duration-150
+        ${focused
+          ? "border-orange-400 ring-1 ring-orange-400"
+          : "border-outline hover:border-orange-300"
+        }`}
       >
-        <Calendar className="w-4 h-4 text-muted shrink-0" />
-        <span className={`flex-1 min-w-0 text-sm select-none ${value ? "text-foreground" : "text-muted"}`}>
-          {value ? formatDateTH(value) : placeholder}
-        </span>
-        {value && (
-          <span
-            role="button"
-            onClick={e => { e.stopPropagation(); onChange(""); }}
-            className="p-1 rounded text-muted hover:text-foreground transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-          </span>
-        )}
+        {/* Calendar icon — cursor pointer, toggles picker */}
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={e => e.preventDefault()}
+          onClick={handleCalendarClick}
+          className="pl-3 pr-2 py-2.5 cursor-pointer text-muted hover:text-orange-500 transition-colors shrink-0"
+        >
+          <Calendar className="w-4 h-4" />
+        </button>
+
+        {/* Native date input — browser handles the picker UI (incl. mobile sheet) */}
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark]"
+        />
+
+        {/* X clear button — animates in/out */}
+        <AnimatePresence>
+          {value && (
+            <motion.button
+              type="button"
+              tabIndex={-1}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
+              exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => onChange("")}
+              className="pr-3 pl-1 py-2.5 text-muted hover:text-foreground transition-colors shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: [0.16, 1, 0.3, 1] } }}
-            exit={{ opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.1, ease: [0.4, 0, 1, 1] } }}
-            style={{ transformOrigin: "top" }}
-            className="absolute z-50 top-full left-0 mt-1 bg-surface border border-border rounded-xl shadow-lg p-3 w-full min-w-[17rem]"
-          >
-            {/* Month navigation */}
-            <div className="flex items-center justify-between mb-2 px-1">
-              <button type="button" onClick={prevMonth}
-                className="p-1.5 rounded-lg hover:bg-elevated transition-colors text-muted hover:text-foreground">
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-sm font-semibold text-foreground">
-                {MONTHS_TH[viewMonth]} {viewYear + 543}
-              </span>
-              <button type="button" onClick={nextMonth}
-                className="p-1.5 rounded-lg hover:bg-elevated transition-colors text-muted hover:text-foreground">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Day-of-week headers */}
-            <div className="grid grid-cols-7 mb-1">
-              {DAYS_TH.map(d => (
-                <div key={d} className="text-center text-[10px] font-semibold text-muted py-1">{d}</div>
-              ))}
-            </div>
-
-            {/* Day cells */}
-            <div className="grid grid-cols-7 gap-y-0.5">
-              {cells.map((day, idx) => {
-                if (!day) return <div key={idx} />;
-                const mm  = String(viewMonth + 1).padStart(2, "0");
-                const dd  = String(day).padStart(2, "0");
-                const iso = `${viewYear}-${mm}-${dd}`;
-                const isSelected = value === iso;
-                const isToday    = today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
-                return (
-                  <button key={idx} type="button" onClick={() => selectDay(day)}
-                    className={`text-center text-sm py-1.5 rounded-lg transition-colors
-                      ${isSelected
-                        ? "bg-orange-500 text-white font-semibold"
-                        : isToday
-                          ? "text-orange-500 font-semibold hover:bg-orange-50 dark:hover:bg-orange-950/20"
-                          : "text-foreground hover:bg-elevated"}`}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -196,11 +121,11 @@ export default function SandboxClient() {
       {/* ── Datepicker ─────────────────────────────────────────── */}
       <section className="space-y-4">
         <h2 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border pb-2">
-          Datepicker — Custom Calendar
+          Datepicker — Custom Wrapper
         </h2>
 
         <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
-          <p className="text-xs text-muted">เลือกวันที่ด้วย Calendar Dropdown</p>
+          <p className="text-xs text-muted">Native browser datepicker (ใช้ sheet ของ OS บนมือถือ) พร้อม custom UI</p>
 
           <CustomDatepicker value={dateVal} onChange={setDateVal} />
 
@@ -211,10 +136,12 @@ export default function SandboxClient() {
           )}
 
           <ul className="text-xs text-muted space-y-1 border-t border-border pt-3">
-            <li>✓ กด Calendar icon หรือพื้นที่ input เพื่อ toggle เปิด/ปิด</li>
-            <li>✓ กด X เพื่อล้างค่า</li>
-            <li>✓ เปิด/ปิดมี Animation (scale + fade)</li>
-            <li>✓ นำทางเดือนก่อน/หลัง · วันที่เลือกไฮไลท์สีส้ม · วันนี้ตัวอักษรสีส้ม</li>
+            <li>✓ กด icon ปฏิทิน → เปิด picker · กดอีกครั้ง → ปิด (toggle)</li>
+            <li>✓ cursor pointer เมื่อ hover icon ปฏิทิน</li>
+            <li>✓ กดพื้นที่ข้อความ → browser picker เปิดตามปกติ</li>
+            <li>✓ ปุ่ม X ล้างค่า (animate in/out)</li>
+            <li>✓ Border + ring animation เมื่อ focus (เหมือน Combobox)</li>
+            <li>✓ บนมือถือ → ใช้ native OS date picker (ไม่ zoom)</li>
           </ul>
         </div>
       </section>

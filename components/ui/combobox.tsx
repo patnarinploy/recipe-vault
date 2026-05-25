@@ -64,7 +64,7 @@ export function Combobox({
           ${loading
             ? "border-border opacity-60 cursor-not-allowed"
             : open
-              ? "border-orange-400 ring-2 ring-orange-400/20"
+              ? "border-orange-400 ring-1 ring-orange-400"
               : "border-outline hover:border-orange-300"}`}
       >
         {loading ? (
@@ -83,7 +83,7 @@ export function Combobox({
               if (e.key === "Enter") { e.preventDefault(); select(query.trim()); }
             }}
             placeholder={placeholder}
-            className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-transparent text-foreground focus:outline-none placeholder:text-muted"
+            className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-transparent text-foreground focus:outline-none focus:[box-shadow:none] placeholder:text-muted"
           />
         )}
 

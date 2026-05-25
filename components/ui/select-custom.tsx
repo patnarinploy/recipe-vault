@@ -75,7 +75,7 @@ export function SelectCustom({
           ${loading
             ? "border-border opacity-60 cursor-not-allowed"
             : open
-              ? "border-orange-400 ring-2 ring-orange-400/20 focus:outline-none"
+              ? "border-orange-400 ring-1 ring-orange-400 focus:outline-none"
               : "border-outline hover:border-orange-300 focus:outline-none"}`}
       >
         {loading ? (

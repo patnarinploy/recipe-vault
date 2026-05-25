@@ -80,7 +80,7 @@ export default function BookCoverEditor({ book, author, onSuccess, onCancel, inM
   }
 
   const cancel = onCancel ?? (() => router.back());
-  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
+  const inputCls = "w-full border border-outline rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted";
   const labelCls = "block text-sm font-medium text-secondary mb-1.5";
 
   return (

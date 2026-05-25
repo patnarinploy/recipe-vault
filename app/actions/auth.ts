@@ -86,10 +86,11 @@ export async function updatePrivateInfo(
   const instagram_in = (formData.get("social_instagram") as string)?.trim() || "";
   const youtube_in   = (formData.get("social_youtube")   as string)?.trim() || "";
   const website_in   = (formData.get("social_website")   as string)?.trim() || "";
-  const twitter   = twitter_in   ? `https://x.com/${twitter_in}`                                           : "";
-  const instagram = instagram_in ? `https://instagram.com/${instagram_in}`                                 : "";
-  const youtube   = youtube_in   ? `https://youtube.com/@${youtube_in.replace(/^@/, "")}`                 : "";
-  const website   = website_in   ? `https://${website_in.replace(/^https?:\/\//, "")}`                   : "";
+  const mkUrl = (v: string) => v ? `https://${v.replace(/^https?:\/\//, "")}` : "";
+  const twitter   = mkUrl(twitter_in);
+  const instagram = mkUrl(instagram_in);
+  const youtube   = mkUrl(youtube_in);
+  const website   = mkUrl(website_in);
   const social_links = (twitter || instagram || youtube || website)
     ? { twitter, instagram, youtube, website }
     : null;

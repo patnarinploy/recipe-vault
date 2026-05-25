@@ -20,7 +20,7 @@ export const Switch = forwardRef<
         setLocalChecked(v);
         onCheckedChange?.(v);
       }}
-      className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer
+      className={`relative w-10 h-6 rounded-full shrink-0 transition-colors cursor-pointer
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400
         data-[state=checked]:bg-orange-500 data-[state=unchecked]:bg-stone-200 dark:data-[state=unchecked]:bg-stone-700
         ${className}`}

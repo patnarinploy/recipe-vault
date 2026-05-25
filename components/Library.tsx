@@ -175,7 +175,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
             <input value={mySearch} onChange={e => setMySearch(e.target.value)}
               placeholder={lib.searchMy}
-              className="w-full border border-outline rounded-xl pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted" />
+              className="w-full border border-outline rounded-xl pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted" />
             {mySearch && (
               <button onClick={() => setMySearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-secondary">
                 <X className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export default function Library({ myBooks, publicBooks, followingBooks, currentU
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
             <input value={pubSearch} onChange={e => setPubSearch(e.target.value)}
               placeholder={lib.searchPublic}
-              className="w-full border border-outline rounded-xl pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted" />
+              className="w-full border border-outline rounded-xl pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400 bg-surface text-foreground placeholder:text-muted" />
             {pubSearch && (
               <button onClick={() => setPubSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-secondary">
                 <X className="w-3.5 h-3.5" />
