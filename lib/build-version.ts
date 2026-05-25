@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 230;
-export const BUILD_TIMESTAMP = "2026-05-25T21:36:29.000Z";
-export const BUILD_TOOLTIP   = "Add custom datepicker sandbox, social link add-on inputs";
+export const BUILD_NUMBER    = 231;
+export const BUILD_TIMESTAMP = "2026-05-25T21:38:53.000Z";
+export const BUILD_TOOLTIP   = "Restore settings nav press effect using translate instead of scale";

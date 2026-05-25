@@ -1,5 +1,12 @@
 [
   {
+    "build": 231,
+    "timestamp": "2026-05-25T21:38:53.000Z",
+    "subject": "Restore settings nav press effect using translate instead of scale",
+    "hash": "203f8bd",
+    "category": "internal"
+  },
+  {
     "build": 230,
     "timestamp": "2026-05-25T21:36:29.000Z",
     "subject": "Add custom datepicker sandbox, social link add-on inputs",
