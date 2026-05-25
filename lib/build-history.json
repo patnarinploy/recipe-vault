@@ -1,5 +1,12 @@
 [
   {
+    "build": 228,
+    "timestamp": "2026-05-25T21:12:19.000Z",
+    "subject": "fix: prevent placeholder text from wrapping in Combobox and SelectCustom",
+    "hash": "177bf33",
+    "category": "fix"
+  },
+  {
     "build": 227,
     "timestamp": "2026-05-25T20:56:33.000Z",
     "subject": "feat: add loading state to all ingredient Comboboxes in RecipeForm",
