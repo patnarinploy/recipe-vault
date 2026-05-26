@@ -115,7 +115,7 @@ export default function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ type: "spring", stiffness: 160, damping: 20 }}
-            className="fixed inset-0 overflow-y-auto pointer-events-none"
+            className="fixed inset-0 overflow-y-auto overscroll-contain pointer-events-none"
             style={{ zIndex: 9999 }}
             role="dialog"
             aria-modal="true"
