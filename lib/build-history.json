@@ -1,5 +1,12 @@
 [
   {
+    "build": 236,
+    "timestamp": "2026-05-26T09:40:52.000Z",
+    "subject": "fix: prevent scroll chaining out of Modal on scroll boundary",
+    "hash": "62dc91c",
+    "category": "fix"
+  },
+  {
     "build": 235,
     "timestamp": "2026-05-25T22:39:55.000Z",
     "subject": "fix: remove border-orange-400 from Combobox and SelectCustom open state",
