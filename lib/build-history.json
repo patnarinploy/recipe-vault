@@ -1,5 +1,12 @@
 [
   {
+    "build": 237,
+    "timestamp": "2026-05-26T20:43:33.000Z",
+    "subject": "fix: lock <html> scroll when Modal opens, not just <body>",
+    "hash": "b72e087",
+    "category": "fix"
+  },
+  {
     "build": 236,
     "timestamp": "2026-05-26T09:40:52.000Z",
     "subject": "fix: prevent scroll chaining out of Modal on scroll boundary",
