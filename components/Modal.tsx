@@ -37,12 +37,15 @@ export default function Modal({
       if (e.key === "Escape" && isTopModal(id)) { e.preventDefault(); onCloseRef.current(); }
     }
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
       popModal(id);
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
