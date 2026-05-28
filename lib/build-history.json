@@ -1,5 +1,12 @@
 [
   {
+    "build": 238,
+    "timestamp": "2026-05-28T20:52:11.000Z",
+    "subject": "fix: datepicker closes after selection and X clears correctly",
+    "hash": "a35aa7f",
+    "category": "fix"
+  },
+  {
     "build": 237,
     "timestamp": "2026-05-26T20:43:33.000Z",
     "subject": "fix: lock <html> scroll when Modal opens, not just <body>",
