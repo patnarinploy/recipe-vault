@@ -1,5 +1,12 @@
 [
   {
+    "build": 239,
+    "timestamp": "2026-05-28T21:02:30.000Z",
+    "subject": "feat: replace native datepicker with custom calendar popup in Sandbox",
+    "hash": "76c75c1",
+    "category": "feat"
+  },
+  {
     "build": 238,
     "timestamp": "2026-05-28T20:52:11.000Z",
     "subject": "fix: datepicker closes after selection and X clears correctly",

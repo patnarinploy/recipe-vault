@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 238;
-export const BUILD_TIMESTAMP = "2026-05-28T20:52:11.000Z";
-export const BUILD_TOOLTIP   = "fix: datepicker closes after selection and X clears correctly";
+export const BUILD_NUMBER    = 239;
+export const BUILD_TIMESTAMP = "2026-05-28T21:02:30.000Z";
+export const BUILD_TOOLTIP   = "feat: replace native datepicker with custom calendar popup in Sandbox";
