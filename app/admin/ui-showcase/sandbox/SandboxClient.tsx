@@ -72,7 +72,7 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           ref={inputRef}
           type="date"
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => { onChange(e.target.value); inputRef.current?.blur(); }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onClick={() => { try { (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.(); } catch { /* no-op */ } }}
@@ -88,7 +88,8 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
               exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
-              onClick={() => onChange("")}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { onChange(""); inputRef.current?.blur(); }}
               className="pr-3 pl-1 py-2.5 text-muted hover:text-foreground transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
