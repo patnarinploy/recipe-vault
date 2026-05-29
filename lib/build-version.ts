@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 240;
-export const BUILD_TIMESTAMP = "2026-05-29T05:36:42.000Z";
-export const BUILD_TOOLTIP   = "revert: back to native datepicker, remove additions that caused regressi";
+export const BUILD_NUMBER    = 241;
+export const BUILD_TIMESTAMP = "2026-05-29T13:19:24.000Z";
+export const BUILD_TOOLTIP   = "fix: datepicker only confirms value on blur (✓), not on intermediate d";
