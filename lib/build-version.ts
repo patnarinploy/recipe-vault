@@ -4,6 +4,6 @@
 // BUILD_TOOLTIP   : commit subject of the deployed change (≤ 72 chars)
 // Visible format: "Build #1 · 07 May 2026 · 22:06:00"
 
-export const BUILD_NUMBER    = 243;
-export const BUILD_TIMESTAMP = "2026-05-29T14:51:29.000Z";
-export const BUILD_TOOLTIP   = "fix: restore showPicker() on input click for desktop";
+export const BUILD_NUMBER    = 244;
+export const BUILD_TIMESTAMP = "2026-05-29T14:57:28.000Z";
+export const BUILD_TOOLTIP   = "feat: extract Datepicker as shared component, replace all native date in";

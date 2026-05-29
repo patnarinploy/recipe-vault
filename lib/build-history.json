@@ -1,5 +1,12 @@
 [
   {
+    "build": 244,
+    "timestamp": "2026-05-29T14:57:28.000Z",
+    "subject": "feat: extract Datepicker as shared component, replace all native date in",
+    "hash": "b59d977",
+    "category": "feat"
+  },
+  {
     "build": 243,
     "timestamp": "2026-05-29T14:51:29.000Z",
     "subject": "fix: restore showPicker() on input click for desktop",
