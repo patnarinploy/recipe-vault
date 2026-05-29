@@ -1,5 +1,12 @@
 [
   {
+    "build": 245,
+    "timestamp": "2026-05-29T15:11:38.000Z",
+    "subject": "Fix dark mode group headings, achievement tooltip i18n, modal nested scr",
+    "hash": "9323ebb",
+    "category": "fix"
+  },
+  {
     "build": 244,
     "timestamp": "2026-05-29T14:57:28.000Z",
     "subject": "feat: extract Datepicker as shared component, replace all native date in",
