@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 import { SelectCustom } from "@/components/ui/select-custom";
+import { Datepicker } from "@/components/ui/datepicker";
 
 const COMBO_OPTIONS = ["กระเทียม", "หัวหอม", "พริกขี้หนู", "ขิง", "ตะไคร้", "ใบมะกรูด", "น้ำปลา", "ซีอิ๊ว"];
 
@@ -25,78 +25,6 @@ const UNIT_OPTIONS = [
   { value: "tbsp", label: "ช้อนโต๊ะ (tbsp)" },
   { value: "tsp",  label: "ช้อนชา (tsp)" },
 ];
-
-// ── Custom Datepicker wrapper (native <input type="date">) ────────────────
-
-interface DatepickerProps {
-  value: string;
-  onChange: (v: string) => void;
-}
-
-function CustomDatepicker({ value, onChange }: DatepickerProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [focused, setFocused] = useState(false);
-
-  function handleCalendarClick() {
-    if (focused) {
-      inputRef.current?.blur();
-    } else {
-      try {
-        (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.();
-      } catch { /* fallback */ }
-      inputRef.current?.focus();
-    }
-  }
-
-  return (
-    <div className="relative w-full">
-      <div className={`flex items-center rounded-xl bg-surface border overflow-hidden transition-colors duration-150
-        ${focused
-          ? "border-orange-400 ring-1 ring-orange-400"
-          : "border-outline hover:border-orange-300"
-        }`}
-      >
-        <button
-          type="button"
-          tabIndex={-1}
-          onMouseDown={e => e.preventDefault()}
-          onClick={handleCalendarClick}
-          className="pl-3 pr-2 py-2.5 cursor-pointer text-muted hover:text-orange-500 transition-colors shrink-0"
-        >
-          <Calendar className="w-4 h-4" />
-        </button>
-
-        <input
-          ref={inputRef}
-          type="date"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onClick={() => { try { (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.(); } catch { /* no-op */ } }}
-          className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
-        />
-
-        <AnimatePresence>
-          {value && (
-            <motion.button
-              type="button"
-              tabIndex={-1}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
-              exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => onChange("")}
-              className="pr-3 pl-1 py-2.5 text-muted hover:text-foreground transition-colors shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
 
 // ── Main ──────────────────────────────────────────────────────────
 
@@ -125,7 +53,7 @@ export default function SandboxClient() {
         <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
           <p className="text-xs text-muted">Native browser datepicker — ใช้ OS sheet บนมือถือ, calendar dropdown บน desktop</p>
 
-          <CustomDatepicker value={dateVal} onChange={setDateVal} />
+          <Datepicker value={dateVal} onChange={setDateVal} />
 
           {dateVal && (
             <p className="text-xs text-secondary">

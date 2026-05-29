@@ -9,6 +9,7 @@ import { ReactSortable } from "react-sortablejs";
 import { Combobox } from "@/components/ui/combobox";
 import { SelectCustom } from "@/components/ui/select-custom";
 import { Stepper } from "@/components/ui/stepper";
+import { Datepicker } from "@/components/ui/datepicker";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import Modal from "@/components/Modal";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -158,6 +159,7 @@ export default function UIShowcaseClient() {
   const [color, setColor]               = useState(STORE_COLORS[0]);
   const [loading, setLoading]           = useState(false);
   const [checks, setChecks]             = useState({ a: true, b: false, c: true });
+  const [dateVal, setDateVal]           = useState("");
   const [radio, setRadio]               = useState("r1");
   const [checkList, setCheckList]       = useState([
     { id: "1", label: "แป้งสาลี 2 ถ้วย",   done: false },
@@ -546,18 +548,14 @@ export default function UIShowcaseClient() {
         <Section title="Datepicker">
           <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Date Input มาตรฐาน</label>
-              <input type="date" className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+              <label className="text-xs font-medium text-muted">ปกติ</label>
+              <Datepicker value={dateVal} onChange={setDateVal} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Date Input (orange border — form variant)</label>
-              <input type="date" className="w-full border border-orange-300 rounded-xl px-3 py-2 text-sm bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-orange-400" />
+              <label className="text-xs font-medium text-muted">Disabled</label>
+              <Datepicker value="" onChange={() => {}} disabled />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted">Date Input (disabled)</label>
-              <input type="date" disabled className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-surface text-foreground opacity-50 cursor-not-allowed" />
-            </div>
-            <p className="text-xs text-muted"><Code>{"<input type='date' />"}</Code> — native browser datepicker</p>
+            <p className="text-xs text-muted"><Code>{"<Datepicker />"}</Code> — native picker + custom wrapper · icon toggle · X clear · form-ready (<Code>name</Code> prop)</p>
           </div>
         </Section>
 

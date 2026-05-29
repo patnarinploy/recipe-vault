@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { updatePrivateInfo } from "@/app/actions/auth";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import LoadingButton from "@/components/ui/LoadingButton";
 import { useLocale } from "@/lib/locale";
 import { SelectCustom } from "@/components/ui/select-custom";
+import { Datepicker } from "@/components/ui/datepicker";
 
 function getSocialDefault(stored: string | undefined | null, _platform: string): string {
   if (!stored) return "";
@@ -39,6 +40,7 @@ export default function AccountForm({
   const a = t.settings.account;
 
   const [state, action, pending] = useActionState(updatePrivateInfo, undefined);
+  const [dob, setDob] = useState(currentDob ?? "");
 
   useEffect(() => {
     if (!state) return;
@@ -90,7 +92,7 @@ export default function AccountForm({
           <p className="text-sm font-semibold text-secondary">{a.personalHeader}</p>
           <div>
             <label className={labelCls}>{a.dobLabel}</label>
-            <input name="dob" type="date" defaultValue={currentDob ?? ""} className={inputCls} />
+            <Datepicker value={dob} onChange={setDob} name="dob" />
           </div>
           <div>
             <label className={labelCls}>{a.countryLabel}</label>
