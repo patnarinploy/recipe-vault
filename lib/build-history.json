@@ -1,5 +1,12 @@
 [
   {
+    "build": 242,
+    "timestamp": "2026-05-29T14:08:33.000Z",
+    "subject": "revert: simplify datepicker back to direct onChange, keep UI wrapper",
+    "hash": "0995897",
+    "category": "internal"
+  },
+  {
     "build": 241,
     "timestamp": "2026-05-29T13:19:24.000Z",
     "subject": "fix: datepicker only confirms value on blur (✓), not on intermediate d",
