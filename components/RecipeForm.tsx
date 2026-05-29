@@ -378,7 +378,7 @@ export default function RecipeForm({
           : "bg-surface rounded-2xl border border-border shadow-sm"
       }
     >
-      <div className={inModal ? "p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto" : "p-6 space-y-5"}>
+      <div className={inModal ? "p-6 space-y-5 max-h-[calc(100vh-10rem)] overflow-y-auto overscroll-contain" : "p-6 space-y-5"}>
 
         <ImageUpload value={imageUrl} onChange={setImageUrl} />
 

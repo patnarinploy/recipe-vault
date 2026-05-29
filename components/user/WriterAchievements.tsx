@@ -45,7 +45,7 @@ const TIER_LABEL: Record<1 | 2 | 3 | 4 | 5 | "special", string> = {
   1: "Tier I", 2: "Tier II", 3: "Tier III", 4: "Tier IV", 5: "Tier V", special: "Special",
 };
 
-function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string }) {
+function BadgeCircle({ badge, label, tooltip }: { badge: AchievementBadge; label: string; tooltip: string }) {
   const { pinnedId, pin, unpin } = use(PinCtx);
   const pinned = pinnedId === badge.id;
   const [hovered, setHovered] = useState(false);
@@ -96,7 +96,7 @@ function BadgeCircle({ badge, label }: { badge: AchievementBadge; label: string 
         </span>
 
         {/* Condition */}
-        <p className="text-xs text-muted leading-relaxed">{badge.tooltip}</p>
+        <p className="text-xs text-muted leading-relaxed">{tooltip}</p>
       </HoverCardContent>
     </HoverCard>
   );
@@ -112,6 +112,7 @@ export default function WriterAchievements({
 }: WriterAchievementsProps) {
   const { t } = useLocale();
   const labels = t.achievements as Record<string, string>;
+  const conditions = (t.admin.achievements as unknown as { conditions: Record<string, string> }).conditions;
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const pin   = (id: string) => setPinnedId(id);
   const unpin = (id: string) => setPinnedId(p => p === id ? null : p);
@@ -180,7 +181,7 @@ export default function WriterAchievements({
         <PinCtx.Provider value={{ pinnedId, pin, unpin }}>
           <div className="flex flex-wrap justify-center gap-2">
             {allBadges.map((b) => (
-              <BadgeCircle key={b.id} badge={b} label={labels[b.id] ?? b.label} />
+              <BadgeCircle key={b.id} badge={b} label={labels[b.id] ?? b.label} tooltip={conditions[b.id] ?? b.tooltip} />
             ))}
           </div>
         </PinCtx.Provider>
