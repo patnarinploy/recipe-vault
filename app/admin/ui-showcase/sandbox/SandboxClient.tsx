@@ -73,6 +73,7 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          onClick={() => { try { (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.(); } catch { /* no-op */ } }}
           className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
         />
 
