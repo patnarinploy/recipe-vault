@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, Loader2, X } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
@@ -37,15 +37,6 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
 
-  // localValue drives the controlled input during picking.
-  // External value only updates on blur (✓ tapped) or explicit reset/clear.
-  const [localValue, setLocalValue] = useState(value);
-
-  // Sync when external value changes while picker is closed (e.g. X button)
-  useEffect(() => {
-    if (!focused) setLocalValue(value);
-  }, [value, focused]);
-
   function handleCalendarClick() {
     if (focused) {
       inputRef.current?.blur();
@@ -57,24 +48,6 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
     }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = e.target.value;
-    setLocalValue(v);
-    // รีเซ็ต button fires change with "" → propagate immediately so value clears
-    if (!v) onChange("");
-  }
-
-  function handleBlur() {
-    setFocused(false);
-    // Picker closed (✓ tapped, or date clicked on desktop) → confirm the value
-    onChange(localValue);
-  }
-
-  function handleClear() {
-    setLocalValue("");
-    onChange("");
-  }
-
   return (
     <div className="relative w-full">
       <div className={`flex items-center rounded-xl bg-surface border overflow-hidden transition-colors duration-150
@@ -83,7 +56,6 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           : "border-outline hover:border-orange-300"
         }`}
       >
-        {/* Calendar icon — toggles picker */}
         <button
           type="button"
           tabIndex={-1}
@@ -94,18 +66,16 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           <Calendar className="w-4 h-4" />
         </button>
 
-        {/* Native date input — localValue prevents intermediate taps from propagating */}
         <input
           ref={inputRef}
           type="date"
-          value={localValue}
-          onChange={handleChange}
+          value={value}
+          onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
-          onBlur={handleBlur}
+          onBlur={() => setFocused(false)}
           className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
         />
 
-        {/* X clear button — show based on confirmed external value */}
         <AnimatePresence>
           {value && (
             <motion.button
@@ -115,7 +85,7 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
               animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
               exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
               onMouseDown={e => e.preventDefault()}
-              onClick={handleClear}
+              onClick={() => onChange("")}
               className="pr-3 pl-1 py-2.5 text-muted hover:text-foreground transition-colors shrink-0"
             >
               <X className="w-3.5 h-3.5" />
@@ -164,10 +134,10 @@ export default function SandboxClient() {
 
           <ul className="text-xs text-muted space-y-1 border-t border-border pt-3">
             <li>✓ กด icon ปฏิทิน → เปิด / ปิด (toggle)</li>
-            <li>✓ กดวันระหว่าง picking → ยังไม่บันทึก (ค่าจริงรอกด ✓)</li>
-            <li>✓ กด ✓ ยืนยัน → บันทึกค่า · กด รีเซ็ต → ล้างค่าทันที</li>
-            <li>✓ ปุ่ม X ล้างค่าที่ยืนยันแล้ว (animate in/out)</li>
+            <li>✓ กดพื้นที่ input → browser/OS picker เปิดตามปกติ</li>
+            <li>✓ ปุ่ม X ล้างค่า (animate in/out)</li>
             <li>✓ Border + ring เมื่อ focus (เหมือน Combobox)</li>
+            <li>✓ ซ่อน native calendar icon ไม่ให้ซ้อนกับ icon ซ้าย</li>
             <li>✓ บนมือถือ → ใช้ native OS date picker ของ browser</li>
           </ul>
         </div>
