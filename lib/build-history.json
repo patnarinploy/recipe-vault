@@ -1,5 +1,12 @@
 [
   {
+    "build": 240,
+    "timestamp": "2026-05-29T05:36:42.000Z",
+    "subject": "revert: back to native datepicker, remove additions that caused regressi",
+    "hash": "ad1f1a9",
+    "category": "internal"
+  },
+  {
     "build": 239,
     "timestamp": "2026-05-28T21:02:30.000Z",
     "subject": "feat: replace native datepicker with custom calendar popup in Sandbox",
