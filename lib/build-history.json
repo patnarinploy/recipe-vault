@@ -1,5 +1,12 @@
 [
   {
+    "build": 243,
+    "timestamp": "2026-05-29T14:51:29.000Z",
+    "subject": "fix: restore showPicker() on input click for desktop",
+    "hash": "64a6cb9",
+    "category": "fix"
+  },
+  {
     "build": 242,
     "timestamp": "2026-05-29T14:08:33.000Z",
     "subject": "revert: simplify datepicker back to direct onChange, keep UI wrapper",
