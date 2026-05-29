@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
+import { Calendar, Loader2, X } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 import { SelectCustom } from "@/components/ui/select-custom";
 
@@ -26,22 +26,7 @@ const UNIT_OPTIONS = [
   { value: "tsp",  label: "ช้อนชา (tsp)" },
 ];
 
-// ── Custom Datepicker (calendar popup) ───────────────────────────
-
-const MONTH_FULL  = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-                     "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
-const MONTH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-const DOW_TH      = ["อา","จ","อ","พ","พฤ","ศ","ส"];
-
-function toDateStr(y: number, m: number, d: number) {
-  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-}
-
-function fmtDisplay(s: string) {
-  if (!s) return null;
-  const [y, m, d] = s.split("-");
-  return `${parseInt(d)} ${MONTH_SHORT[parseInt(m) - 1]} ${y}`;
-}
+// ── Custom Datepicker wrapper (native <input type="date">) ────────────────
 
 interface DatepickerProps {
   value: string;
@@ -49,95 +34,56 @@ interface DatepickerProps {
 }
 
 function CustomDatepicker({ value, onChange }: DatepickerProps) {
-  const today = new Date().toISOString().slice(0, 10);
-  const [open, setOpen] = useState(false);
-  const [temp, setTemp] = useState("");   // highlighted (pre-confirm) selection
-  const [vy, setVy]     = useState(new Date().getFullYear());
-  const [vm, setVm]     = useState(new Date().getMonth());   // 0-based
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
 
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  function openPicker() {
-    if (open) return;
-    if (value) {
-      const [y, m] = value.split("-").map(Number);
-      setVy(y); setVm(m - 1); setTemp(value);
+  function handleCalendarClick() {
+    if (focused) {
+      inputRef.current?.blur();
     } else {
-      const now = new Date();
-      setVy(now.getFullYear()); setVm(now.getMonth()); setTemp("");
+      try {
+        (inputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.();
+      } catch { /* fallback */ }
+      inputRef.current?.focus();
     }
-    setOpen(true);
   }
-
-  function confirm() { onChange(temp); setOpen(false); }
-  function reset()   { onChange(""); setTemp(""); setOpen(false); }
-
-  // Outside click / touch → close without confirming
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent | TouchEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown, { passive: true });
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("touchstart", onDown);
-    };
-  }, [open]);
-
-  // Escape → close without confirming
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
-
-  function prevMonth() {
-    if (vm === 0) { setVy(y => y - 1); setVm(11); }
-    else setVm(m => m - 1);
-  }
-  function nextMonth() {
-    if (vm === 11) { setVy(y => y + 1); setVm(0); }
-    else setVm(m => m + 1);
-  }
-
-  const firstDow    = new Date(vy, vm, 1).getDay();
-  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
-  const displayStr  = open ? fmtDisplay(temp) : fmtDisplay(value);
 
   return (
-    <div ref={wrapRef} className="relative w-full">
-
-      {/* ── Trigger row ── */}
+    <div className="relative w-full">
       <div className={`flex items-center rounded-xl bg-surface border overflow-hidden transition-colors duration-150
-        ${open ? "border-orange-400 ring-1 ring-orange-400" : "border-outline hover:border-orange-300"}`}
+        ${focused
+          ? "border-orange-400 ring-1 ring-orange-400"
+          : "border-outline hover:border-orange-300"
+        }`}
       >
-        {/* Calendar icon — toggles popup */}
+        {/* Calendar icon — toggles picker */}
         <button
           type="button"
+          tabIndex={-1}
           onMouseDown={e => e.preventDefault()}
-          onClick={() => open ? setOpen(false) : openPicker()}
+          onClick={handleCalendarClick}
           className="pl-3 pr-2 py-2.5 cursor-pointer text-muted hover:text-orange-500 transition-colors shrink-0"
         >
           <Calendar className="w-4 h-4" />
         </button>
 
-        {/* Date text / placeholder — click to open */}
-        <span
-          onClick={openPicker}
-          className={`flex-1 py-2.5 text-sm min-w-0 truncate cursor-pointer select-none
-            ${displayStr ? "text-foreground" : "text-muted"}`}
-        >
-          {displayStr ?? "เลือกวันที่…"}
-        </span>
+        {/* Native date input */}
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="flex-1 min-w-0 py-2.5 pr-2 text-sm bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-0 focus:[box-shadow:none] [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
+        />
 
-        {/* X clear — only when value is confirmed and popup is closed */}
+        {/* X clear button — animates in/out */}
         <AnimatePresence>
-          {value && !open && (
+          {value && (
             <motion.button
               type="button"
+              tabIndex={-1}
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1, transition: { duration: 0.12 } }}
               exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.1 } }}
@@ -150,103 +96,6 @@ function CustomDatepicker({ value, onChange }: DatepickerProps) {
           )}
         </AnimatePresence>
       </div>
-
-      {/* ── Calendar popup ── */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.14, ease: "easeOut" }}
-            className="absolute left-0 right-0 z-50 mt-1.5 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden"
-          >
-            {/* Month / year navigation */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <button
-                type="button"
-                onMouseDown={e => e.preventDefault()}
-                onClick={prevMonth}
-                className="p-1.5 rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-sm font-semibold text-foreground select-none">
-                {MONTH_FULL[vm]} {vy}
-              </span>
-              <button
-                type="button"
-                onMouseDown={e => e.preventDefault()}
-                onClick={nextMonth}
-                className="p-1.5 rounded-lg hover:bg-elevated text-muted hover:text-foreground transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Day-of-week headers */}
-            <div className="grid grid-cols-7 px-3 pt-2.5 pb-1">
-              {DOW_TH.map(d => (
-                <div key={d} className="text-center text-[10px] font-semibold text-muted py-0.5 select-none">
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Day cells */}
-            <div className="grid grid-cols-7 gap-y-0.5 px-3 pb-3">
-              {Array.from({ length: firstDow }, (_, i) => <div key={`gap${i}`} />)}
-              {Array.from({ length: daysInMonth }, (_, i) => {
-                const d        = i + 1;
-                const ds       = toDateStr(vy, vm, d);
-                const isSel    = ds === temp;
-                const isConf   = ds === value;
-                const isToday  = ds === today;
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    onMouseDown={e => e.preventDefault()}
-                    onClick={() => setTemp(ds)}
-                    className={`h-8 w-full rounded-lg text-sm transition-colors
-                      ${isSel
-                        ? "bg-orange-500 text-white font-semibold"
-                        : isConf
-                          ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 font-semibold"
-                          : isToday
-                            ? "text-orange-500 font-medium hover:bg-elevated"
-                            : "text-foreground hover:bg-elevated"
-                      }`}
-                  >
-                    {d}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Footer: Reset + Confirm */}
-            <div className="flex gap-2 px-4 py-3 border-t border-border">
-              <button
-                type="button"
-                onMouseDown={e => e.preventDefault()}
-                onClick={reset}
-                className="flex-1 py-2 text-sm text-secondary border border-border rounded-xl hover:bg-elevated transition-colors"
-              >
-                รีเซ็ต
-              </button>
-              <button
-                type="button"
-                onMouseDown={e => e.preventDefault()}
-                onClick={confirm}
-                disabled={!temp}
-                className="flex-1 py-2 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                ยืนยัน
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -272,11 +121,11 @@ export default function SandboxClient() {
       {/* ── Datepicker ─────────────────────────────────────────── */}
       <section className="space-y-4">
         <h2 className="text-xs font-bold text-muted uppercase tracking-widest border-b border-border pb-2">
-          Datepicker — Custom Calendar Popup
+          Datepicker — Custom Wrapper
         </h2>
 
         <div className="bg-surface rounded-2xl border border-border p-5 space-y-4">
-          <p className="text-xs text-muted">Custom calendar popup พร้อม confirm / reset — ค่าจะไม่เปลี่ยนจนกว่าจะกดยืนยัน</p>
+          <p className="text-xs text-muted">Native browser datepicker — ใช้ OS sheet บนมือถือ, calendar dropdown บน desktop</p>
 
           <CustomDatepicker value={dateVal} onChange={setDateVal} />
 
@@ -288,11 +137,11 @@ export default function SandboxClient() {
 
           <ul className="text-xs text-muted space-y-1 border-t border-border pt-3">
             <li>✓ กด icon ปฏิทิน → เปิด / ปิด (toggle)</li>
-            <li>✓ กดวันในปฏิทิน → highlight (preview) ยังไม่บันทึก</li>
-            <li>✓ กด ยืนยัน → บันทึกค่า · กด รีเซ็ต → ล้างค่าและปิด</li>
-            <li>✓ กดนอก popup → ปิดโดยไม่บันทึก</li>
-            <li>✓ ปุ่ม X ล้างค่าที่ยืนยันแล้ว (animate in/out)</li>
-            <li>✓ Border + ring เมื่อ popup เปิด (เหมือน Combobox)</li>
+            <li>✓ กดพื้นที่ input → browser/OS picker เปิดตามปกติ</li>
+            <li>✓ ปุ่ม X ล้างค่า (animate in/out)</li>
+            <li>✓ Border + ring เมื่อ focus (เหมือน Combobox)</li>
+            <li>✓ ซ่อน native calendar icon ไม่ให้ซ้อนกับ icon ซ้าย</li>
+            <li>✓ บนมือถือ → ใช้ native OS date picker ของ browser</li>
           </ul>
         </div>
       </section>
